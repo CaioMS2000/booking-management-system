@@ -1,0 +1,4 @@
+{
+    "prod":[],
+    "dev":["@types/node", "typescript"]
+}

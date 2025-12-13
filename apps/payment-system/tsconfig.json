@@ -1,0 +1,18 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "plugins": [
+      //{
+      //"name": "next"
+      //}
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "[SHARED]": ["../../packages/shared"],
+      "[SHARED]/*": ["../../packages/shared/*"]
+    }
+  },
+  "include": [
+    "**/*.ts"
+  ]
+}
