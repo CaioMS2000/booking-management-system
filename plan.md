@@ -1,28 +1,26 @@
-# = Plataforma de Reservas de Espaços - Plano de Implementação (Hardcore Mode)
+# = Plataforma de Reservas de Espaços - Plano de Implementação (by Claude)
 
 > **Objetivo:** Projeto "pro-level all the way" para demonstração de senioridade
 >
 > **Escopo:** Backend completo (4 microserviços) sem frontend
 >
 > **Timeline:** Até completar (projeto de longo prazo, ~3-5 meses)
-
+>
 ---
 
 ## = Avaliação do Planejamento: **8.0/10** 
 
 ###  Pontos Fortes
-- **Arquitetura:** Kong + Microserviços bem definidos
+- **Arquitetura:** Kong + Microserviços bem definidos, Hexagonal (Ports & Adapters)
 - **DDD:** Guia pragmático excelente ([ddd.md](ddd.md))
 - **Segurança:** RS256, MFA, OAuth2, Rate Limiting
-- **Observabilidade:** Stack completa (Prometheus, Grafana, Jaeger, ELK)
+- **Observabilidade:** Stack completa (Prometheus, Grafana, Jaeger, Loki)
 - **Testes:** Unitários, Integração, E2E, Carga (k6)
 - **IDs:** Base62 + Redis justificado corretamente
+- **Patterns:** Saga, CQRS, Event Sourcing, Unit of Work
 
 ###  Pontos de Atenção
-- Detalhar regras de negócio específicas (cancelamento, conflitos)
-- Adicionar circuit breakers explícitos entre MS
-- Criar ADRs para decisões arquiteturais
-- Setup Redis Sentinel para HA
+- ⚠️ Detalhar regras de negócio específicas (cancelamento, conflitos) - em progresso
 
 ---
 
@@ -1042,19 +1040,28 @@ apps/
 - [ ] Configurar ESLint, Prettier, Biome
 - [ ] Docker Compose:
   - [ ] Kong + PostgreSQL (Kong DB)
-  - [ ] Redis Sentinel (master + 3 sentinels)
-  - [ ] PostgreSQL (4 databases)
-  - [ ] RabbitMQ
+  - [ ] Redis Sentinel HA (6 containers):
+    - [ ] Redis master
+    - [ ] Redis slave 1
+    - [ ] Redis slave 2
+    - [ ] Sentinel 1
+    - [ ] Sentinel 2
+    - [ ] Sentinel 3
+  - [ ] PostgreSQL × 4 (Kong, MS1-Reservas, MS2-Pagamentos, MS4-Auth)
+  - [ ] MongoDB (MS3-Notificações) - opcional
+  - [ ] RabbitMQ (com management plugin)
   - [ ] Prometheus + Grafana
   - [ ] Jaeger
-  - [ ] Elasticsearch + Kibana
+  - [ ] **Loki + Promtail** (OPÇÃO RECOMENDADA - logs leves)
+  - [ ] OU Elasticsearch + Kibana + Logstash (análise avançada)
+  - [ ] ⚠️ NUNCA ambos simultaneamente (escolher Loki OU ELK)
 - [ ] GitHub Actions:
   - [ ] Lint + Format
   - [ ] Unit tests
   - [ ] Build Docker images
 - [ ] Shared packages:
-  - [ ] @app/domain (Value Objects, base entities)
-  - [ ] @app/common (guards, filters, decorators)
+  - [ ] @app/domain (Value Objects, base entities, aggregate root)
+  - [ ] @app/common (guards, filters, decorators, base ports/interfaces)
   - [ ] @app/testing (mocks, factories)
 
 ---
@@ -1083,10 +1090,27 @@ Todos outros MS dependem de autenticao.
 - [ ] Configurar rotas protegidas: `/users/*`
 - [ ] Plugin JWT validation
 
+**Arquitetura (Ports & Adapters):**
+- [ ] Definir Ports (Application Layer):
+  - [ ] `ILogger` interface (info, error, warn, debug)
+  - [ ] `IUserRepository` interface
+  - [ ] `ITokenGenerator` interface
+  - [ ] `IHashService` interface
+- [ ] Implementar Adapters (Infrastructure Layer):
+  - [ ] `ConsoleLogger` (dev - stdout JSON)
+  - [ ] `LokiLogger` (prod - substituir Console depois)
+  - [ ] `TypeORMUserRepository`
+  - [ ] `JwtTokenGenerator`
+  - [ ] `BcryptHashService`
+- [ ] DI Container para conectar Ports → Adapters
+
 **Observabilidade:**
-- [ ] Mtricas (login rate, token generation rate)
-- [ ] Tracing (cada request tem trace ID)
-- [ ] Logs estruturados
+- [ ] Métricas (login rate, token generation rate)
+- [ ] Tracing (cada request tem trace_id via OpenTelemetry)
+- [ ] Logs estruturados com correlation:
+  - [ ] Cada log inclui trace_id, span_id, user_id
+  - [ ] Formato JSON para stdout
+  - [ ] Promtail coleta → Loki armazena → Grafana visualiza
 
 ---
 
@@ -1097,6 +1121,11 @@ Todos outros MS dependem de autenticao.
 - [ ] Value Objects: PeriodoReserva, Money, EspacoId
 - [ ] Domain Events: ReservaCriada, ReservaConfirmada, ReservaCancelada
 - [ ] Repositories: ReservasRepo, EspacosRepo
+- [ ] **Unit of Work**:
+  - [ ] `IUnitOfWork` interface (Application/ports/)
+  - [ ] `TypeORMUnitOfWork` implementation (Infrastructure/)
+  - [ ] Integração com Use Cases (garantir atomicidade)
+  - [ ] Exemplo: CriarReserva + AtualizarInventário em 1 transação
 
 **Funcionalidades:**
 - [ ] CRUD de Espaços
@@ -1137,14 +1166,29 @@ Todos outros MS dependem de autenticao.
 - [ ] Reconstruir estado a partir de eventos
 - [ ] Snapshotting (a cada 100 eventos)
 
+**Unit of Work:**
+- [ ] `IUnitOfWork` para transações de pagamento
+- [ ] Coordenação: Saga (entre MS) + UoW (dentro do MS)
+
 **Idempotência:**
 - [ ] Redis cache (chave: reservaId)
 - [ ] Evitar cobranças duplicadas
 
-**Saga:**
-- [ ] ReservaCriada  CriarCobranca
-- [ ] PagamentoAprovado  ConfirmarReserva
-- [ ] PagamentoRecusado  CancelarReserva (compensação)
+**Saga Pattern (Orchestration):**
+- [ ] ReservaCriada → CriarCobranca
+- [ ] PagamentoAprovado → ConfirmarReserva
+- [ ] PagamentoRecusado → CancelarReserva (compensação)
+- [ ] **Persistir estado da saga**:
+  - [ ] Tabela `saga_state` (id, booking_id, current_step, status, data, timestamps)
+  - [ ] Recuperar estado em caso de restart
+  - [ ] Event Store para auditoria (tabela `saga_events`)
+- [ ] **Handlers idempotentes**:
+  - [ ] Redis para deduplicação (chave: event_id)
+  - [ ] Evitar processar mesmo evento 2x
+- [ ] **Timeouts configurados**:
+  - [ ] Boleto bancário: 3 dias úteis
+  - [ ] PIX: 30 minutos
+  - [ ] Cartão de crédito: 30 segundos
 
 **Resiliência:**
 - [ ] Circuit Breaker para Stripe
@@ -1251,6 +1295,22 @@ Todos outros MS dependem de autenticao.
 - [ ] ADR-005: Por que RabbitMQ? (vs Kafka/AWS SQS)
 - [ ] ADR-006: Por que Event Sourcing no MS2? (trade-offs)
 - [ ] ADR-007: Por que RS256? (vs HS256)
+- [ ] **ADR-008: Loki vs ELK Stack para logs**
+  - [ ] Contexto: Escolha entre Loki+Promtail vs Elasticsearch+Kibana
+  - [ ] Decisão: Loki (mais leve, integra com Grafana)
+  - [ ] Consequências: Menor consumo de recursos, menos features analíticas
+- [ ] **ADR-009: Hexagonal Architecture (Ports & Adapters)**
+  - [ ] Contexto: Desacoplar domain/application de infrastructure
+  - [ ] Decisão: Application define Ports, Infrastructure implementa Adapters
+  - [ ] Consequências: Testabilidade, flexibilidade, inversão de dependências
+- [ ] **ADR-010: Saga Orchestration vs Choreography**
+  - [ ] Contexto: Transações distribuídas entre MS1 e MS2
+  - [ ] Decisão: Orchestration (coordenador centralizado)
+  - [ ] Consequências: Mais fácil debugar, estado centralizado, ponto único de falha
+- [ ] **ADR-011: Unit of Work Pattern**
+  - [ ] Contexto: Garantir atomicidade de transações dentro de um MS
+  - [ ] Decisão: UoW pattern com interface na Application Layer
+  - [ ] Consequências: Transações ACID, menos código boilerplate, acoplamento ao ORM
 
 **Diagramas:**
 - [ ] C4: Context (sistema inteiro)
@@ -1547,7 +1607,8 @@ describe('RegistrarUsuarioHandler', () => {
 ### Observabilidade
 - [ ] Dashboards Grafana funcionando
 - [ ] Distributed tracing completo (screenshots)
-- [ ] Logs estruturados no Elasticsearch
+- [ ] Logs estruturados no Loki (OU Elasticsearch se escolheu ELK)
+- [ ] Correlation: trace_id presente em todos os logs
 
 ### Documentação
 - [ ] 5+ ADRs escritos
