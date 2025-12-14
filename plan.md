@@ -1,1467 +1,642 @@
-# 🚀 **Plataforma de Reservas de Espaços** (by Claude)
+# = Plataforma de Reservas de Espaços - Plano de Implementação (Hardcore Mode)
+
+> **Objetivo:** Projeto "pro-level all the way" para demonstração de senioridade
+>
+> **Escopo:** Backend completo (4 microserviços) sem frontend
+>
+> **Timeline:** Até completar (projeto de longo prazo, ~3-5 meses)
 
 ---
 
-# 📐 **ARQUITETURA COMPLETA (REVISADA)**
+## = Avaliação do Planejamento: **8.0/10** 
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         CAMADA EXTERNA                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
-│  │  Web App │  │ Mobile   │  │  Tablet  │  │  Admin   │         │
-│  │ (React)  │  │(React N.)│  │  App     │  │  Panel   │         │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘         │
-│       │             │             │             │               │
-└───────┼─────────────┼─────────────┼─────────────┼───────────────┘
-        │             │             │             │
-        └─────────────┴─────────────┴─────────────┘
-                      │
-┌─────────────────────┼─────────────────────────────────────────┐
-│                CAMADA DE EDGE                                 │
-├─────────────────────┼─────────────────────────────────────────┤
-│                     ↓                                         │
-│            ┌─────────────────┐                                │
-│            │  CDN (Cloudflare│                                │
-│            │    ou AWS CF)   │                                │
-│            └────────┬────────┘                                │
-│                     ↓                                         │
-│            ┌─────────────────┐                                │
-│            │  WAF (Web App   │                                │
-│            │   Firewall)     │                                │
-│            └────────┬────────┘                                │
-│                     ↓                                         │
-│            ┌─────────────────┐                                │
-│            │  Load Balancer  │                                │
-│            │   (AWS ALB ou   │                                │
-│            │    Nginx)       │                                │
-│            └────────┬────────┘                                │
-└─────────────────────┼─────────────────────────────────────────┘
-                      │
-┌─────────────────────┼─────────────────────────────────────────┐
-│          CAMADA DE REVERSE PROXY (SIMPLES)                    │
-├─────────────────────┼─────────────────────────────────────────┤
-│                     ↓                                         │
-│       ┌──────────────────────────────┐                        │
-│       │    Nginx (Reverse Proxy)     │                        │
-│       │                              │                        │
-│       │ • SSL/TLS Termination        │                        │
-│       │ • Routing (/api/reservas)    │                        │
-│       │ • Load Balancing             │                        │
-│       │ • Compression (gzip/brotli)  │                        │
-│       │ • Static file serving        │                        │
-│       │ • Request logging            │                        │
-│       │                              │                        │
-│       │ SEM: Auth, Rate Limit, CORS  │  ← MS fazem isso!      │
-│       └──────────┬───────────────────┘                        │
-└──────────────────┼────────────────────────────────────────────┘
-                   │
-┌──────────────────┼────────────────────────────────────────────────────────┐
-│              CAMADA DE BFF (OPCIONAL INICIAL)                             │
-├──────────────────┼────────────────────────────────────────────────────────┤
-│                  │                                                        │
-│    ┌─────────────┼──────────────┐                                         │
-│    │             │              │                                         │
-│    ↓             ↓              ↓                                         │
-│ ┌────────┐  ┌────────┐  ┌──────────┐                                      │
-│ │BFF Web │  │BFF Mob.│  │BFF Admin │                                      │
-│ │(Node)  │  │(Node)  │  │(Node)    │                                      │
-│ │        │  │        │  │          │                                      │
-│ │        │  │        │  │          │   ← CADA UM VALIDA JWT INDEPENDENTE  │
-│ └───┬────┘  └──┬─────┘  └────┬─────┘                                      │
-└─────┼──────────┼─────────────┼────────────────────────────────────────────┘
-      │          │             │
-      └──────────┴─────────────┘
-                 │
-┌────────────────┼─────────────────────────────────────────────┐
-│          CAMADA DE MICROSERVIÇOS                              │
-├────────────────┼─────────────────────────────────────────────┤
-│                │                                              │
-│    ┌───────────┼───────────────┐                              │
-│    │           │               │                              │
-│    ↓           ↓               ↓                              │
-│ ┌─────────────────────────────────────────────┐              │
-│ │  MS1: Reservas & Disponibilidade            │              │
-│ │  (NestJS + TypeScript)                      │              │
-│ │                                             │              │
-│ │  ✅ JWT Validation (JwtAuthGuard)           │              │
-│ │  ✅ Rate Limiting (por IP/user)             │              │
-│ │  ✅ CORS                                    │              │
-│ │  ✅ Input Validation                        │              │
-│ │  ✅ Authorization (regras de negócio)       │              │
-│ │                                             │              │
-│ │  ┌──────────┐  ┌──────────┐  ┌──────────┐   │              │
-│ │  │Instance 1│  │Instance 2│  │Instance 3│   │              │
-│ │  └──────────┘  └──────────┘  └──────────┘   │              │
-│ │  ┌──────────────────────────────────────┐   │              │
-│ │  │ PostgreSQL (Primary + Replicas)      │   │              │
-│ │  └──────────────────────────────────────┘   │              │
-│ │  ┌──────────────────────────────────────┐   │              │
-│ │  │ Redis Cluster (Cache + Sessions)     │   │              │
-│ │  └──────────────────────────────────────┘   │              │
-│ └─────────────────────────────────────────────┘              │
-│                                                               │
-│ ┌──────────────────────────────────────────────┐              │
-│ │  MS2: Pagamentos & Cobranças                 │              │
-│ │  (NestJS + TypeScript)                       │              │
-│ │                                              │              │
-│ │  ✅ JWT Validation (independente)            │              │
-│ │  ✅ Rate Limiting                            │              │
-│ │  ✅ CORS                                     │              │
-│ │  ✅ Idempotência (evitar cobranças duplas)   │              │
-│ │                                              │              │
-│ │  ┌──────────┐  ┌──────────┐                  │              │
-│ │  │Instance 1│  │Instance 2│                  │              │
-│ │  └──────────┘  └──────────┘                  │              │
-│ │  ┌──────────────────────────────────────┐   │              │
-│ │  │ PostgreSQL (Primary + Replicas)      │   │              │
-│ │  └──────────────────────────────────────┘   │              │
-│ │  ┌──────────────────────────────────────┐   │              │
-│ │  │ Redis Cluster (Idempotency cache)    │   │              │
-│ │  └──────────────────────────────────────┘   │              │
-│ └──────────────────────────────────────────────┘              │
-│                                                               │
-│ ┌──────────────────────────────────────────────┐              │
-│ │  MS3: Notificações                           │              │
-│ │  (NestJS + TypeScript)                       │              │
-│ │                                              │              │
-│ │  ✅ JWT Validation                           │              │
-│ │  ✅ Rate Limiting (anti-spam)                │              │
-│ │                                              │              │
-│ │  • Email (SendGrid)                          │              │
-│ │  • SMS (Twilio)                              │              │
-│ │  • Push Notifications (Firebase)             │              │
-│ │  ┌──────────────────────────────────────┐   │              │
-│ │  │ MongoDB (Histórico de notificações)  │   │              │
-│ │  └──────────────────────────────────────┘   │              │
-│ └──────────────────────────────────────────────┘              │
-│                                                               │
-│ ┌──────────────────────────────────────────────┐              │
-│ │  MS4: Gestão de Usuários & Auth              │              │
-│ │  (NestJS + TypeScript)                       │              │
-│ │                                              │              │
-│ │  ✅ JWT Generation                           │              │
-│ │  ✅ Refresh Token                            │              │
-│ │  ✅ OAuth2 (Google, Facebook)                │              │
-│ │  ✅ MFA (Two-Factor Auth)                    │              │
-│ │  ✅ Rate Limiting (anti-brute force)         │              │
-│ │                                              │              │
-│ │  ┌──────────────────────────────────────┐   │              │
-│ │  │ PostgreSQL                           │   │              │
-│ │  └──────────────────────────────────────┘   │              │
-│ │  ┌──────────────────────────────────────┐   │              │
-│ │  │ Redis (Sessions, Refresh Tokens)     │   │              │
-│ │  └──────────────────────────────────────┘   │              │
-│ └──────────────────────────────────────────────┘              │
-└───────────────────────────────────────────────────────────────┘
-                        │
-┌───────────────────────┼───────────────────────────────────────┐
-│            CAMADA DE MENSAGERIA & EVENTOS                     │
-├───────────────────────┼───────────────────────────────────────┤
-│                       ↓                                       │
-│          ┌─────────────────────────┐                          │
-│          │  Event Bus (RabbitMQ)   │                          │
-│          │                         │                          │
-│          │  Exchanges & Queues:    │                          │
-│          │  • reservas.events      │                          │
-│          │  • pagamentos.events    │                          │
-│          │  • notificacoes.events  │                          │
-│          │                         │                          │
-│          │  Dead Letter Queue:     │                          │
-│          │  • failed.events        │                          │
-│          └─────────────────────────┘                          │
-└───────────────────────────────────────────────────────────────┘
-                        │
-┌───────────────────────┼───────────────────────────────────────┐
-│         CAMADA DE OBSERVABILIDADE                             │
-├───────────────────────┼───────────────────────────────────────┤
-│                       │                                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
-│  │ Prometheus   │  │   Grafana    │  │    Jaeger    │        │
-│  │  (Metrics)   │  │ (Dashboards) │  │  (Tracing)   │        │
-│  └──────────────┘  └──────────────┘  └──────────────┘        │
-│                                                               │
-│  ┌──────────────────────────────────────────────────┐         │
-│  │  ELK Stack (Elasticsearch, Logstash, Kibana)    │         │
-│  │  (Logs Centralizados)                           │         │
-│  └──────────────────────────────────────────────────┘         │
-│                                                               │
-│  ┌──────────────────────────────────────────────────┐         │
-│  │  Sentry (Error Tracking & Performance)          │         │
-│  └──────────────────────────────────────────────────┘         │
-└───────────────────────────────────────────────────────────────┘
-```
+###  Pontos Fortes
+- **Arquitetura:** Kong + Microserviços bem definidos
+- **DDD:** Guia pragmático excelente ([ddd.md](ddd.md))
+- **Segurança:** RS256, MFA, OAuth2, Rate Limiting
+- **Observabilidade:** Stack completa (Prometheus, Grafana, Jaeger, ELK)
+- **Testes:** Unitários, Integração, E2E, Carga (k6)
+- **IDs:** Base62 + Redis justificado corretamente
+
+###  Pontos de Atenção
+- Detalhar regras de negócio específicas (cancelamento, conflitos)
+- Adicionar circuit breakers explícitos entre MS
+- Criar ADRs para decisões arquiteturais
+- Setup Redis Sentinel para HA
 
 ---
 
-# 🔧 **COMPONENTES DETALHADOS (REVISADOS)**
+## < Arquitetura
 
-## **1. CAMADA DE REVERSE PROXY (Nginx - Simples e Eficiente)**
+### Stack Tecnológica
 
-### **Nginx Configuration**
+**Backend:**
+- NestJS + TypeScript
+- PostgreSQL (1 DB por MS, replicação master/slave)
+- Redis Sentinel (HA para geração de IDs)
+- RabbitMQ (event bus)
 
-```nginx
-# /etc/nginx/nginx.conf
+**API Gateway:**
+- Kong (com PostgreSQL próprio)
+- JWT validation (RS256)
+- Rate limiting
+- API versioning
+- Metrics, tracing
 
-# Performance tuning
-worker_processes auto;
-worker_rlimit_nofile 65535;
+**Observabilidade:**
+- Prometheus + Grafana (métricas)
+- Jaeger (distributed tracing)
+- ELK Stack (logs)
+- Sentry (error tracking)
 
-events {
-    worker_connections 4096;
-    use epoll;
-    multi_accept on;
-}
+**Infraestrutura:**
+- Docker Compose (local)
+- Kubernetes (futuro)
+- GitHub Actions (CI/CD)
 
-http {
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    
-    # Compression
-    gzip on;
-    gzip_vary on;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss;
-    
-    # Logging
-    log_format main_ext '$remote_addr - $remote_user [$time_local] "$request" '
-                        '$status $body_bytes_sent "$http_referer" '
-                        '"$http_user_agent" "$http_x_forwarded_for" '
-                        'rt=$request_time uct="$upstream_connect_time" '
-                        'uht="$upstream_header_time" urt="$upstream_response_time"';
-    
-    access_log /var/log/nginx/access.log main_ext;
-    error_log /var/log/nginx/error.log warn;
-    
-    # Upstream - MS1 Reservas
-    upstream ms1_reservas {
-        least_conn;  # Algoritmo de balanceamento
-        
-        server ms1-instance-1:3000 max_fails=3 fail_timeout=30s weight=1;
-        server ms1-instance-2:3000 max_fails=3 fail_timeout=30s weight=1;
-        server ms1-instance-3:3000 max_fails=3 fail_timeout=30s weight=1;
-        
-        keepalive 32;  # Conexões persistentes
-    }
-    
-    # Upstream - MS2 Pagamentos
-    upstream ms2_pagamentos {
-        least_conn;
-        
-        server ms2-instance-1:3001 max_fails=3 fail_timeout=30s;
-        server ms2-instance-2:3001 max_fails=3 fail_timeout=30s;
-        
-        keepalive 32;
-    }
-    
-    # Upstream - MS3 Notificações
-    upstream ms3_notificacoes {
-        server ms3-instance-1:3002 max_fails=3 fail_timeout=30s;
-        
-        keepalive 16;
-    }
-    
-    # Upstream - MS4 Auth
-    upstream ms4_auth {
-        least_conn;
-        
-        server ms4-instance-1:3003 max_fails=3 fail_timeout=30s;
-        server ms4-instance-2:3003 max_fails=3 fail_timeout=30s;
-        
-        keepalive 32;
-    }
-    
-    # HTTP to HTTPS redirect
-    server {
-        listen 80;
-        server_name api.reservas.com;
-        return 301 https://$server_name$request_uri;
-    }
-    
-    # Main HTTPS server
-    server {
-        listen 443 ssl http2;
-        server_name api.reservas.com;
-        
-        # SSL Configuration
-        ssl_certificate /etc/nginx/ssl/cert.pem;
-        ssl_certificate_key /etc/nginx/ssl/key.pem;
-        ssl_protocols TLSv1.2 TLSv1.3;
-        ssl_ciphers HIGH:!aNULL:!MD5;
-        ssl_prefer_server_ciphers on;
-        ssl_session_cache shared:SSL:10m;
-        ssl_session_timeout 10m;
-        
-        # Request size limits
-        client_max_body_size 10M;
-        
-        # Timeouts
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-        
-        # Proxy headers (padrão)
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Request-ID $request_id;  # Para tracing
-        
-        # Health check endpoint (Nginx não valida auth aqui)
-        location /health {
-            access_log off;
-            return 200 "healthy\n";
-            add_header Content-Type text/plain;
-        }
-        
-        # MS1 - Reservas (SEM validação de auth no Nginx)
-        location /api/v1/reservas {
-            proxy_pass http://ms1_reservas;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-        }
-        
-        location /api/v1/espacos {
-            proxy_pass http://ms1_reservas;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-        }
-        
-        location /api/v1/disponibilidade {
-            proxy_pass http://ms1_reservas;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-        }
-        
-        # MS2 - Pagamentos
-        location /api/v1/pagamentos {
-            proxy_pass http://ms2_pagamentos;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-        }
-        
-        # Webhook do Stripe (público, sem auth)
-        location /api/v1/webhooks/stripe {
-            proxy_pass http://ms2_pagamentos;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-        }
-        
-        # MS3 - Notificações
-        location /api/v1/notificacoes {
-            proxy_pass http://ms3_notificacoes;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-        }
-        
-        # MS4 - Auth (público para login/registro)
-        location /api/v1/auth {
-            proxy_pass http://ms4_auth;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-        }
-        
-        location /api/v1/users {
-            proxy_pass http://ms4_auth;
-            proxy_http_version 1.1;
-            proxy_set_header Connection "";
-        }
-    }
-}
+### Microserviços
+
+#### MS1: Reservas & Disponibilidade
+- **Responsabilidades:**
+  - CRUD de Espaços
+  - Criar/Cancelar/Confirmar Reservas
+  - Consultar Disponibilidade
+  - Validação de conflitos
+
+- **Padrões:**
+  - DDD completo (Aggregates, Value Objects, Domain Events)
+  - CQRS (Commands/Queries separados)
+  - Repository Pattern
+  - Saga Pattern (orquestração com MS2)
+
+- **Database:** PostgreSQL (master + 2 replicas)
+- **Cache:** Redis (disponibilidade, TTL 1min)
+
+#### MS2: Pagamentos & Cobranças
+- **Responsabilidades:**
+  - Integração Stripe
+  - Criar/Confirmar/Estornar cobranças
+  - Webhook handling
+  - Histórico de transações
+
+- **Padrões:**
+  - Event Sourcing (EventStoreDB ou PostgreSQL + events table)
+  - Idempotência (anti-duplicação)
+  - Saga Pattern (compensação em caso de falha)
+
+- **Database:** PostgreSQL + Event Store
+- **Cache:** Redis (idempotency keys)
+
+#### MS3: Notificações
+- **Responsabilidades:**
+  - Email (SendGrid/Resend)
+  - SMS (Twilio) - opcional
+  - Push (Firebase) - opcional
+  - Event listeners (ReservaConfirmada, PagamentoRecusado, etc)
+
+- **Database:** MongoDB (histrico append-only)
+
+#### MS4: Gesto de Usuários & Auth
+- **Responsabilidades:**
+  - Registro/Login
+  - JWT generation (RS256 com private key)
+  - Refresh Token
+  - MFA (TOTP)
+  - OAuth2 (Google)
+  - User CRUD
+
+- **Database:** PostgreSQL
+- **Cache:** Redis (refresh tokens, sessions)
+
+### Fluxo de Autenticao (RS256)
+
+```
+1. User  MS4: POST /auth/login
+2. MS4: Gera JWT assinado com PRIVATE KEY (RS256)
+3. MS4  User: { accessToken, refreshToken }
+4. User  Kong: Authorization: Bearer <token>
+5. Kong: Valida JWT com PUBLIC KEY (MS4 distribuiu)
+6. Kong  MS1/MS2/MS3: Request (com headers de user)
+7. MS1/MS2/MS3: Valida JWT novamente (defense in depth)
+                Valida AUTORIZAO (user pode fazer ESTA ao?)
 ```
 
-**Por que Nginx simples?**
-- ✅ SSL/TLS termination
-- ✅ Load balancing entre instâncias
-- ✅ Compressão
-- ✅ Static file serving
-- ✅ Request logging para observabilidade
-- ❌ **NÃO** valida JWT (MS fazem isso)
-- ❌ **NÃO** faz rate limiting (MS fazem isso)
-- ❌ **NÃO** faz CORS (MS fazem isso)
+**Chaves:**
+- MS4 tem: PRIVATE KEY (assina tokens)
+- Kong, MS1, MS2, MS3 tm: PUBLIC KEY (valida tokens)
+- Rotao de chaves: Cada 90 dias (manual inicial, depois automatizado)
 
 ---
 
-## **2. CAMADA DE MICROSERVIÇOS (COM VALIDAÇÃO INDEPENDENTE)**
+## < Gerao de IDs: Base62 + Redis Sentinel
 
-### **MS1 - Reservas (Exemplo Completo)**
+### Deciso
+Usar Redis INCR + ofuscao Base62 com Redis Sentinel para HA.
 
-#### **Estrutura do Projeto**
-
+### Justificativa
 ```
-ms1-reservas/
-├── src/
-│   ├── modules/
-│   │   ├── reservas/
-│   │   │   ├── domain/
-│   │   │   │   ├── entities/
-│   │   │   │   │   ├── reserva.entity.ts
-│   │   │   │   │   └── disponibilidade.entity.ts
-│   │   │   │   ├── value-objects/
-│   │   │   │   │   ├── periodo-reserva.vo.ts
-│   │   │   │   │   └── status-reserva.vo.ts
-│   │   │   │   ├── repositories/
-│   │   │   │   │   └── reservas.repository.interface.ts
-│   │   │   │   └── events/
-│   │   │   │       ├── reserva-criada.event.ts
-│   │   │   │       ├── reserva-confirmada.event.ts
-│   │   │   │       └── reserva-cancelada.event.ts
-│   │   │   ├── application/
-│   │   │   │   ├── commands/
-│   │   │   │   │   ├── criar-reserva/
-│   │   │   │   │   │   ├── criar-reserva.command.ts
-│   │   │   │   │   │   └── criar-reserva.handler.ts
-│   │   │   │   │   ├── cancelar-reserva/
-│   │   │   │   │   │   ├── cancelar-reserva.command.ts
-│   │   │   │   │   │   └── cancelar-reserva.handler.ts
-│   │   │   │   │   └── confirmar-reserva/
-│   │   │   │   │       ├── confirmar-reserva.command.ts
-│   │   │   │   │       └── confirmar-reserva.handler.ts
-│   │   │   │   ├── queries/
-│   │   │   │   │   ├── obter-reserva/
-│   │   │   │   │   │   ├── obter-reserva.query.ts
-│   │   │   │   │   │   └── obter-reserva.handler.ts
-│   │   │   │   │   └── listar-reservas/
-│   │   │   │   │       ├── listar-reservas.query.ts
-│   │   │   │   │       └── listar-reservas.handler.ts
-│   │   │   │   └── sagas/
-│   │   │   │       └── reserva.saga.ts
-│   │   │   ├── infrastructure/
-│   │   │   │   ├── persistence/
-│   │   │   │   │   ├── typeorm/
-│   │   │   │   │   │   ├── entities/
-│   │   │   │   │   │   │   └── reserva.schema.ts
-│   │   │   │   │   │   └── repositories/
-│   │   │   │   │   │       └── reservas.repository.ts
-│   │   │   │   ├── messaging/
-│   │   │   │   │   └── rabbitmq/
-│   │   │   │   │       ├── publishers/
-│   │   │   │   │       │   └── reserva-events.publisher.ts
-│   │   │   │   │       └── consumers/
-│   │   │   │   │           └── pagamento-events.consumer.ts
-│   │   │   │   └── http/
-│   │   │   │       └── clients/
-│   │   │   │           └── pagamentos.client.ts
-│   │   │   └── presentation/
-│   │   │       ├── controllers/
-│   │   │       │   ├── reservas.controller.ts
-│   │   │       │   └── disponibilidade.controller.ts
-│   │   │       └── dto/
-│   │   │           ├── criar-reserva.dto.ts
-│   │   │           └── atualizar-reserva.dto.ts
-│   │   ├── espacos/
-│   │   └── clientes/
-│   ├── shared/
-│   │   ├── auth/
-│   │   │   ├── guards/
-│   │   │   │   ├── jwt-auth.guard.ts        ← MS1 valida JWT
-│   │   │   │   └── roles.guard.ts
-│   │   │   ├── strategies/
-│   │   │   │   └── jwt.strategy.ts
-│   │   │   └── decorators/
-│   │   │       ├── current-user.decorator.ts
-│   │   │       └── roles.decorator.ts
-│   │   ├── filters/
-│   │   │   └── http-exception.filter.ts
-│   │   ├── interceptors/
-│   │   │   ├── logging.interceptor.ts
-│   │   │   ├── timeout.interceptor.ts
-│   │   │   └── transform.interceptor.ts
-│   │   ├── pipes/
-│   │   │   └── validation.pipe.ts
-│   │   └── middleware/
-│   │       └── rate-limit.middleware.ts     ← MS1 faz rate limiting
-│   ├── config/
-│   │   ├── database.config.ts
-│   │   ├── redis.config.ts
-│   │   ├── rabbitmq.config.ts
-│   │   └── jwt.config.ts
-│   └── main.ts
-├── test/
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
-└── docker/
-    └── Dockerfile
+ Globalmente nico (Redis centralizado)
+ IDs curtos (6-8 chars: "res_a3Bx9")
+ Ordenados por criação
+ Anti-enumeration (ofuscao Base62)
+ Performance altssima (Redis in-memory)
+ HA garantida (Sentinel failover automtico)
 ```
 
-#### **main.ts - Bootstrap do MS1**
+### Arquitetura
+
+```
+MS1, MS2, MS3, MS4
+       
+  RedisIdGenerator
+       
+  Redis Sentinel (3 nodes)
+       
+  Redis Master (+ 2 slaves)
+```
+
+### Implementação
 
 ```typescript
-// src/main.ts
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import helmet from 'helmet';
-import * as compression from 'compression';
-import rateLimit from 'express-rate-limit';
-import { AppModule } from './app.module';
-
-async function bootstrap() {
-  const logger = new Logger('Bootstrap');
-  
-  const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
-  });
-
-  // ========================================
-  // SEGURANÇA - MS1 É RESPONSÁVEL
-  // ========================================
-  
-  // Helmet - Headers de segurança
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-      },
-    },
-    hsts: {
-      maxAge: 31536000,
-      includeSubDomains: true,
-      preload: true,
-    },
-  }));
-
-  // CORS - MS1 controla quem pode acessar
-  app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    credentials: true,
-    maxAge: 3600,
-  });
-
-  // Rate Limiting - MS1 protege contra abuso
-  app.use(
-    rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutos
-      max: 100, // Máximo 100 requests por IP
-      message: 'Muitas requisições deste IP, tente novamente em 15 minutos',
-      standardHeaders: true,
-      legacyHeaders: false,
-      // Store em Redis para distribuir entre instâncias
-      store: new RedisStore({
-        client: redisClient,
-        prefix: 'rl:',
-      }),
-    }),
-  );
-
-  // Compression
-  app.use(compression());
-
-  // ========================================
-  // VALIDAÇÃO GLOBAL
-  // ========================================
-  
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // Remove campos não declarados no DTO
-      forbidNonWhitelisted: true, // Erro se enviar campo não permitido
-      transform: true, // Transforma payloads em DTOs
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
-
-  // ========================================
-  // DOCUMENTAÇÃO (Swagger)
-  // ========================================
-  
-  const config = new DocumentBuilder()
-    .setTitle('MS1 - Reservas API')
-    .setDescription('API de gestão de reservas e disponibilidade')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',
-    )
-    .addTag('Reservas', 'Endpoints de reservas')
-    .addTag('Espacos', 'Endpoints de espaços')
-    .addTag('Disponibilidade', 'Endpoints de consulta de disponibilidade')
-    .build();
-    
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
-
-  // ========================================
-  // HEALTH CHECK
-  // ========================================
-  
-  app.use('/health', (req, res) => {
-    res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      service: 'ms1-reservas',
-      version: process.env.npm_package_version,
-    });
-  });
-
-  // ========================================
-  // GRACEFUL SHUTDOWN
-  // ========================================
-  
-  app.enableShutdownHooks();
-
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-
-  logger.log(`🚀 MS1 - Reservas rodando na porta ${port}`);
-  logger.log(`📚 Documentação disponível em http://localhost:${port}/api/docs`);
-  logger.log(`✅ Health check em http://localhost:${port}/health`);
-}
-
-bootstrap();
-```
-
-#### **JWT Guard - MS1 Valida Independentemente**
-
-```typescript
-// src/shared/auth/guards/jwt-auth.guard.ts
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-
+// src/shared/infrastructure/id-generator/redis-id.service.ts
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private reflector: Reflector) {
-    super();
-  }
-
-  canActivate(context: ExecutionContext) {
-    // Verificar se rota é pública
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    
-    if (isPublic) {
-      return true;
-    }
-
-    // Validar JWT normalmente
-    return super.canActivate(context);
-  }
-
-  handleRequest(err, user, info) {
-    if (err || !user) {
-      throw err || new UnauthorizedException('Token inválido ou expirado');
-    }
-    return user;
-  }
-}
-
-// src/shared/auth/strategies/jwt.strategy.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { ConfigService } from '@nestjs/config';
-
-@Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private configService: ConfigService) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET'),
-      algorithms: ['HS256'],
-    });
-  }
-
-  async validate(payload: any) {
-    // Aqui você pode fazer validações adicionais
-    // Ex: verificar se user ainda existe no DB, se está ativo, etc.
-    
-    if (!payload.sub || !payload.email) {
-      throw new UnauthorizedException('Token malformado');
-    }
-
-    return {
-      id: payload.sub,
-      email: payload.email,
-      role: payload.role,
-      permissions: payload.permissions || [],
-    };
-  }
-}
-```
-
-#### **Controller com Validação de Auth e Autorização**
-
-```typescript
-// src/modules/reservas/presentation/controllers/reservas.controller.ts
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  HttpStatus,
-  HttpCode,
-} from '@nestjs/common';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '@/shared/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '@/shared/auth/guards/roles.guard';
-import { Roles } from '@/shared/auth/decorators/roles.decorator';
-import { CurrentUser } from '@/shared/auth/decorators/current-user.decorator';
-import { Public } from '@/shared/auth/decorators/public.decorator';
-
-@ApiTags('Reservas')
-@Controller('api/v1/reservas')
-@UseGuards(JwtAuthGuard, RolesGuard)  // ← MS1 valida JWT
-@ApiBearerAuth('JWT-auth')
-export class ReservasController {
+export class RedisIdGenerator {
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
+    @Inject('REDIS_SENTINEL') private redis: Redis,
+    private base62: Base62Service,
   ) {}
 
-  // ========================================
-  // CRIAR RESERVA (autenticado)
-  // ========================================
-  
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Criar nova reserva' })
-  @ApiResponse({ status: 201, description: 'Reserva criada com sucesso' })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({ status: 400, description: 'Dados inválidos' })
-  @ApiResponse({ status: 409, description: 'Espaço não disponível' })
-  async criarReserva(
-    @Body() dto: CriarReservaDto,
-    @CurrentUser() user: User,  // ← Extraído do JWT validado
-  ) {
-    // MS1 valida autorização (regra de negócio)
-    // Ex: user pode criar reserva para ele mesmo ou se for admin
-    
-    const command = new CriarReservaCommand({
-      ...dto,
-      clienteId: user.id, // Usa ID do token (não confia no body!)
-    });
-    
-    return this.commandBus.execute(command);
-  }
-
-  // ========================================
-  // OBTER RESERVA (com autorização granular)
-  // ========================================
-  
-  @Get(':id')
-  @ApiOperation({ summary: 'Obter detalhes de uma reserva' })
-  @ApiParam({ name: 'id', type: 'string' })
-  @ApiResponse({ status: 200, description: 'Reserva encontrada' })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({ status: 403, description: 'Sem permissão' })
-  @ApiResponse({ status: 404, description: 'Reserva não encontrada' })
-  async obterReserva(
-    @Param('id') id: string,
-    @CurrentUser() user: User,
-  ) {
-    const query = new ObterReservaQuery(id);
-    const reserva = await this.queryBus.execute(query);
-    
-    // ========================================
-    // AUTORIZAÇÃO - MS1 DECIDE QUEM VÊ O QUÊ
-    // ========================================
-    
-    // User só pode ver suas próprias reservas (ou se for admin)
-    if (reserva.clienteId !== user.id && user.role !== 'ADMIN') {
-      throw new ForbiddenException('Você não tem permissão para ver esta reserva');
-    }
-    
-    return reserva;
-  }
-
-  // ========================================
-  // LISTAR RESERVAS (filtrado por user)
-  // ========================================
-  
-  @Get()
-  @ApiOperation({ summary: 'Listar reservas do usuário' })
-  async listarReservas(
-    @Query() filters: ListarReservasDto,
-    @CurrentUser() user: User,
-  ) {
-    // User normal só vê suas reservas
-    // Admin vê todas
-    const query = new ListarReservasQuery({
-      ...filters,
-      clienteId: user.role === 'ADMIN' ? filters.clienteId : user.id,
-    });
-    
-    return this.queryBus.execute(query);
-  }
-
-  // ========================================
-  // CANCELAR RESERVA (com validação de regra de negócio)
-  // ========================================
-  
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Cancelar reserva' })
-  async cancelarReserva(
-    @Param('id') id: string,
-    @CurrentUser() user: User,
-  ) {
-    // Buscar reserva primeiro
-    const query = new ObterReservaQuery(id);
-    const reserva = await this.queryBus.execute(query);
-    
-    // Validar autorização
-    if (reserva.clienteId !== user.id && user.role !== 'ADMIN') {
-      throw new ForbiddenException('Você não pode cancelar esta reserva');
-    }
-    
-    // Validar regra de negócio (cancelamento até 24h antes)
-    const horasAteReserva = differenceInHours(reserva.dataInicio, new Date());
-    if (horasAteReserva < 24 && user.role !== 'ADMIN') {
-      throw new BadRequestException(
-        'Cancelamento deve ser feito com pelo menos 24 horas de antecedência',
-      );
-    }
-    
-    const command = new CancelarReservaCommand(id, user.id);
-    await this.commandBus.execute(command);
-  }
-
-  // ========================================
-  // ENDPOINT PÚBLICO (sem autenticação)
-  // ========================================
-  
-  @Public()  // ← Decorator para marcar rota como pública
-  @Get('espacos/:id/disponibilidade')
-  @ApiOperation({ summary: 'Consultar disponibilidade de um espaço (público)' })
-  async consultarDisponibilidade(
-    @Param('id') espacoId: string,
-    @Query() dto: ConsultarDisponibilidadeDto,
-  ) {
-    // Endpoint público - qualquer pessoa pode consultar
-    const query = new ConsultarDisponibilidadeQuery(espacoId, dto);
-    return this.queryBus.execute(query);
-  }
-
-  // ========================================
-  // ADMIN ONLY (role-based authorization)
-  // ========================================
-  
-  @Get('admin/dashboard')
-  @Roles('ADMIN')  // ← Só admins podem acessar
-  @ApiOperation({ summary: 'Dashboard administrativo' })
-  async dashboard() {
-    const query = new ObterDashboardQuery();
-    return this.queryBus.execute(query);
+  async generate(prefix: string): Promise<string> {
+    const id = await this.redis.incr(`id:${prefix}`);
+    const encoded = this.base62.encode(id);
+    return `${prefix}_${encoded}`;
   }
 }
+
+// Uso:
+const reservaId = await idGenerator.generate('res'); // "res_a3Bx9"
+const clienteId = await idGenerator.generate('cli'); // "cli_b2Cy8"
+const pagamentoId = await idGenerator.generate('pag'); // "pag_c4Dz7"
 ```
 
-#### **Rate Limiting por Endpoint (Avançado)**
-
-```typescript
-// src/shared/decorators/rate-limit.decorator.ts
-import { SetMetadata } from '@nestjs/common';
-
-export const RATE_LIMIT_KEY = 'rateLimit';
-
-export interface RateLimitOptions {
-  points: number;  // Número de requests permitidos
-  duration: number;  // Duração da janela (em segundos)
-  keyPrefix?: string;
-}
-
-export const RateLimit = (options: RateLimitOptions) => 
-  SetMetadata(RATE_LIMIT_KEY, options);
-
-// src/shared/guards/rate-limit.guard.ts
-import { Injectable, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { RateLimiterRedis } from 'rate-limiter-flexible';
-import { Redis } from 'ioredis';
-import { RATE_LIMIT_KEY, RateLimitOptions } from '../decorators/rate-limit.decorator';
-
-@Injectable()
-export class RateLimitGuard implements CanActivate {
-  private rateLimiters: Map<string, RateLimiterRedis> = new Map();
-
-  constructor(
-    private reflector: Reflector,
-    private redisClient: Redis,
-  ) {}
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const options = this.reflector.get<RateLimitOptions>(
-      RATE_LIMIT_KEY,
-      context.getHandler(),
-    );
-
-    if (!options) {
-      return true;  // Sem rate limit definido
-    }
-
-    const request = context.switchToHttp().getRequest();
-    const key = this.getKey(request, options.keyPrefix);
-
-    const rateLimiter = this.getRateLimiter(options);
-
-    try {
-      await rateLimiter.consume(key);
-      return true;
-    } catch (rejRes) {
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.TOO_MANY_REQUESTS,
-          message: 'Muitas requisições. Tente novamente mais tarde.',
-          retryAfter: Math.ceil(rejRes.msBeforeNext / 1000),
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
-  }
-
-  private getKey(request: any, prefix?: string): string {
-    // Pode usar IP, userId, ou combinação
-    const userId = request.user?.id;
-    const ip = request.ip;
-    
-    const base = userId || ip;
-    return prefix ? `${prefix}:${base}` : base;
-  }
-
-  private getRateLimiter(options: RateLimitOptions): RateLimiterRedis {
-    const key = `${options.keyPrefix || 'default'}:${options.points}:${options.duration}`;
-    
-    if (!this.rateLimiters.has(key)) {
-      this.rateLimiters.set(
-        key,
-        new RateLimiterRedis({
-          storeClient: this.redisClient,
-          keyPrefix: options.keyPrefix || 'rl',
-          points: options.points,
-          duration: options.duration,
-        }),
-      );
-    }
-
-    return this.rateLimiters.get(key)!;
-  }
-}
-
-// Uso no controller
-@Controller('api/v1/reservas')
-export class ReservasController {
-  
-  @Post()
-  @RateLimit({ points: 10, duration: 60 })  // Máx 10 reservas por minuto
-  async criarReserva(@Body() dto: CriarReservaDto) {
-    // ...
-  }
-  
-  @Get()
-  @RateLimit({ points: 100, duration: 60 })  // Máx 100 consultas por minuto
-  async listarReservas() {
-    // ...
-  }
-}
-```
+### Failover Strategy
+- Se Redis Master cair: Sentinel promove slave automaticamente (<30s)
+- Se todo Redis cair: MS lana exception (fail fast, sem IDs duplicados)
 
 ---
 
-## **3. CQRS + Event Sourcing + Saga Pattern**
+## < Regras de Negcio (A DETALHAR)
 
-### **Command Handler (Criar Reserva)**
+### 1. Conflitos de Reserva
 
+| Cenário | Reserva A | Reserva B | Ação |
+|---------|-----------|-----------|------|
+| Overlap total | 10h-12h | 10h-12h | L BLOQUEAR |
+| Overlap parcial | 10h-12h | 11h-13h | L BLOQUEAR |
+| Back-to-back | 10h-12h | 12h-14h |  VERIFICAR BUFFER |
+| Sem conflito | 10h-12h | 14h-16h |  PERMITIR |
+
+**Regra de Buffer Time:**
+- Default: 15 minutos entre reservas
+- Configurável por espaço (ex: sala de reunião = 15min, auditório = 30min)
+- Admin pode override
+
+**SQL para detectar conflitos:**
+```sql
+SELECT * FROM reservas
+WHERE espaco_id = $1
+  AND status IN ('CONFIRMADA', 'PENDENTE_PAGAMENTO')
+  AND (
+    -- Overlap detection
+    (data_inicio < $3 AND data_fim > $2)
+    OR
+    -- Back-to-back com buffer
+    (data_fim + interval '15 minutes' > $2 AND data_inicio < $3)
+  );
+```
+
+### 2. Política de Cancelamento
+
+| Quando | Cliente | Admin | Reembolso |
+|--------|---------|-------|-----------|
+| >24h antes |  Pode |  Pode | 100% |
+| 12-24h antes |  Pode |  Pode | 50% |
+| <12h antes | L No pode |  Pode | 0% |
+| Após início | L No pode |  Pode (motivo) | 0% |
+
+**Excees:**
+- Force majeure (admin marca como "excepcional"): 100%
+- Problema no espaço (admin cancela): 100% + crédito bônus
+
+### 3. Precificação
+
+**Base:**
 ```typescript
-// src/modules/reservas/application/commands/criar-reserva/criar-reserva.handler.ts
-import { CommandHandler, ICommandHandler, EventBus } from '@nestjs/cqrs';
-import { Logger, ConflictException } from '@nestjs/common';
-import { CriarReservaCommand } from './criar-reserva.command';
-import { ReservasRepository } from '@/modules/reservas/domain/repositories/reservas.repository.interface';
-import { Reserva } from '@/modules/reservas/domain/entities/reserva.entity';
-import { PeriodoReserva } from '@/modules/reservas/domain/value-objects/periodo-reserva.vo';
-import { ReservaCriadaEvent } from '@/modules/reservas/domain/events/reserva-criada.event';
-import { PagamentosClient } from '@/modules/reservas/infrastructure/http/clients/pagamentos.client';
+valor = precoPorHora  duracaoEmHoras
+```
+
+**Multiplicadores (futuro):**
+```typescript
+interface Multiplicador {
+  horarioPico: number;      // Sex-Sab 18h-23h: 1.5x
+  diaUtil: number;          // Seg-Sex: 1.0x, Sab-Dom: 1.2x
+  antecedencia: number;     // >30 dias: 0.8x
+}
+```
+
+**Taxas Adicionais:**
+- Limpeza: R$ 50 fixo
+- Equipamentos extras: Varivel (projetor R$ 100, coffee break R$ 200)
+
+### 4. Limites Operacionais
+
+- Antecedência mínima: 2 horas
+- Antecedência máxima: 180 dias
+- Duração mínima: 1 hora
+- Duração máxima: 24 horas
+- Max reservas simultneas por cliente: 5
+
+---
+
+## = Padrões e Patterns
+
+### CQRS (Command Query Responsibility Segregation)
+
+**Commands (escrita):**
+```typescript
+// MS1 - Reservas
+class CriarReservaCommand {
+  constructor(
+    public readonly espacoId: string,
+    public readonly clienteId: string,
+    public readonly dataInicio: Date,
+    public readonly dataFim: Date,
+  ) {}
+}
 
 @CommandHandler(CriarReservaCommand)
-export class CriarReservaHandler implements ICommandHandler<CriarReservaCommand> {
-  private readonly logger = new Logger(CriarReservaHandler.name);
+export class CriarReservaHandler implements ICommandHandler {
+  async execute(command: CriarReservaCommand): Promise<Result<Reserva>> {
+    // 1. Validar domínio
+    const periodo = PeriodoReserva.create(command.dataInicio, command.dataFim);
+    if (periodo.isFailure) return Result.fail(periodo.error);
 
-  constructor(
-    private readonly reservasRepo: ReservasRepository,
-    private readonly eventBus: EventBus,
-    private readonly pagamentosClient: PagamentosClient,
-  ) {}
-
-  async execute(command: CriarReservaCommand): Promise<Reserva> {
-    this.logger.log(`Criando reserva para cliente ${command.clienteId}`);
-
-    // ========================================
-    // 1. VALIDAR DISPONIBILIDADE
-    // ========================================
-    
-    const periodo = new PeriodoReserva(command.dataInicio, command.dataFim);
-    
-    const reservasConflitantes = await this.reservasRepo.findOverlapping(
+    // 2. Verificar conflitos
+    const conflitos = await this.repo.findOverlapping(
       command.espacoId,
-      periodo,
+      periodo.value
     );
-
-    if (reservasConflitantes.length > 0) {
-      throw new ConflictException('Espaço não disponível neste período');
+    if (conflitos.length > 0) {
+      return Result.fail(new EspacoIndisponivelError());
     }
 
-    // ========================================
-    // 2. CRIAR RESERVA (Domain Entity)
-    // ========================================
-    
-    const reserva = Reserva.criar({
-      espacoId: command.espacoId,
-      clienteId: command.clienteId,
-      periodo,
-      valor: await this.calcularValor(command.espacoId, periodo),
-      status: 'PENDENTE_PAGAMENTO',
+    // 3. Criar agregado
+    const reserva = Reserva.create({
+      espacoId: EspacoId.create(command.espacoId),
+      clienteId: ClienteId.create(command.clienteId),
+      periodo: periodo.value,
     });
 
-    // ========================================
-    // 3. PERSISTIR (Transação)
-    // ========================================
-    
-    await this.reservasRepo.save(reserva);
+    // 4. Persistir
+    await this.repo.save(reserva);
 
-    this.logger.log(`Reserva ${reserva.id} criada com sucesso`);
+    // 5. Emitir eventos
+    await this.eventBus.publish(reserva.domainEvents);
 
-    // ========================================
-    // 4. EMITIR EVENTO (Event-Driven)
-    // ========================================
-    
-    const event = new ReservaCriadaEvent(
-      reserva.id,
-      reserva.espacoId,
-      reserva.clienteId,
-      reserva.valor,
-      reserva.periodo.dataInicio,
-      reserva.periodo.dataFim,
-    );
-
-    this.eventBus.publish(event);
-
-    return reserva;
-  }
-
-  private async calcularValor(espacoId: string, periodo: PeriodoReserva): Promise<number> {
-    // Lógica de cálculo de valor
-    const espaco = await this.espacosRepo.findById(espacoId);
-    const horas = periodo.duracaoEmHoras();
-    return espaco.precoPorHora * horas;
+    return Result.ok(reserva);
   }
 }
 ```
 
-### **Saga Pattern (Orquestração Distribuída)**
+**Queries (leitura):**
+```typescript
+@QueryHandler(ListarReservasQuery)
+export class ListarReservasHandler implements IQueryHandler {
+  async execute(query: ListarReservasQuery): Promise<ReservaDto[]> {
+    // Usa read replica
+    return this.repo.findMany({
+      clienteId: query.clienteId,
+      dataInicio: { gte: query.periodoInicio },
+    });
+  }
+}
+```
+
+### Saga Pattern (Orquestrao Distribuída)
+
+**Fluxo: Criar Reserva  Criar Cobrana  Confirmar Reserva**
 
 ```typescript
-// src/modules/reservas/application/sagas/reserva.saga.ts
-import { Injectable, Logger } from '@nestjs/common';
-import { ICommand, ofType, Saga } from '@nestjs/cqrs';
-import { Observable } from 'rxjs';
-import { delay, map, mergeMap } from 'rxjs/operators';
-import { ReservaCriadaEvent } from '@/modules/reservas/domain/events/reserva-criada.event';
-import { PagamentoAprovadoEvent } from '@/modules/pagamentos/domain/events/pagamento-aprovado.event';
-import { PagamentoRecusadoEvent } from '@/modules/pagamentos/domain/events/pagamento-recusado.event';
-import { CriarCobrancaCommand } from '@/modules/pagamentos/application/commands/criar-cobranca.command';
-import { ConfirmarReservaCommand } from '../commands/confirmar-reserva/confirmar-reserva.command';
-import { CancelarReservaCommand } from '../commands/cancelar-reserva/cancelar-reserva.command';
-import { EnviarNotificacaoCommand } from '@/modules/notificacoes/application/commands/enviar-notificacao.command';
-
 @Injectable()
 export class ReservaSaga {
-  private readonly logger = new Logger(ReservaSaga.name);
-
-  // ========================================
-  // SAGA 1: Reserva Criada → Criar Cobrança
-  // ========================================
-  
+  // 1. Reserva criada  Criar cobrança
   @Saga()
   reservaCriada = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
       ofType(ReservaCriadaEvent),
-      delay(100),  // Pequeno delay para garantir consistência
-      map((event: ReservaCriadaEvent) => {
-        this.logger.log(`[SAGA] Reserva ${event.reservaId} criada, criando cobrança...`);
-        
-        return new CriarCobrancaCommand(
-          event.reservaId,
-          event.clienteId,
-          event.valor,
-        );
-      }),
+      map((event) => new CriarCobrancaCommand(
+        event.reservaId,
+        event.clienteId,
+        event.valor,
+      )),
     );
   };
 
-  // ========================================
-  // SAGA 2: Pagamento Aprovado → Confirmar Reserva + Notificar
-  // ========================================
-  
+  // 2. Pagamento aprovado  Confirmar reserva
   @Saga()
   pagamentoAprovado = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
       ofType(PagamentoAprovadoEvent),
-      mergeMap((event: PagamentoAprovadoEvent) => {
-        this.logger.log(`[SAGA] Pagamento ${event.pagamentoId} aprovado, confirmando reserva...`);
-        
-        return [
-          // Confirmar reserva
-          new ConfirmarReservaCommand(event.reservaId, event.pagamentoId),
-          
-          // Enviar notificação
-          new EnviarNotificacaoCommand({
-            tipo: 'EMAIL',
-            template: 'reserva-confirmada',
-            destinatarioId: event.clienteId,
-            dados: {
-              reservaId: event.reservaId,
-            },
-          }),
-        ];
-      }),
+      mergeMap((event) => [
+        new ConfirmarReservaCommand(event.reservaId, event.pagamentoId),
+        new EnviarNotificacaoCommand('reserva-confirmada', event.clienteId),
+      ]),
     );
   };
 
-  // ========================================
-  // SAGA 3: Pagamento Recusado → Cancelar Reserva (Compensação)
-  // ========================================
-  
+  // 3. Pagamento recusado  Cancelar reserva (compensação)
   @Saga()
   pagamentoRecusado = (events$: Observable<any>): Observable<ICommand> => {
     return events$.pipe(
       ofType(PagamentoRecusadoEvent),
-      mergeMap((event: PagamentoRecusadoEvent) => {
-        this.logger.warn(`[SAGA] Pagamento ${event.pagamentoId} recusado, cancelando reserva...`);
-        
-        return [
-          // Cancelar reserva (transação compensatória)
-          new CancelarReservaCommand(
-            event.reservaId,
-            'PAGAMENTO_RECUSADO',
-          ),
-          
-          // Notificar falha
-          new EnviarNotificacaoCommand({
-            tipo: 'EMAIL',
-            template: 'pagamento-recusado',
-            destinatarioId: event.clienteId,
-            dados: {
-              reservaId: event.reservaId,
-              motivo: event.motivo,
-            },
-          }),
-        ];
-      }),
+      mergeMap((event) => [
+        new CancelarReservaCommand(event.reservaId, 'PAGAMENTO_RECUSADO'),
+        new EnviarNotificacaoCommand('pagamento-recusado', event.clienteId),
+      ]),
     );
   };
 }
 ```
 
-### **Event Sourcing (Opcional - Hardcore)**
+### Domain Events
 
 ```typescript
-// src/modules/reservas/infrastructure/persistence/event-store/reserva-event-store.repository.ts
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ReservaEventSchema } from './schemas/reserva-event.schema';
-import { DomainEvent } from '@/shared/domain/domain-event';
+// Domnio
+class Reserva extends AggregateRoot {
+  private domainEvents: DomainEvent[] = [];
 
-@Injectable()
-export class ReservaEventStoreRepository {
-  constructor(
-    @InjectRepository(ReservaEventSchema)
-    private readonly eventRepo: Repository<ReservaEventSchema>,
-  ) {}
-
-  // Salvar evento
-  async saveEvent(aggregateId: string, event: DomainEvent, version: number): Promise<void> {
-    await this.eventRepo.save({
-      aggregateId,
-      eventType: event.constructor.name,
-      eventData: JSON.stringify(event),
-      version,
-      occurredAt: new Date(),
-    });
+  criar(): void {
+    // Lógica de criação...
+    this.addDomainEvent(new ReservaCriadaEvent(
+      this.id,
+      this.espacoId,
+      this.clienteId,
+      this.valor,
+    ));
   }
 
-  // Buscar todos os eventos de um aggregate
-  async getEvents(aggregateId: string): Promise<DomainEvent[]> {
-    const events = await this.eventRepo.find({
-      where: { aggregateId },
-      order: { version: 'ASC' },
-    });
-
-    return events.map(e => JSON.parse(e.eventData));
-  }
-
-  // Reconstruir estado a partir de eventos
-  async reconstituirReserva(aggregateId: string): Promise<Reserva> {
-    const events = await this.getEvents(aggregateId);
-    return ReservaAggregate.fromEvents(events);
+  confirmar(pagamentoId: string): void {
+    this.status = 'CONFIRMADA';
+    this.pagamentoId = pagamentoId;
+    this.addDomainEvent(new ReservaConfirmadaEvent(this.id, pagamentoId));
   }
 }
 
-// Domain Aggregate
-export class ReservaAggregate extends AggregateRoot {
+// Repositório publica eventos ao salvar
+@Injectable()
+export class ReservasRepository {
+  async save(reserva: Reserva): Promise<void> {
+    await this.db.save(reserva);
+
+    // Outbox Pattern (garantia de entrega)
+    for (const event of reserva.domainEvents) {
+      await this.outbox.insert({
+        eventType: event.constructor.name,
+        payload: JSON.stringify(event),
+        status: 'PENDING',
+      });
+    }
+
+    reserva.clearDomainEvents();
+  }
+}
+```
+
+### Event Sourcing (MS2 - Pagamentos)
+
+```typescript
+// Event Store
+class PagamentoAggregate {
   private id: string;
   private version: number = 0;
-  private uncommittedEvents: DomainEvent[] = [];
-
-  // Estado atual
-  private espacoId: string;
-  private clienteId: string;
   private status: string;
-  private valor: number;
 
-  // Reconstruir estado a partir de eventos (Event Sourcing)
-  static fromEvents(events: DomainEvent[]): ReservaAggregate {
-    const aggregate = new ReservaAggregate();
-    events.forEach(event => aggregate.apply(event, false));
+  static fromEvents(events: DomainEvent[]): PagamentoAggregate {
+    const aggregate = new PagamentoAggregate();
+    events.forEach(event => aggregate.apply(event));
     return aggregate;
   }
 
-  apply(event: DomainEvent, isNew: boolean = true) {
-    // Aplicar evento ao estado
+  apply(event: DomainEvent): void {
     switch (event.constructor) {
-      case ReservaCriadaEvent:
-        this.whenReservaCriada(event as ReservaCriadaEvent);
+      case CobrancaCriadaEvent:
+        this.id = event.pagamentoId;
+        this.status = 'PENDENTE';
         break;
-      case ReservaConfirmadaEvent:
-        this.whenReservaConfirmada(event as ReservaConfirmadaEvent);
+      case PagamentoAprovadoEvent:
+        this.status = 'APROVADO';
         break;
-      case ReservaCanceladaEvent:
-        this.whenReservaCancelada(event as ReservaCanceladaEvent);
+      case PagamentoRecusadoEvent:
+        this.status = 'RECUSADO';
         break;
     }
-
-    if (isNew) {
-      this.uncommittedEvents.push(event);
-    }
-
     this.version++;
   }
+}
 
-  private whenReservaCriada(event: ReservaCriadaEvent) {
-    this.id = event.reservaId;
-    this.espacoId = event.espacoId;
-    this.clienteId = event.clienteId;
-    this.valor = event.valor;
-    this.status = 'PENDENTE_PAGAMENTO';
+// Uso
+const events = await eventStore.getEvents(pagamentoId);
+const pagamento = PagamentoAggregate.fromEvents(events);
+// Estado reconstrudo a partir de eventos
+```
+
+---
+
+## = Resiliência
+
+### Circuit Breakers
+
+```typescript
+// MS1  MS2 (criar cobrança)
+@Injectable()
+export class PagamentosClient {
+  private circuitBreaker = new CircuitBreaker({
+    failureThreshold: 5,      // 5 falhas consecutivas
+    successThreshold: 2,      // 2 sucessos para fechar
+    timeout: 5000,            // 5s timeout
+    resetTimeout: 30000,      // 30s Até tentar novamente
+  });
+
+  async criarCobranca(dto: CriarCobrancaDto): Promise<Cobranca> {
+    return this.circuitBreaker.execute(async () => {
+      return this.httpClient.post('/pagamentos', dto, {
+        timeout: 5000,
+        retry: {
+          count: 3,
+          delay: (attempt) => Math.pow(2, attempt) * 1000, // Backoff exponencial
+        },
+      });
+    });
+  }
+}
+```
+
+### Graceful Degradation
+
+```typescript
+// MS1 - Se MS2 estiver fora, ainda cria reserva
+async criarReserva(dto: CriarReservaDto): Promise<Reserva> {
+  const reserva = await this.criarReservaLocal(dto);
+
+  try {
+    await this.pagamentosClient.criarCobranca({
+      reservaId: reserva.id,
+      valor: reserva.valor,
+    });
+  } catch (error) {
+    // MS2 fora? Cria reserva com status "PENDENTE_COBRANCA"
+    // Event listener vai retry quando MS2 voltar
+    this.logger.warn('MS2 indisponível, reserva criada sem cobrança', {
+      reservaId: reserva.id,
+    });
+
+    // Emite evento para retry posterior
+    this.eventBus.publish(new ReservaSemCobrancaEvent(reserva.id));
   }
 
-  private whenReservaConfirmada(event: ReservaConfirmadaEvent) {
-    this.status = 'CONFIRMADA';
-  }
+  return reserva;
+}
+```
 
-  private whenReservaCancelada(event: ReservaCanceladaEvent) {
-    this.status = 'CANCELADA';
-  }
+### Dead Letter Queue
 
-  getUncommittedEvents(): DomainEvent[] {
-    return this.uncommittedEvents;
-  }
+```typescript
+// RabbitMQ config
+export const rabbitmqConfig = {
+  exchanges: [
+    { name: 'reservas.events', type: 'topic' },
+    { name: 'reservas.events.dlq', type: 'topic' },
+  ],
+  queues: [
+    {
+      name: 'reservas.confirmacao',
+      deadLetterExchange: 'reservas.events.dlq',
+      messageTtl: 60000, // 1 min
+    },
+  ],
+};
 
-  markEventsAsCommitted() {
-    this.uncommittedEvents = [];
+// Retry com backoff
+@EventPattern('reserva.confirmada')
+async handleReservaConfirmada(@Payload() event: any, @Ctx() context: RmqContext) {
+  const channel = context.getChannelRef();
+  const originalMsg = context.getMessage();
+
+  try {
+    await this.processEvent(event);
+    channel.ack(originalMsg);
+  } catch (error) {
+    const retryCount = originalMsg.properties.headers['x-retry-count'] || 0;
+
+    if (retryCount < 3) {
+      // Retry com backoff (1s, 2s, 4s)
+      setTimeout(() => {
+        channel.publish('reservas.events', 'reserva.confirmada',
+          Buffer.from(JSON.stringify(event)),
+          { headers: { 'x-retry-count': retryCount + 1 } }
+        );
+      }, Math.pow(2, retryCount) * 1000);
+
+      channel.ack(originalMsg);
+    } else {
+      // Após 3 tentativas  DLQ
+      channel.publish('reservas.events.dlq', 'reserva.confirmada.failed',
+        Buffer.from(JSON.stringify(event))
+      );
+      channel.ack(originalMsg);
+    }
   }
 }
 ```
 
 ---
 
-## **4. TESTES (FUNDAMENTAIS PARA SENIORIDADE)**
+## > Estratégia de Testes
 
-### **Teste Unitário (Command Handler)**
+### Pirmide de Testes
+
+```
+        E2E (5%)
+       /      \
+    Integration (15%)
+   /              \
+  Unit Tests (80%)
+```
+
+### 1. Testes Unitários (>90% coverage)
 
 ```typescript
-// src/modules/reservas/application/commands/criar-reserva/criar-reserva.handler.spec.ts
-import { Test, TestingModule } from '@nestjs/testing';
-import { EventBus } from '@nestjs/cqrs';
-import { ConflictException } from '@nestjs/common';
-import { CriarReservaHandler } from './criar-reserva.handler';
-import { CriarReservaCommand } from './criar-reserva.command';
-import { ReservasRepository } from '@/modules/reservas/domain/repositories/reservas.repository.interface';
-import { PagamentosClient } from '@/modules/reservas/infrastructure/http/clients/pagamentos.client';
-
+// MS1 - CriarReservaHandler.spec.ts
 describe('CriarReservaHandler', () => {
   let handler: CriarReservaHandler;
-  let reservasRepo: jest.Mocked<ReservasRepository>;
-  let eventBus: jest.Mocked<EventBus>;
-  let pagamentosClient: jest.Mocked<PagamentosClient>;
+  let repo: jest.Mocked<ReservasRepository>;
 
   beforeEach(async () => {
-    // Mocks
-    const reservasRepoMock = {
-      findOverlapping: jest.fn(),
-      save: jest.fn(),
-      findById: jest.fn(),
-    };
-
-    const eventBusMock = {
-      publish: jest.fn(),
-    };
-
-    const pagamentosClientMock = {
-      criarCobranca: jest.fn(),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       providers: [
         CriarReservaHandler,
-        {
-          provide: ReservasRepository,
-          useValue: reservasRepoMock,
-        },
-        {
-          provide: EventBus,
-          useValue: eventBusMock,
-        },
-        {
-          provide: PagamentosClient,
-          useValue: pagamentosClientMock,
-        },
+        { provide: ReservasRepository, useValue: createMock() },
       ],
     }).compile();
 
-    handler = module.get<CriarReservaHandler>(CriarReservaHandler);
-    reservasRepo = module.get(ReservasRepository);
-    eventBus = module.get(EventBus);
-    pagamentosClient = module.get(PagamentosClient);
+    handler = module.get(CriarReservaHandler);
+    repo = module.get(ReservasRepository);
   });
 
-  describe('execute', () => {
-    it('deve criar uma reserva com sucesso quando espaço está disponível', async () => {
-      // Arrange
-      const command = new CriarReservaCommand({
-        espacoId: 'espaco-123',
-        clienteId: 'cliente-456',
-        dataInicio: new Date('2025-01-01T10:00:00'),
-        dataFim: new Date('2025-01-01T12:00:00'),
-      });
+  it('deve criar reserva quando espaço disponível', async () => {
+    repo.findOverlapping.mockResolvedValue([]);
 
-      reservasRepo.findOverlapping.mockResolvedValue([]);  // Nenhum conflito
-      reservasRepo.save.mockResolvedValue({
-        id: 'reserva-789',
-        ...command,
-        status: 'PENDENTE_PAGAMENTO',
-      });
+    const command = new CriarReservaCommand(
+      'espaco-1',
+      'cliente-1',
+      new Date('2025-01-01T10:00'),
+      new Date('2025-01-01T12:00')
+    );
 
-      // Act
-      const result = await handler.execute(command);
+    const result = await handler.execute(command);
 
-      // Assert
-      expect(result).toBeDefined();
-      expect(result.id).toBe('reserva-789');
-      expect(result.status).toBe('PENDENTE_PAGAMENTO');
-      expect(reservasRepo.save).toHaveBeenCalledTimes(1);
-      expect(eventBus.publish).toHaveBeenCalledWith(
-        expect.objectContaining({
-          reservaId: 'reserva-789',
-        }),
-      );
-    });
+    expect(result.isSuccess).toBe(true);
+    expect(repo.save).toHaveBeenCalledTimes(1);
+  });
 
-    it('deve lançar ConflictException quando espaço não está disponível', async () => {
-      // Arrange
-      const command = new CriarReservaCommand({
-        espacoId: 'espaco-123',
-        clienteId: 'cliente-456',
-        dataInicio: new Date('2025-01-01T10:00:00'),
-        dataFim: new Date('2025-01-01T12:00:00'),
-      });
+  it('deve falhar quando espaço indisponível', async () => {
+    repo.findOverlapping.mockResolvedValue([{ id: 'outra-reserva' }]);
 
-      reservasRepo.findOverlapping.mockResolvedValue([
-        { id: 'outra-reserva', status: 'CONFIRMADA' },
-      ]);
+    const result = await handler.execute(command);
 
-      // Act & Assert
-      await expect(handler.execute(command)).rejects.toThrow(ConflictException);
-      expect(reservasRepo.save).not.toHaveBeenCalled();
-      expect(eventBus.publish).not.toHaveBeenCalled();
-    });
-
-    it('deve calcular valor correto baseado na duração', async () => {
-      // Arrange
-      const command = new CriarReservaCommand({
-        espacoId: 'espaco-123',
-        clienteId: 'cliente-456',
-        dataInicio: new Date('2025-01-01T10:00:00'),
-        dataFim: new Date('2025-01-01T14:00:00'),  // 4 horas
-      });
-
-      jest.spyOn(handler as any, 'calcularValor').mockResolvedValue(200);  // R$ 50/hora
-
-      reservasRepo.findOverlapping.mockResolvedValue([]);
-      reservasRepo.save.mockImplementation(async (reserva) => reserva);
-
-      // Act
-      const result = await handler.execute(command);
-
-      // Assert
-      expect(result.valor).toBe(200);
-    });
+    expect(result.isFailure).toBe(true);
+    expect(result.error).toBeInstanceOf(EspacoIndisponivelError);
   });
 });
 ```
 
-### **Teste de Integração (Controller + DB)**
+### 2. Testes de Integração (banco real)
 
 ```typescript
-// test/integration/reservas.integration.spec.ts
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from '@/app.module';
-import { PrismaService } from '@/shared/database/prisma.service';
-
-describe('Reservas Integration Tests', () => {
+// MS1 - reservas.integration.spec.ts
+describe('Reservas Integration', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let authToken: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+    app = module.createNestApplication();
     await app.init();
 
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-    
-    // Criar usuário e obter token
-    authToken = await createUserAndGetToken(app);
+    prisma = module.get(PrismaService);
   });
 
   afterAll(async () => {
@@ -1469,939 +644,954 @@ describe('Reservas Integration Tests', () => {
     await app.close();
   });
 
-  afterEach(async () => {
-    await prisma.reserva.deleteMany();
-  });
+  it('POST /reservas - deve criar e persistir no banco', async () => {
+    const espaco = await prisma.espaco.create({
+      data: { nome: 'Sala A', capacidade: 10, precoPorHora: 50 },
+    });
 
-  describe('POST /api/v1/reservas', () => {
-    it('deve criar uma reserva com sucesso', async () => {
-      // Arrange
-      const espaco = await prisma.espaco.create({
-        data: {
-          nome: 'Sala de Reunião A',
-          capacidade: 10,
-          precoPorHora: 50,
-        },
-      });
-
-      const dto = {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/reservas')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
         espacoId: espaco.id,
         dataInicio: '2025-01-01T10:00:00Z',
         dataFim: '2025-01-01T12:00:00Z',
-      };
-
-      // Act
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/reservas')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(dto)
-        .expect(201);
-
-      // Assert
-      expect(response.body).toHaveProperty('id');
-      expect(response.body.espacoId).toBe(espaco.id);
-      expect(response.body.status).toBe('PENDENTE_PAGAMENTO');
-
-      // Verificar no banco
-      const reservaDb = await prisma.reserva.findUnique({
-        where: { id: response.body.id },
-      });
-      expect(reservaDb).toBeDefined();
-    });
-
-    it('deve retornar 409 quando espaço não está disponível', async () => {
-      // Arrange
-      const espaco = await prisma.espaco.create({
-        data: { nome: 'Sala B', capacidade: 5, precoPorHora: 30 },
-      });
-
-      // Criar reserva existente
-      await prisma.reserva.create({
-        data: {
-          espacoId: espaco.id,
-          clienteId: 'cliente-123',
-          dataInicio: new Date('2025-01-01T10:00:00Z'),
-          dataFim: new Date('2025-01-01T12:00:00Z'),
-          status: 'CONFIRMADA',
-        },
-      });
-
-      const dto = {
-        espacoId: espaco.id,
-        dataInicio: '2025-01-01T11:00:00Z',  // Conflito!
-        dataFim: '2025-01-01T13:00:00Z',
-      };
-
-      // Act & Assert
-      await request(app.getHttpServer())
-        .post('/api/v1/reservas')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(dto)
-        .expect(409);
-    });
-
-    it('deve retornar 401 quando não autenticado', async () => {
-      // Act & Assert
-      await request(app.getHttpServer())
-        .post('/api/v1/reservas')
-        .send({})
-        .expect(401);
-    });
-
-    it('deve validar DTO e retornar 400', async () => {
-      // Act & Assert
-      const response = await request(app.getHttpServer())
-        .post('/api/v1/reservas')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          espacoId: 'abc',  // Inválido
-          // Faltando campos obrigatórios
-        })
-        .expect(400);
-
-      expect(response.body.message).toContain('validation');
-    });
-  });
-
-  describe('GET /api/v1/reservas/:id', () => {
-    it('deve retornar reserva quando usuário é dono', async () => {
-      // Arrange
-      const reserva = await createReserva(prisma, 'cliente-123');
-
-      // Act
-      const response = await request(app.getHttpServer())
-        .get(`/api/v1/reservas/${reserva.id}`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
-
-      // Assert
-      expect(response.body.id).toBe(reserva.id);
-    });
-
-    it('deve retornar 403 quando usuário não é dono', async () => {
-      // Arrange
-      const reserva = await createReserva(prisma, 'outro-cliente');
-
-      // Act & Assert
-      await request(app.getHttpServer())
-        .get(`/api/v1/reservas/${reserva.id}`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .expect(403);
-    });
-  });
-});
-
-// Helper functions
-async function createUserAndGetToken(app: INestApplication): Promise<string> {
-  const response = await request(app.getHttpServer())
-    .post('/api/v1/auth/login')
-    .send({
-      email: 'test@example.com',
-      password: 'senha123',
-    });
-
-  return response.body.accessToken;
-}
-```
-
-### **Teste E2E (Fluxo Completo)**
-
-```typescript
-// test/e2e/reserva-flow.e2e.spec.ts
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from '@/app.module';
-
-describe('Fluxo Completo de Reserva (E2E)', () => {
-  let app: INestApplication;
-  let userToken: string;
-  let espacoId: string;
-
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
-
-  afterAll(async () => {
-    await app.close();
-  });
-
-  it('deve executar fluxo completo: cadastro → login → criar reserva → pagar → confirmar', async () => {
-    // ========================================
-    // 1. CADASTRAR USUÁRIO
-    // ========================================
-    
-    const signupResponse = await request(app.getHttpServer())
-      .post('/api/v1/auth/signup')
-      .send({
-        nome: 'João Silva',
-        email: 'joao@example.com',
-        password: 'Senha@123',
-        telefone: '11999999999',
       })
       .expect(201);
 
-    expect(signupResponse.body).toHaveProperty('id');
+    const reservaDb = await prisma.reserva.findUnique({
+      where: { id: response.body.id },
+    });
 
-    // ========================================
-    // 2. LOGIN
-    // ========================================
-    
-    const loginResponse = await request(app.getHttpServer())
+    expect(reservaDb).toBeDefined();
+    expect(reservaDb.status).toBe('PENDENTE_PAGAMENTO');
+  });
+});
+```
+
+### 3. Testes E2E (fluxo completo)
+
+```typescript
+// test/e2e/reserva-flow.e2e.spec.ts
+describe('Fluxo Completo: Criar Reserva  Pagar  Confirmar', () => {
+  it('deve completar fluxo end-to-end', async () => {
+    // 1. Cadastro
+    const signupRes = await request(app)
+      .post('/api/v1/auth/signup')
+      .send({ nome: 'Joo', email: 'joao@test.com', password: 'Senha@123' })
+      .expect(201);
+
+    // 2. Login
+    const loginRes = await request(app)
       .post('/api/v1/auth/login')
-      .send({
-        email: 'joao@example.com',
-        password: 'Senha@123',
-      })
+      .send({ email: 'joao@test.com', password: 'Senha@123' })
       .expect(200);
 
-    userToken = loginResponse.body.accessToken;
-    expect(userToken).toBeDefined();
+    const token = loginRes.body.accessToken;
 
-    // ========================================
-    // 3. CONSULTAR ESPAÇOS DISPONÍVEIS
-    // ========================================
-    
-    const espacosResponse = await request(app.getHttpServer())
-      .get('/api/v1/espacos')
-      .query({ capacidade: 10 })
-      .expect(200);
-
-    expect(espacosResponse.body.length).toBeGreaterThan(0);
-    espacoId = espacosResponse.body[0].id;
-
-    // ========================================
-    // 4. CRIAR RESERVA
-    // ========================================
-    
-    const reservaResponse = await request(app.getHttpServer())
+    // 3. Criar reserva
+    const reservaRes = await request(app)
       .post('/api/v1/reservas')
-      .set('Authorization', `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({
-        espacoId,
+        espacoId: 'espaco-123',
         dataInicio: '2025-02-01T14:00:00Z',
         dataFim: '2025-02-01T16:00:00Z',
       })
       .expect(201);
 
-    const reservaId = reservaResponse.body.id;
-    expect(reservaResponse.body.status).toBe('PENDENTE_PAGAMENTO');
-    expect(reservaResponse.body).toHaveProperty('checkoutUrl');
+    const reservaId = reservaRes.body.id;
+    expect(reservaRes.body.status).toBe('PENDENTE_PAGAMENTO');
 
-    // ========================================
-    // 5. SIMULAR WEBHOOK DO STRIPE (Pagamento Aprovado)
-    // ========================================
-    
-    await request(app.getHttpServer())
+    // 4. Simular webhook Stripe (pagamento aprovado)
+    await request(app)
       .post('/api/v1/webhooks/stripe')
       .send({
         type: 'payment_intent.succeeded',
         data: {
           object: {
-            id: 'pi_123456',
-            metadata: {
-              reservaId,
-            },
+            id: 'pi_123',
+            metadata: { reservaId },
           },
         },
       })
       .expect(200);
 
-    // ========================================
-    // 6. AGUARDAR PROCESSAMENTO ASSÍNCRONO
-    // ========================================
-    
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // 5. Aguardar processamento assíncrono
+    await sleep(3000);
 
-    // ========================================
-    // 7. VERIFICAR QUE RESERVA FOI CONFIRMADA
-    // ========================================
-    
-    const reservaAtualizadaResponse = await request(app.getHttpServer())
+    // 6. Verificar confirmao
+    const reservaAtualizada = await request(app)
       .get(`/api/v1/reservas/${reservaId}`)
-      .set('Authorization', `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect(reservaAtualizadaResponse.body.status).toBe('CONFIRMADA');
-
-    // ========================================
-    // 8. VERIFICAR QUE EMAIL FOI ENVIADO
-    // (Precisa mockar o SendGrid em testes)
-    // ========================================
-    
-    // expect(sendGridMock.send).toHaveBeenCalledWith(
-    //   expect.objectContaining({
-    //     to: 'joao@example.com',
-    //     templateId: 'reserva-confirmada',
-    //   }),
-    // );
+    expect(reservaAtualizada.body.status).toBe('CONFIRMADA');
   });
 });
 ```
 
+### 4. Contract Testing (Pact)
+
+```typescript
+// MS1  MS2 contract
+describe('MS1  MS2 Contract', () => {
+  const provider = new Pact({
+    consumer: 'MS1-Reservas',
+    provider: 'MS2-Pagamentos',
+  });
+
+  it('deve criar cobrança no formato esperado', async () => {
+    await provider.addInteraction({
+      state: 'reserva criada',
+      uponReceiving: 'request para criar cobrança',
+      withRequest: {
+        method: 'POST',
+        path: '/api/v1/pagamentos',
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          reservaId: like('res_a3Bx9'),
+          clienteId: like('cli_b2Cy8'),
+          valor: like(100),
+        },
+      },
+      willRespondWith: {
+        status: 201,
+        body: {
+          id: like('pag_c4Dz7'),
+          status: 'PENDENTE',
+          checkoutUrl: like('https://stripe.com/checkout/xxx'),
+        },
+      },
+    });
+
+    // MS1 faz request
+    const response = await ms1Client.criarCobranca({
+      reservaId: 'res_a3Bx9',
+      clienteId: 'cli_b2Cy8',
+      valor: 100,
+    });
+
+    expect(response.id).toBe('pag_c4Dz7');
+  });
+});
+```
+
+### 5. Load Testing (k6)
+
+```javascript
+// load-tests/create-reserva.js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '2m', target: 100 },   // Ramp up
+    { duration: '5m', target: 100 },   // Stay
+    { duration: '2m', target: 200 },   // Spike
+    { duration: '5m', target: 200 },   // Stay
+    { duration: '2m', target: 0 },     // Ramp down
+  ],
+  thresholds: {
+    http_req_duration: ['p(95)<500'],  // 95% < 500ms
+    http_req_failed: ['rate<0.01'],    // <1% erro
+  },
+};
+
+export default function () {
+  const payload = JSON.stringify({
+    espacoId: 'espaco-123',
+    clienteId: `cliente-${__VU}`,
+    dataInicio: '2025-01-01T10:00:00Z',
+    dataFim: '2025-01-01T12:00:00Z',
+  });
+
+  const res = http.post(
+    'http://localhost:8000/api/v1/reservas',
+    payload,
+    { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } }
+  );
+
+  check(res, {
+    'status 201': (r) => r.status === 201,
+    'tempo <500ms': (r) => r.timings.duration < 500,
+  });
+
+  sleep(1);
+}
+```
+
 ---
 
-## **5. OBSERVABILIDADE - ESSENCIAL PARA PRODUÇÃO**
+##  Observabilidade
 
-### **Prometheus + Grafana**
+### Mtricas (Prometheus)
 
 ```typescript
 // src/shared/observability/metrics.service.ts
-import { Injectable } from '@nestjs/common';
-import { Counter, Histogram, Gauge, register } from 'prom-client';
-
 @Injectable()
 export class MetricsService {
   // Contadores
-  public readonly httpRequestsTotal = new Counter({
+  httpRequestsTotal = new Counter({
     name: 'http_requests_total',
-    help: 'Total de requisições HTTP',
+    help: 'Total de requests HTTP',
     labelNames: ['method', 'route', 'status_code'],
   });
 
-  public readonly reservasCriadasTotal = new Counter({
+  reservasCriadas = new Counter({
     name: 'reservas_criadas_total',
     help: 'Total de reservas criadas',
     labelNames: ['espaco_id', 'status'],
   });
 
-  // Histogramas (para latência)
-  public readonly httpRequestDuration = new Histogram({
+  // Histogramas (latência)
+  httpRequestDuration = new Histogram({
     name: 'http_request_duration_seconds',
-    help: 'Duração das requisições HTTP em segundos',
-    labelNames: ['method', 'route', 'status_code'],
-    buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
+    help: 'Duração de requests em segundos',
+    labelNames: ['method', 'route'],
+    buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 10],
   });
 
-  public readonly dbQueryDuration = new Histogram({
-    name: 'db_query_duration_seconds',
-    help: 'Duração das queries ao banco de dados',
-    labelNames: ['operation', 'table'],
-    buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1],
-  });
-
-  // Gauges (valores instantâneos)
-  public readonly activeReservations = new Gauge({
+  // Gauges (valores instantneos)
+  activeReservations = new Gauge({
     name: 'active_reservations',
-    help: 'Número de reservas ativas no momento',
+    help: 'Reservas ativas agora',
   });
-
-  public readonly availableSpaces = new Gauge({
-    name: 'available_spaces',
-    help: 'Número de espaços disponíveis',
-  });
-
-  getMetrics(): Promise<string> {
-    return register.metrics();
-  }
-}
-
-// Interceptor para métricas HTTP
-@Injectable()
-export class MetricsInterceptor implements NestInterceptor {
-  constructor(private readonly metricsService: MetricsService) {}
-
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest();
-    const { method, route } = request;
-    const start = Date.now();
-
-    return next.handle().pipe(
-      tap(() => {
-        const response = context.switchToHttp().getResponse();
-        const duration = (Date.now() - start) / 1000;
-
-        // Incrementar contador
-        this.metricsService.httpRequestsTotal.inc({
-          method,
-          route: route?.path || 'unknown',
-          status_code: response.statusCode,
-        });
-
-        // Registrar latência
-        this.metricsService.httpRequestDuration.observe(
-          {
-            method,
-            route: route?.path || 'unknown',
-            status_code: response.statusCode,
-          },
-          duration,
-        );
-      }),
-    );
-  }
-}
-
-// Controller de métricas
-@Controller('metrics')
-export class MetricsController {
-  constructor(private readonly metricsService: MetricsService) {}
-
-  @Get()
-  @Public()
-  async getMetrics(): Promise<string> {
-    return this.metricsService.getMetrics();
-  }
 }
 ```
 
-### **Distributed Tracing (Jaeger)**
+### Distributed Tracing (Jaeger)
 
 ```typescript
-// src/shared/observability/tracing.service.ts
-import { Injectable, OnModuleInit } from '@nestjs/common';
+// OpenTelemetry setup
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
-import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 
-@Injectable()
-export class TracingService implements OnModuleInit {
-  private sdk: NodeSDK;
+const sdk = new NodeSDK({
+  traceExporter: new JaegerExporter({
+    endpoint: 'http://jaeger:14268/api/traces',
+  }),
+  serviceName: 'ms1-reservas',
+});
 
-  onModuleInit() {
-    this.sdk = new NodeSDK({
-      resource: new Resource({
-        [SemanticResourceAttributes.SERVICE_NAME]: 'ms1-reservas',
-        [SemanticResourceAttributes.SERVICE_VERSION]: '1.0.0',
-      }),
-      traceExporter: new JaegerExporter({
-        endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
-      }),
-      instrumentations: [
-        getNodeAutoInstrumentations({
-          '@opentelemetry/instrumentation-http': { enabled: true },
-          '@opentelemetry/instrumentation-express': { enabled: true },
-          '@opentelemetry/instrumentation-pg': { enabled: true },
-          '@opentelemetry/instrumentation-redis': { enabled: true },
-        }),
-      ],
-    });
+sdk.start();
 
-    this.sdk.start();
-  }
+// Instrumentação manual
+import { trace } from '@opentelemetry/api';
 
-  async onModuleDestroy() {
-    await this.sdk.shutdown();
-  }
+async criarReserva(dto: CriarReservaDto): Promise<Reserva> {
+  const tracer = trace.getTracer('reservas-service');
+
+  return tracer.startActiveSpan('criarReserva', async (span) => {
+    span.setAttribute('reserva.espaco_id', dto.espacoId);
+
+    try {
+      const reserva = await this.repo.save(dto);
+      span.setStatus({ code: SpanStatusCode.OK });
+      return reserva;
+    } catch (error) {
+      span.setStatus({ code: SpanStatusCode.ERROR });
+      span.recordException(error);
+      throw error;
+    } finally {
+      span.end();
+    }
+  });
 }
+```
 
-// Uso manual de tracing
-import { trace, context, SpanStatusCode } from '@opentelemetry/api';
+### Logs Estruturados (ELK)
 
-export class ReservasService {
-  async criarReserva(dto: CriarReservaDto): Promise<Reserva> {
-    const tracer = trace.getTracer('reservas-service');
-    
-    // Criar span principal
-    return tracer.startActiveSpan('criarReserva', async (span) => {
-      try {
-        span.setAttribute('reserva.espaco_id', dto.espacoId);
-        span.setAttribute('reserva.cliente_id', dto.clienteId);
+```typescript
+// Winston + Elasticsearch
+const logger = WinstonModule.createLogger({
+  transports: [
+    new ElasticsearchTransport({
+      level: 'info',
+      clientOpts: { node: 'http://elasticsearch:9200' },
+      index: 'logs-ms1-reservas',
+    }),
+  ],
+});
 
-        // Span para validação
-        await tracer.startActiveSpan('validarDisponibilidade', async (validationSpan) => {
-          try {
-            await this.validarDisponibilidade(dto);
-            validationSpan.setStatus({ code: SpanStatusCode.OK });
-          } finally {
-            validationSpan.end();
-          }
-        });
+// Uso
+this.logger.log({
+  message: 'Reserva criada',
+  reservaId: reserva.id,
+  espacoId: reserva.espacoId,
+  clienteId: reserva.clienteId,
+  valor: reserva.valor,
+});
+```
 
-        // Span para salvar no DB
-        const reserva = await tracer.startActiveSpan('salvarReserva', async (dbSpan) => {
-          try {
-            const result = await this.repo.save(dto);
-            dbSpan.setAttribute('reserva.id', result.id);
-            dbSpan.setStatus({ code: SpanStatusCode.OK });
-            return result;
-          } finally {
-            dbSpan.end();
-          }
-        });
+### Dashboards Grafana
 
-        span.setStatus({ code: SpanStatusCode.OK });
-        return reserva;
-      } catch (error) {
-        span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
-        span.recordException(error);
-        throw error;
-      } finally {
-        span.end();
-      }
-    });
-  }
-}
+**Dashboard: Reservas Overview**
+- Request rate (req/s)
+- Response time (p50, p95, p99)
+- Error rate (%)
+- Reservas criadas/hora
+- Taxa de ocupação por espaço
+- RabbitMQ queue depth
+- Redis cache hit rate
+
+---
+
+## = Estrutura de Pastas (DDD)
+
+```
+apps/
+ ms1-reservas/
+    src/
+       modules/
+          reservas/
+             domain/
+                entities/
+                   reserva.entity.ts
+                value-objects/
+                   periodo-reserva.vo.ts
+                   money.vo.ts
+                repositories/
+                   reservas.repository.interface.ts
+                events/
+                    reserva-criada.event.ts
+                    reserva-confirmada.event.ts
+             application/
+                commands/
+                   criar-reserva/
+                      criar-reserva.command.ts
+                      criar-reserva.handler.ts
+                queries/
+                   listar-reservas/
+                       listar-reservas.query.ts
+                       listar-reservas.handler.ts
+                sagas/
+                    reserva.saga.ts
+             infrastructure/
+                persistence/
+                   typeorm/
+                       entities/
+                          reserva.schema.ts
+                       repositories/
+                           reservas.repository.ts
+                messaging/
+                   rabbitmq/
+                       reserva-events.publisher.ts
+                http/
+                    clients/
+                        pagamentos.client.ts
+             presentation/
+                 controllers/
+                    reservas.controller.ts
+                 dto/
+                     criar-reserva.dto.ts
+                     reserva-response.dto.ts
+          espacos/
+              ... (mesma estrutura)
+       shared/
+          auth/
+             guards/
+                jwt-auth.guard.ts
+                roles.guard.ts
+             decorators/
+                 current-user.decorator.ts
+          filters/
+          interceptors/
+          pipes/
+       config/
+           database.config.ts
+           rabbitmq.config.ts
+    test/
+        unit/
+        integration/
+        e2e/
+ ms2-pagamentos/
+ ms3-auth/
+ packages/
+     @app/domain/
+        value-objects/
+           email.vo.ts
+           cpf.vo.ts
+        base/
+            entity.base.ts
+            aggregate-root.base.ts
+     @app/common/
+        decorators/
+        filters/
+        utils/
+     @app/testing/
+         mocks/
+         factories/
+ ms4-notificacoes/
 ```
 
 ---
 
-## **6. DOCKER & KUBERNETES**
+## = Plano de Implementação (14-20 semanas)
 
-### **Docker Compose (Desenvolvimento)**
+### FASE 0: Fundação (1-2 semanas)
 
+**Objetivos:**
+- Setup monorepo
+- Docker Compose base
+- CI/CD pipeline
+- Shared libraries
+
+**Tarefas:**
+- [ ] Criar monorepo (Turborepo)
+- [ ] Configurar ESLint, Prettier, Biome
+- [ ] Docker Compose:
+  - [ ] Kong + PostgreSQL (Kong DB)
+  - [ ] Redis Sentinel (master + 3 sentinels)
+  - [ ] PostgreSQL (4 databases)
+  - [ ] RabbitMQ
+  - [ ] Prometheus + Grafana
+  - [ ] Jaeger
+  - [ ] Elasticsearch + Kibana
+- [ ] GitHub Actions:
+  - [ ] Lint + Format
+  - [ ] Unit tests
+  - [ ] Build Docker images
+- [ ] Shared packages:
+  - [ ] @app/domain (Value Objects, base entities)
+  - [ ] @app/common (guards, filters, decorators)
+  - [ ] @app/testing (mocks, factories)
+
+---
+
+### FASE 1: MS4 (Auth) - Primeiro sempre (2-3 semanas)
+
+**Por que primeiro?**
+Todos outros MS dependem de autenticao.
+
+**Funcionalidades:**
+- [ ] Registro de usuário
+- [ ] Login com JWT (RS256)
+- [ ] Refresh Token
+- [ ] MFA (TOTP com speakeasy)
+- [ ] OAuth2 (Google via Passport)
+- [ ] User CRUD
+- [ ] Distribuir public key para outros MS
+
+**Testes:**
+- [ ] Unit (>90% coverage)
+- [ ] Integration (testcontainers)
+- [ ] E2E (fluxo completo auth)
+
+**Kong:**
+- [ ] Configurar rotas pblicas: `/auth/login`, `/auth/register`
+- [ ] Configurar rotas protegidas: `/users/*`
+- [ ] Plugin JWT validation
+
+**Observabilidade:**
+- [ ] Mtricas (login rate, token generation rate)
+- [ ] Tracing (cada request tem trace ID)
+- [ ] Logs estruturados
+
+---
+
+### FASE 2: MS1 (Reservas) - Core do Negcio (3-4 semanas)
+
+**DDD Exemplar:**
+- [ ] Agregados: Reserva (raiz), Disponibilidade
+- [ ] Value Objects: PeriodoReserva, Money, EspacoId
+- [ ] Domain Events: ReservaCriada, ReservaConfirmada, ReservaCancelada
+- [ ] Repositories: ReservasRepo, EspacosRepo
+
+**Funcionalidades:**
+- [ ] CRUD de Espaços
+- [ ] Criar Reserva (com validao de conflitos)
+- [ ] Cancelar Reserva (com regras de poltica)
+- [ ] Confirmar Reserva (aps pagamento)
+- [ ] Listar Reservas (com filtros)
+- [ ] Consultar Disponibilidade
+
+**CQRS:**
+- [ ] Commands: CriarReserva, CancelarReserva, ConfirmarReserva
+- [ ] Queries: ObterReserva, ListarReservas, ConsultarDisponibilidade
+
+**Performance:**
+- [ ] Indexes: `(espaco_id, data_inicio, data_fim)`
+- [ ] Cache Redis (disponibilidade, TTL 1min)
+- [ ] Read replica para queries pesadas
+
+**Testes:**
+- [ ] Unit (agregados, value objects, handlers)
+- [ ] Integration (repository, conflitos)
+- [ ] E2E (criar  cancelar)
+
+---
+
+### FASE 3: MS2 (Pagamentos) - Integração Crítica (2-3 semanas)
+
+**Funcionalidades:**
+- [ ] Integração Stripe
+- [ ] Criar Cobrana
+- [ ] Webhook Stripe (confirmar/rejeitar)
+- [ ] Estorno (cancelamento de reserva)
+- [ ] Listar Transaes
+
+**Event Sourcing:**
+- [ ] EventStoreDB setup
+- [ ] Event stream para cada pagamento
+- [ ] Reconstruir estado a partir de eventos
+- [ ] Snapshotting (a cada 100 eventos)
+
+**Idempotência:**
+- [ ] Redis cache (chave: reservaId)
+- [ ] Evitar cobranças duplicadas
+
+**Saga:**
+- [ ] ReservaCriada  CriarCobranca
+- [ ] PagamentoAprovado  ConfirmarReserva
+- [ ] PagamentoRecusado  CancelarReserva (compensação)
+
+**Resiliência:**
+- [ ] Circuit Breaker para Stripe
+- [ ] Retry com backoff (3 tentativas)
+- [ ] Dead Letter Queue
+
+**Testes:**
+- [ ] Unit (event sourcing, idempotncia)
+- [ ] Integration (webhook handling)
+- [ ] E2E (fluxo completo com mock Stripe)
+
+---
+
+### FASE 4: MS3 (Notificações) - Fire-and-Forget (1-2 semanas)
+
+**Funcionalidades:**
+- [ ] Email (SendGrid ou Resend)
+- [ ] SMS (Twilio) - opcional
+- [ ] Push (Firebase) - opcional
+
+**Templates:**
+- [ ] Reserva Confirmada
+- [ ] Reserva Cancelada
+- [ ] Lembrete (1 dia antes)
+- [ ] Pagamento Aprovado/Recusado
+
+**Event Listeners:**
+- [ ] ReservaConfirmada  Enviar Email
+- [ ] ReservaCancelada  Enviar Email
+- [ ] PagamentoRecusado  Enviar Email
+
+**Histórico:**
+- [ ] MongoDB (append-only log)
+- [ ] Query: "Quais emails para clienteX?"
+
+**Testes:**
+- [ ] Unit (template rendering)
+- [ ] Integration (mock SendGrid)
+
+---
+
+### FASE 5: Integração e Resiliência (2-3 semanas)
+
+**Circuit Breakers:**
+- [ ] MS1  MS2 (criar cobrança)
+- [ ] MS1  MS4 (validar permissões - se necessário)
+
+**Contract Testing (Pact):**
+- [ ] MS1  MS2 contracts
+- [ ] MS1  MS4 contracts
+
+**Load Testing:**
+- [ ] k6 scenarios:
+  - [ ] Normal: 100 req/s  10min
+  - [ ] Pico: 500 req/s  5min
+  - [ ] Stress: aumentar Até quebrar
+- [ ] Analisar bottlenecks
+- [ ] Otimizaes necessrias
+
+**Chaos Engineering (opcional hardcore):**
+- [ ] Toxiproxy: injetar latência/erros
+- [ ] Derrubar MS2 aleatoriamente
+- [ ] Verificar degradao graceful
+
+---
+
+### FASE 6: Observabilidade Showcase (1-2 semanas)
+
+**Grafana Dashboards:**
+- [ ] Overview Dashboard:
+  - [ ] Request rate (req/s)
+  - [ ] Error rate (%)
+  - [ ] Response time (p50, p95, p99)
+- [ ] Per-service Dashboard
+- [ ] Business Metrics:
+  - [ ] Reservas criadas/hora
+  - [ ] Taxa de ocupação por espaço
+  - [ ] Receita total
+- [ ] Infrastructure:
+  - [ ] RabbitMQ queue depth
+  - [ ] Redis memory usage
+  - [ ] PostgreSQL connections
+
+**Distributed Tracing:**
+- [ ] Trace completo: Cliente  Kong  MS1  MS2  Stripe
+- [ ] Identificar bottlenecks
+- [ ] Screenshots de traces reais
+
+**Alerting:**
+- [ ] Error rate > 1%
+- [ ] P95 latency > 500ms
+- [ ] RabbitMQ queue > 1000 msgs
+- [ ] Redis memory > 80%
+
+---
+
+### FASE 7: Documentação Final (1 semana)
+
+**ADRs (Architecture Decision Records):**
+- [ ] ADR-001: Por que NestJS? (vs Express/Fastify)
+- [ ] ADR-002: Por que Kong? (vs Nginx/AWS API Gateway)
+- [ ] ADR-003: Por que Base62+Redis para IDs? (vs UUID/Snowflake)
+- [ ] ADR-004: Por que PostgreSQL para Reservas? (vs MongoDB)
+- [ ] ADR-005: Por que RabbitMQ? (vs Kafka/AWS SQS)
+- [ ] ADR-006: Por que Event Sourcing no MS2? (trade-offs)
+- [ ] ADR-007: Por que RS256? (vs HS256)
+
+**Diagramas:**
+- [ ] C4: Context (sistema inteiro)
+- [ ] C4: Container (microserviços)
+- [ ] C4: Component (MS1 interno)
+- [ ] Sequence Diagrams (fluxos crticos):
+  - [ ] Criar Reserva  Pagar  Confirmar
+  - [ ] Cancelar Reserva  Estornar
+  - [ ] Autenticao (login, refresh token)
+- [ ] Deployment Diagram (Docker Compose)
+
+**OpenAPI:**
+- [ ] Swagger completo de cada MS
+- [ ] Exportar para arquivo `.yaml`
+
+**Runbooks:**
+- [ ] Como fazer rollback de deploy
+- [ ] Como fazer failover do Redis
+- [ ] Como debugar evento perdido no RabbitMQ
+- [ ] Como investigar lentidão (tracing + logs)
+
+**README Principal:**
+- [ ] Visão geral do projeto
+- [ ] Como rodar local (Docker Compose)
+- [ ] Como rodar testes
+- [ ] Screenshots de dashboards
+- [ ] Links para ADRs, diagramas
+
+---
+
+## = Próximos Passos Imediatos
+
+### 1. Criar ADRs Crticos (2-3 dias)
+
+Template ADR:
+```markdown
+# ADR-001: Escolha do Framework Backend (NestJS)
+
+## Status
+Aceito
+
+## Contexto
+Precisamos escolher framework Node.js para microserviços.
+
+Opções consideradas:
+- NestJS
+- Express puro
+- Fastify
+
+## Deciso
+Usar NestJS.
+
+## Consequências
+
+PRÓS:
+-  TypeScript first-class
+-  Dependency Injection nativo
+-  Suporte built-in para CQRS, Event Sourcing
+-  Estrutura opinativa (menos decisões)
+-  Decorators (@Controller, @Injectable)
+
+CONTRAS:
+- L Curva de aprendizado
+- L Overhead de abstrações
+- L ~5% mais lento que Express puro
+
+## Quando Revisitar
+Se performance virar gargalo crtico (>10k req/s) e profiling apontar NestJS como bottleneck.
+```
+
+**Criar:**
+- [ ] ADR-001: NestJS vs Express/Fastify
+- [ ] ADR-002: Kong vs Nginx vs AWS API Gateway
+- [ ] ADR-003: Base62+Redis vs UUID vs Snowflake
+- [ ] ADR-004: PostgreSQL vs MongoDB para Reservas
+- [ ] ADR-005: RabbitMQ vs Kafka vs AWS SQS
+
+---
+
+### 2. Detalhar Regras de Negcio (1-2 dias)
+
+**Criar arquivos:**
+
+`docs/business-rules/conflitos-reserva.md`:
+```markdown
+# Regras de Conflito de Reservas
+
+## Matriz de Conflitos
+
+| Reserva A | Reserva B | Conflito? | Motivo |
+|-----------|-----------|-----------|--------|
+| 10h-12h | 10h-12h |  SIM | Overlap total |
+| 10h-12h | 11h-13h |  SIM | Overlap parcial |
+| 10h-12h | 12h-14h |  DEPENDE | Buffer time |
+| 10h-12h | 12h15-14h | L NO | 15min buffer OK |
+
+## SQL de Detecção
+
+```sql
+SELECT * FROM reservas
+WHERE espaco_id = $1
+  AND status IN ('CONFIRMADA', 'PENDENTE_PAGAMENTO')
+  AND (
+    (data_inicio < $3 AND data_fim > $2) -- Overlap
+    OR
+    (data_fim + interval '15 minutes' > $2 AND data_inicio < $3) -- Buffer
+  );
+```
+
+## Buffer Time
+
+- **Padro:** 15 minutos
+- **Configurável:** Por espaço (campo `buffer_minutes`)
+- **Exemplos:**
+  - Sala reunião: 15min (limpeza rápida)
+  - Auditrio: 30min (limpeza + setup)
+  - Quadra esportiva: 0min (sem buffer)
+```
+
+`docs/business-rules/cancelamento.md`:
+`docs/business-rules/precificacao.md`:
+
+---
+
+### 3. Setup Inicial (3-5 dias)
+
+**Criar estrutura:**
+```bash
+# Criar monorepo
+npx create-turbo@latest
+
+# Estrutura
+booking-management-system/
+ apps/
+    ms1-reservas/
+    ms2-pagamentos/
+    ms3-notificacoes/
+    ms4-auth/
+ packages/
+    @app/domain/
+    @app/common/
+    @app/testing/
+ docker/
+    docker-compose.yml
+    kong/
+       kong.yml (declarative config)
+    redis/
+       sentinel.conf
+    postgres/
+        init.sql
+ docs/
+    adrs/
+    architecture/
+    business-rules/
+    runbooks/
+ .github/
+    workflows/
+        ci.yml
+ README.md
+```
+
+**Docker Compose v1:**
 ```yaml
-# docker-compose.yml
 version: '3.8'
 
 services:
-  # ========================================
-  # Nginx (Reverse Proxy)
-  # ========================================
-  nginx:
-    image: nginx:alpine
+  # Kong
+  kong-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kong
+
+  kong:
+    image: kong:3.4-alpine
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
     ports:
-      - "80:80"
-      - "443:443"
+      - "8000:8000"  # Proxy
+      - "8001:8001"  # Admin API
+    depends_on:
+      - kong-db
+
+  # Redis Sentinel
+  redis-master:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+
+  redis-sentinel-1:
+    image: redis:7-alpine
+    command: redis-sentinel /etc/redis/sentinel.conf
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - ms1-instance-1
-      - ms1-instance-2
-      - ms2
-      - ms3
-      - ms4
-    networks:
-      - frontend
-      - backend
+      - ./docker/redis/sentinel.conf:/etc/redis/sentinel.conf
 
-  # ========================================
-  # MS1 - Reservas (3 instâncias)
-  # ========================================
-  ms1-instance-1:
-    build:
-      context: ./ms1-reservas
-      dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://admin:secret@postgres-ms1:5432/reservas
-      - REDIS_URL=redis://redis-ms1:6379
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      - postgres-ms1
-      - redis-ms1
-      - rabbitmq
-    networks:
-      - backend
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-
-  ms1-instance-2:
-    build:
-      context: ./ms1-reservas
-      dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://admin:secret@postgres-ms1:5432/reservas
-      - REDIS_URL=redis://redis-ms1:6379
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      - postgres-ms1
-      - redis-ms1
-      - rabbitmq
-    networks:
-      - backend
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-
-  # ========================================
-  # MS2 - Pagamentos
-  # ========================================
-  ms2:
-    build:
-      context: ./ms2-pagamentos
-      dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://admin:secret@postgres-ms2:5432/pagamentos
-      - REDIS_URL=redis://redis-ms2:6379
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-    depends_on:
-      - postgres-ms2
-      - redis-ms2
-      - rabbitmq
-    networks:
-      - backend
-
-  # ========================================
-  # MS3 - Notificações
-  # ========================================
-  ms3:
-    build:
-      context: ./ms3-notificacoes
-      dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=production
-      - MONGODB_URL=mongodb://mongo:27017/notificacoes
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
-      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
-      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
-    depends_on:
-      - mongo
-      - rabbitmq
-    networks:
-      - backend
-
-  # ========================================
-  # MS4 - Auth
-  # ========================================
-  ms4:
-    build:
-      context: ./ms4-auth
-      dockerfile: Dockerfile
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://admin:secret@postgres-ms4:5432/auth
-      - REDIS_URL=redis://redis-ms4:6379
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=15m
-      - REFRESH_TOKEN_EXPIRATION=7d
-    depends_on:
-      - postgres-ms4
-      - redis-ms4
-    networks:
-      - backend
-
-  # ========================================
-  # Bancos de Dados
-  # ========================================
+  # PostgreSQL (MS1)
   postgres-ms1:
     image: postgres:15-alpine
     environment:
       POSTGRES_DB: reservas
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: secret
-    volumes:
-      - postgres-ms1-data:/var/lib/postgresql/data
-    networks:
-      - backend
 
-  postgres-ms2:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: pagamentos
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secret
-    volumes:
-      - postgres-ms2-data:/var/lib/postgresql/data
-    networks:
-      - backend
-
-  postgres-ms4:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: auth
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secret
-    volumes:
-      - postgres-ms4-data:/var/lib/postgresql/data
-    networks:
-      - backend
-
-  mongo:
-    image: mongo:7
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - backend
-
-  # ========================================
-  # Redis (Cache)
-  # ========================================
-  redis-ms1:
-    image: redis:7-alpine
-    volumes:
-      - redis-ms1-data:/data
-    networks:
-      - backend
-
-  redis-ms2:
-    image: redis:7-alpine
-    volumes:
-      - redis-ms2-data:/data
-    networks:
-      - backend
-
-  redis-ms4:
-    image: redis:7-alpine
-    volumes:
-      - redis-ms4-data:/data
-    networks:
-      - backend
-
-  # ========================================
-  # RabbitMQ (Event Bus)
-  # ========================================
+  # RabbitMQ
   rabbitmq:
     image: rabbitmq:3-management-alpine
     ports:
       - "15672:15672"  # Management UI
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: secret
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - backend
 
-  # ========================================
-  # Observabilidade
-  # ========================================
+  # Prometheus
   prometheus:
     image: prom/prometheus:latest
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    networks:
-      - backend
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
+  # Grafana
   grafana:
     image: grafana/grafana:latest
     ports:
       - "3001:3000"
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
-    volumes:
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources
-      - grafana-data:/var/lib/grafana
-    networks:
-      - backend
 
+  # Jaeger
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
       - "16686:16686"  # UI
-      - "14268:14268"  # Collector HTTP
-    networks:
-      - backend
-
-  elasticsearch:
-    image: elasticsearch:8.11.0
-    environment:
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    networks:
-      - backend
-
-  kibana:
-    image: kibana:8.11.0
-    ports:
-      - "5601:5601"
-    environment:
-      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - backend
-
-volumes:
-  postgres-ms1-data:
-  postgres-ms2-data:
-  postgres-ms4-data:
-  mongo-data:
-  redis-ms1-data:
-  redis-ms2-data:
-  redis-ms4-data:
-  rabbitmq-data:
-  prometheus-data:
-  grafana-data:
-  elasticsearch-data:
-
-networks:
-  frontend:
-  backend:
 ```
 
 ---
 
-# ✅ **CHECKLIST REVISADO**
+### 4. Comear MS4 (Auth)
 
-## **Arquitetura**
-- [x] Nginx (Reverse Proxy simples)
-- [x] Load Balancer (integrado no Nginx)
-- [x] BFF (opcional, começar sem)
-- [x] 4 Microserviços **independentes** (cada um valida JWT)
-- [x] Event Bus (RabbitMQ)
-- [x] Cada MS com auth, rate limit, CORS próprios
-
-## **Segurança (Defense in Depth)**
-- [x] JWT validado por CADA MS (não só no Gateway)
-- [x] Rate Limiting por MS (Redis distribuído)
-- [x] CORS por MS
-- [x] Authorization granular (regras de negócio)
-- [x] Helmet.js
-- [x] Input validation (class-validator)
-
-## **Padrões Avançados**
-- [x] CQRS (Command Query Responsibility Segregation)
-- [x] Event Sourcing (opcional)
-- [x] Saga Pattern (orquestração distribuída)
-- [x] DDD (Domain-Driven Design)
-- [x] Clean Architecture
-- [x] Repository Pattern
-
-## **Testes (FUNDAMENTAL)**
-- [x] Testes Unitários (>80% coverage)
-- [x] Testes de Integração
-- [x] Testes E2E
-- [x] Testes de Carga (k6)
-
-## **Observabilidade**
-- [x] Prometheus (métricas)
-- [x] Grafana (dashboards)
-- [x] Jaeger (distributed tracing)
-- [x] ELK Stack (logs)
-- [x] Sentry (error tracking)
-
-## **Infraestrutura**
-- [x] Docker multi-stage builds
-- [x] Docker Compose
-- [x] Kubernetes (próximo passo)
-- [x] CI/CD (GitHub Actions)
-
----
-
-# 📚 **DOCUMENTAÇÃO - ARCHITECTURE.md**
-
-Crie este arquivo no repositório:
-
-```markdown
-# Decisões de Arquitetura
-
-## Por que NÃO usar API Gateway com autenticação centralizada?
-
-### TL;DR
-Optamos por **validação de JWT em cada microserviço** ao invés de centralizar no API Gateway por questões de **segurança**, **autonomia** e **pragmatismo**.
-
-### Análise de Tradeoffs
-
-#### Abordagem Considerada (mas rejeitada):
-```
-Frontend → API Gateway (Kong) → MS (confiam cegamente no Gateway)
+**Estrutura inicial:**
+```bash
+cd apps/ms4-auth
+nest new . --skip-git
 ```
 
-#### Abordagem Escolhida:
+**Instalar dependncias:**
+```bash
+npm install @nestjs/passport @nestjs/jwt passport-jwt
+npm install @nestjs/typeorm typeorm pg
+npm install bcrypt speakeasy qrcode
+npm install --save-dev @types/bcrypt @types/speakeasy
 ```
-Frontend → Nginx (routing simples) → MS (cada um valida JWT)
-```
 
-### Justificativa:
+**Primeiro teste (TDD):**
+```typescript
+// src/modules/auth/application/commands/registrar-usuario/registrar-usuario.handler.spec.ts
+describe('RegistrarUsuarioHandler', () => {
+  it('deve registrar usuário com senha hasheada', async () => {
+    // Arrange
+    const command = new RegistrarUsuarioCommand(
+      'Joo Silva',
+      'joao@example.com',
+      'Senha@123'
+    );
 
-**1. Defense in Depth (Segurança em Camadas)**
-- Se atacante bypassar o Nginx (ex: acesso direto à rede interna), MS ainda estão protegidos
-- Zero Trust Architecture: nunca confiar, sempre verificar
-- Cada MS é autônomo e responsável pela própria segurança
+    // Act
+    const result = await handler.execute(command);
 
-**2. Escala não justifica complexidade adicional**
-- Sistema target: ~1.000 req/s
-- Validação JWT: ~0.5-2ms (~0.2% do tempo total de request)
-- Gargalo real: Database queries (50%), chamadas entre MS (30%)
-- ROI negativo: complexidade adicional não compensa ganho marginal de performance
-
-**3. Autonomia dos Microserviços**
-- Cada MS pode ser testado/deployado/executado independentemente
-- Facilita debugging e troubleshooting
-- Permite evolução independente (ex: MS1 usar JWT, MS2 usar OAuth)
-
-**4. Simplicidade e Manutenibilidade**
-- Menos "magic" na arquitetura
-- Stack trace mais claro
-- Onboarding de novos devs mais fácil
-
-### Quando reconsi deraríamos API Gateway robusto:
-
-- [ ] Escala > 10.000 req/s (CPU de validação JWT vira bottleneck)
-- [ ] Múltiplos consumidores externos (B2B, parceiros)
-- [ ] Necessidade de features específicas:
-  - Circuit breaker distribuído
-  - API versioning complexo (/v1, /v2 com comportamentos muito diferentes)
-  - Rate limiting global cross-service
-  - Transformação complexa de requests/responses
-  - Analytics/metering por tenant (multi-tenancy)
-
-### O que usamos no lugar:
-
-**Nginx:**
-- SSL/TLS termination
-- Routing entre MS
-- Load balancing (least_conn)
-- Compressão (gzip/brotli)
-- Static file serving
-- Request logging
-
-**Cada Microserviço:**
-- JWT validation (`@UseGuards(JwtAuthGuard)`)
-- Authorization (regras de negócio)
-- Rate limiting (Redis distribuído)
-- CORS (configuração própria)
-- Input validation
-
-### Métricas para Validar a Decisão:
-
-Iremos monitorar:
-- Latência p95 de requests (target: < 200ms)
-- CPU usage dos MS (target: < 70%)
-- Taxa de erros 5xx (target: < 0.1%)
-- Tempo de validação JWT (esperado: < 2ms)
-
-Se observarmos degradação nesses indicadores, reavaliaremos a arquitetura.
-
----
-
-## Outras Decisões Importantes
-
-### Por que PostgreSQL para Reservas/Pagamentos/Auth?
-- ACID transactions (crítico para reservas e pagamentos)
-- JSON support (flexibilidade quando necessário)
-- Maturidade e tooling
-- Replicação read/write built-in
-
-### Por que MongoDB para Notificações?
-- Schema flexível (diferentes tipos de notificação)
-- Append-only workload (write-heavy)
-- Não precisa de ACID
-
-### Por que RabbitMQ ao invés de Kafka?
-- Menor complexidade operacional
-- Pattern matching flexível (topic exchanges)
-- Suficiente para nossa escala (<10k msg/s)
-- Melhor para workloads onde ordem não é crítica
-
-### Por que CQRS?
-- Separação clara read/write
-- Permite otimizar queries (read models)
-- Facilita Event Sourcing (futuro)
-- Alinha com DDD
-
-### Por que NestJS?
-- TypeScript (type safety)
-- Arquitetura opinativa (menos decisões)
-- Built-in support para CQRS, DDD patterns
-- Ecossistema maduro
+    // Assert
+    expect(result.isSuccess).toBe(true);
+    expect(result.value.email).toBe('joao@example.com');
+    expect(result.value.senha).not.toBe('Senha@123'); // Deve estar hasheada
+  });
+});
 ```
 
 ---
+
+## < Critérios de Sucesso
+
+### Funcionalidades
+- [ ] 4 microserviços funcionando
+- [ ] Fluxo completo: Criar Reserva  Pagar  Confirmar  Notificar
+- [ ] Kong validando JWT
+- [ ] Event-driven (RabbitMQ)
+- [ ] Event Sourcing no MS2
+
+### Qualidade
+- [ ] Cobertura de testes >90%
+- [ ] Testes E2E passando
+- [ ] Load test: >100 req/s com <500ms p95
+- [ ] Zero warnings no CI
+
+### Observabilidade
+- [ ] Dashboards Grafana funcionando
+- [ ] Distributed tracing completo (screenshots)
+- [ ] Logs estruturados no Elasticsearch
+
+### Documentação
+- [ ] 5+ ADRs escritos
+- [ ] Diagramas C4 completos
+- [ ] OpenAPI de cada MS
+- [ ] README com setup instructions
+- [ ] Runbooks operacionais
+
+### Demonstrao de Senioridade
+- [ ] DDD bem implementado (agregados, value objects)
+- [ ] CQRS + Event Sourcing funcionando
+- [ ] Circuit Breakers demonstrados
+- [ ] Contract testing (Pact)
+- [ ] Performance tuning (indexes, cache)
+- [ ] Security hardening (RS256, rate limiting)
+
+---
+
+## = Referências
+
+### Arquitetura
+- [Domain-Driven Design - Eric Evans](https://www.domainlanguage.com/ddd/)
+- [Implementing DDD - Vaughn Vernon](https://vaughnvernon.com/)
+- [Building Microservices - Sam Newman](https://samnewman.io/books/building_microservices/)
+
+### Patterns
+- [Saga Pattern](https://microservices.io/patterns/data/saga.html)
+- [Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
+- [CQRS](https://martinfowler.com/bliki/CQRS.html)
+
+### NestJS
+- [NestJS Documentation](https://docs.nestjs.com/)
+- [NestJS CQRS](https://docs.nestjs.com/recipes/cqrs)
+
+### Observabilidade
+- [Prometheus Best Practices](https://prometheus.io/docs/practices/)
+- [OpenTelemetry](https://opentelemetry.io/)
+
+---
+
+## Lembretes
+
+1. **Qualidade > Velocidade** (no tem deadline,  showcase)
+2. **TDD religioso** (testes antes do cdigo)
+3. **Documentação contnua** (ADRs, diagramas)
+4. **Observabilidade desde o início** (métricas, logs, tracing)
+5. **Demonstre trade-offs** (justifique cada deciso)
