@@ -572,7 +572,3 @@ const id = toBase62(sequentialId, shuffledChars);
 - Multi-idiomas
 
 ---
-
-**Última Atualização:** Dezembro 2024  
-**Versão:** 2.0  
-**Status:** Requisitos Validados
