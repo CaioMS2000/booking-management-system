@@ -160,3 +160,153 @@ Você não vai acertar de primeira. Nas próximas 2-3 semanas, sempre que for da
 - Se não: Usa `git add -p` ou adiciona seletivamente com `git add arquivo1.js arquivo2.js`
 
 Depois de algumas semanas isso vira automático. O segredo é: **uma mudança lógica = um commit**. Se você não consegue descrever o commit em uma frase, provavelmente são múltiplos commits.
+
+---
+
+# Workflow de branches e quando fazer merge
+
+## Fatores de variância:
+1. Se está trabalhando sozinho vs em equipe
+2. Se tem processo de code review
+3. O tamanho/complexidade das mudanças
+4. Se as branches são dependentes entre si
+
+## A abordagem muda **dependendo do contexto**. Cenários práticos:
+### Cenário 1: Trabalhando sozinho ou em projeto pessoal
+
+**Sim, faça merge frequentemente na main.**
+
+```bash
+# Terminou a feature A
+git checkout main
+git merge feature/feature-a
+git push origin main
+git branch -d feature/feature-a  # deleta a branch local
+
+# Começa a feature B
+git checkout -b feature/feature-b
+# Já tem as mudanças de feature-a aqui
+```
+
+**Vantagens:**
+- Sua main sempre tem o código mais atual
+- Novas branches já partem do estado mais recente
+- Simples e direto
+
+**Quando usar:** Projetos pessoais, prototipagem, ou quando você é o único desenvolvedor.
+
+### Cenário 2: Trabalhando em equipe (mais comum profissionalmente)
+
+Aqui tem um **processo de review** antes do merge:
+
+```bash
+# Terminou a feature A
+git push origin feature/feature-a
+
+# Abre Pull Request (GitHub) ou Merge Request (GitLab)
+# Alguém revisa o código
+# Após aprovação, faz merge via interface (GitHub/GitLab)
+
+# Atualiza sua main local
+git checkout main
+git pull origin main
+
+# Começa feature B
+git checkout -b feature/feature-b
+```
+
+**Importante:** Você NÃO faz merge direto na main local. O merge acontece após code review, geralmente pela interface web do GitHub/GitLab.
+
+**Vantagens:**
+- Qualidade de código (alguém revisa antes de entrar)
+- Histórico limpo e rastreável
+- CI/CD roda testes antes do merge
+
+### Cenário 3: Feature B depende de Feature A (ainda não mergeada)
+
+Às vezes você precisa começar feature B, mas ela depende de código que está na feature A que ainda não foi mergeada (esperando review, por exemplo).
+
+**Opção 1 - Branch a partir da branch:**
+
+```bash
+# Feature A ainda não foi mergeada
+git checkout feature/feature-a
+git checkout -b feature/feature-b
+
+# Trabalha na feature B
+# Quando terminar, abre PR com base em feature-a
+```
+
+Depois que feature-a for mergeada na main, você faz rebase de feature-b:
+
+```bash
+git checkout main
+git pull
+git checkout feature/feature-b
+git rebase main
+```
+
+**Opção 2 - Espera mergear A antes de começar B:**
+
+Simplesmente aguarda a feature A ser mergeada antes de começar B. Enquanto isso, trabalha em outra coisa independente.
+
+### Cenário 4: Desenvolvimento em paralelo de múltiplas features
+
+Se você está trabalhando em várias features ao mesmo tempo (comum em times maiores):
+
+```bash
+# Todas partem da main
+main
+├── feature/auth
+├── feature/payment  
+└── feature/notifications
+
+# Cada uma é independente
+# Cada uma abre seu PR separado
+# Podem ser mergeadas em qualquer ordem
+```
+
+Quando uma é mergeada, você **atualiza as outras** se necessário:
+
+```bash
+# feature/auth foi mergeada
+git checkout feature/payment
+git rebase main  # ou git merge main
+
+# Resolve conflitos se houver
+# Continua trabalhando
+```
+
+## Workflow recomendado para ambiente profissional
+
+1. **Sempre parta da main atualizada:**
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feature/nova-feature
+   ```
+
+2. **Durante desenvolvimento, mantenha sua branch atualizada:**
+   ```bash
+   # A cada 1-2 dias, ou quando outras features forem mergeadas
+   git checkout main
+   git pull
+   git checkout feature/sua-feature
+   git rebase main  # ou merge main se preferir
+   ```
+
+3. **Quando terminar:**
+   ```bash
+   git push origin feature/sua-feature
+   # Abre PR no GitHub/GitLab
+   # Aguarda review
+   # Após aprovação, faz merge (pela interface ou CLI)
+   ```
+
+4. **Após merge, limpa:**
+   ```bash
+   git checkout main
+   git pull
+   git branch -d feature/sua-feature  # local
+   git push origin --delete feature/sua-feature  # remoto (opcional)
+   ```
