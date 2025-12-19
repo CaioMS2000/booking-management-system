@@ -1,0 +1,293 @@
+services:
+  # =====================================================
+  # PostgreSQL Databases (6 instâncias - Database per Service)
+  # =====================================================
+
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: booking-postgres-auth
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-user:
+    image: postgres:16-alpine
+    container_name: booking-postgres-user
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: user_user
+      POSTGRES_PASSWORD: user_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-user-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_user -d user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-property:
+    image: postgres:16-alpine
+    container_name: booking-postgres-property
+    environment:
+      POSTGRES_DB: property_db
+      POSTGRES_USER: property_user
+      POSTGRES_PASSWORD: property_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-property-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U property_user -d property_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-payment:
+    image: postgres:16-alpine
+    container_name: booking-postgres-payment
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: payment_user
+      POSTGRES_PASSWORD: payment_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-payment-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment_user -d payment_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-notification:
+    image: postgres:16-alpine
+    container_name: booking-postgres-notification
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: notification_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-notification-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification_user -d notification_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-search:
+    image: postgres:16-alpine
+    container_name: booking-postgres-search
+    environment:
+      POSTGRES_DB: search_db
+      POSTGRES_USER: search_user
+      POSTGRES_PASSWORD: search_pass
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres-search-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U search_user -d search_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =====================================================
+  # RabbitMQ (Event Bus - Message Broker)
+  # =====================================================
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: booking-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: booking
+      RABBITMQ_DEFAULT_PASS: booking123
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"   # AMQP protocol
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - rabbitmq-logs:/var/log/rabbitmq
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =====================================================
+  # Redis (Cache & Session Storage)
+  # =====================================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: booking-redis
+    command: redis-server --appendonly yes --requirepass redis123
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =====================================================
+  # Elasticsearch (Search Service - CQRS Read Model)
+  # =====================================================
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: booking-elasticsearch
+    environment:
+      - node.name=es-node-1
+      - cluster.name=booking-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # =====================================================
+  # Kong (API Gateway) - Opcional para MVP
+  # =====================================================
+
+  kong-database:
+    image: postgres:16-alpine
+    container_name: booking-kong-database
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+    ports:
+      - "5438:5432"
+    volumes:
+      - kong-db-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kong-migrations:
+    image: kong:3.5-alpine
+    container_name: booking-kong-migrations
+    command: kong migrations bootstrap
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PORT: 5432
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+    depends_on:
+      kong-database:
+        condition: service_healthy
+    networks:
+      - booking-network
+    restart: on-failure
+
+  kong:
+    image: kong:3.5-alpine
+    container_name: booking-kong
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_PORT: 5432
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+    ports:
+      - "8000:8000" # Proxy (API Gateway entry point)
+      - "8001:8001" # Admin API
+    depends_on:
+      kong-database:
+        condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# =====================================================
+# Networks
+# =====================================================
+
+networks:
+  booking-network:
+    driver: bridge
+
+# =====================================================
+# Volumes (Data Persistence)
+# =====================================================
+
+volumes:
+  postgres-auth-data:
+  postgres-user-data:
+  postgres-property-data:
+  postgres-payment-data:
+  postgres-notification-data:
+  postgres-search-data:
+  rabbitmq-data:
+  rabbitmq-logs:
+  redis-data:
+  elasticsearch-data:
+  kong-db-data:

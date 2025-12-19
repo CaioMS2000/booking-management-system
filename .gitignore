@@ -37,3 +37,32 @@ yarn-error.log*
 .DS_Store
 *.pem
 temp
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Database
+*.sql.backup
+*.db
+*.sqlite
+
+# Uploads (local development)
+uploads/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Keys (JWT RS256)
+keys/private.pem
+keys/public.pem
+*.key
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
