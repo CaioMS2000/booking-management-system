@@ -18,6 +18,19 @@
       "cache": true,
       "inputs": ["**/*.spec.ts", "**/vitest.config.ts"]
     },
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:cov": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "outputs": ["coverage/**"]
+    },
+    "test:debug": {
+      "cache": false,
+      "persistent": true
+    },
     "dev": {
       "cache": false,
       "persistent": true

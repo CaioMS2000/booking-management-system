@@ -8,6 +8,7 @@
     "test": "turbo run test",
     "test:cov": "turbo run test:cov",
     "test:debug": "turbo run test:debug",
+    "test:watch": "turbo run test:watch",
     "format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
     "check-types": "turbo run check-types",
     "prepare": "husky"

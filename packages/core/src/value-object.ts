@@ -1,8 +1,12 @@
-export abstract class ValueObject<Props> {
-	protected props: Props
+export abstract class ValueObject<ValueType> {
+	protected readonly _value: ValueType
 
-	protected constructor(props: Props) {
-		this.props = props
+	protected constructor(value: ValueType) {
+		this._value = value
+	}
+
+	public get value() {
+		return this._value
 	}
 
 	public equals(vo: ValueObject<unknown>) {
@@ -10,10 +14,10 @@ export abstract class ValueObject<Props> {
 			return false
 		}
 
-		if (vo.props === undefined) {
+		if (vo._value === undefined) {
 			return false
 		}
 
-		return JSON.stringify(vo.props) === JSON.stringify(this.props)
+		return JSON.stringify(vo._value) === JSON.stringify(this._value)
 	}
 }
