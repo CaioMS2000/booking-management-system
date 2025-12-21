@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: auth_user
       POSTGRES_PASSWORD: auth_pass
     ports:
-      - "5437:5432"
+      - "5438:5432"
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
     networks:
@@ -206,7 +206,7 @@ services:
       POSTGRES_USER: kong
       POSTGRES_PASSWORD: kong
     ports:
-      - "5438:5432"
+      - "5439:5432"
     volumes:
       - kong-db-data:/var/lib/postgresql/data
     networks:
@@ -218,7 +218,7 @@ services:
       retries: 5
 
   kong-migrations:
-    image: kong:3.5-alpine
+    image: kong:3.8
     container_name: booking-kong-migrations
     command: kong migrations bootstrap
     environment:
@@ -236,7 +236,7 @@ services:
     restart: on-failure
 
   kong:
-    image: kong:3.5-alpine
+    image: kong:3.8
     container_name: booking-kong
     environment:
       KONG_DATABASE: postgres
