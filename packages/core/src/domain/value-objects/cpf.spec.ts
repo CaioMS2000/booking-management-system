@@ -26,7 +26,7 @@ describe('CPF', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('CPF deve ter 11 dígitos')
+				expect(result.value.message).toBe('CPF must have 11 digits')
 			}
 		})
 
@@ -35,7 +35,7 @@ describe('CPF', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('CPF deve ter 11 dígitos')
+				expect(result.value.message).toBe('CPF must have 11 digits')
 			}
 		})
 
@@ -44,7 +44,7 @@ describe('CPF', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('CPF inválido')
+				expect(result.value.message).toBe('Invalid CPF')
 			}
 		})
 
@@ -53,7 +53,7 @@ describe('CPF', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('CPF inválido')
+				expect(result.value.message).toBe('Invalid CPF')
 			}
 		})
 
@@ -62,7 +62,7 @@ describe('CPF', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('CPF inválido')
+				expect(result.value.message).toBe('Invalid CPF')
 			}
 		})
 
@@ -71,7 +71,7 @@ describe('CPF', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('CPF inválido')
+				expect(result.value.message).toBe('Invalid CPF')
 			}
 		})
 

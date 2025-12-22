@@ -1,6 +1,7 @@
 import { Either, failure, success } from '@/either'
 import { ValueObject } from '../../value-object'
 import { InvalidValueError } from '../@errors/domain-errors/invalid-value-error'
+import { CPFLengthRule } from '@/domain/value-objects/rules/cpf-length-rule'
 
 export class CPF extends ValueObject<string> {
 	private constructor(value: string) {
@@ -8,14 +9,15 @@ export class CPF extends ValueObject<string> {
 	}
 
 	static create(cpf: string): Either<InvalidValueError, CPF> {
+		const cpfLengthRule = new CPFLengthRule()
 		const cleaned = cpf.replace(/\D/g, '')
 
-		if (cleaned.length !== 11) {
-			return failure(new InvalidValueError('CPF deve ter 11 dígitos'))
+		if (!cpfLengthRule.validate(cleaned)) {
+			return failure(new InvalidValueError(cpfLengthRule.message))
 		}
 
 		if (!CPF.isValidChecksum(cleaned)) {
-			return failure(new InvalidValueError('CPF inválido'))
+			return failure(new InvalidValueError('Invalid CPF'))
 		}
 
 		return success(new CPF(cleaned))

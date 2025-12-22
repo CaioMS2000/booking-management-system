@@ -59,7 +59,7 @@ describe('Phone', () => {
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
 				expect(result.value.message).toBe(
-					'Telefone deve ter entre 12 e 13 dígitos'
+					'Phone must have between 12 and 13 digits'
 				)
 			}
 		})
@@ -70,7 +70,7 @@ describe('Phone', () => {
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
 				expect(result.value.message).toBe(
-					'Telefone deve ter entre 12 e 13 dígitos'
+					'Phone must have between 12 and 13 digits'
 				)
 			}
 		})
@@ -81,7 +81,7 @@ describe('Phone', () => {
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
 				expect(result.value.message).toBe(
-					'Telefone deve ter entre 12 e 13 dígitos'
+					'Phone must have between 12 and 13 digits'
 				)
 			}
 		})

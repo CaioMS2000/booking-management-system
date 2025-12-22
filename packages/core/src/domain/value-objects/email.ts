@@ -1,6 +1,8 @@
 import { Either, failure, success } from '../../either'
 import { ValueObject } from '../../value-object'
 import { InvalidValueError } from '../@errors/domain-errors/invalid-value-error'
+import { EmailContainsAtRule } from './rules/email-contains-at-rule'
+import { EmailFormatRule } from './rules/email-format-rule'
 
 export class Email extends ValueObject<string> {
 	private constructor(value: string) {
@@ -8,12 +10,15 @@ export class Email extends ValueObject<string> {
 	}
 
 	static create(email: string): Either<InvalidValueError, Email> {
-		if (!email.includes('@')) {
-			return failure(new InvalidValueError('Email inválido'))
+		const containsAtRule = new EmailContainsAtRule()
+		const formatRule = new EmailFormatRule()
+
+		if (!containsAtRule.validate(email)) {
+			return failure(new InvalidValueError(containsAtRule.message))
 		}
 
-		if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-			return failure(new InvalidValueError('Formato de email inválido'))
+		if (!formatRule.validate(email)) {
+			return failure(new InvalidValueError(formatRule.message))
 		}
 
 		return success(new Email(email))

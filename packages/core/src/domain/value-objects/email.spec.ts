@@ -44,7 +44,7 @@ describe('Email', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('Email inválido')
+				expect(result.value.message).toBe('Invalid email')
 			}
 		})
 
@@ -53,7 +53,7 @@ describe('Email', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('Formato de email inválido')
+				expect(result.value.message).toBe('Invalid email format')
 			}
 		})
 
@@ -62,7 +62,7 @@ describe('Email', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('Formato de email inválido')
+				expect(result.value.message).toBe('Invalid email format')
 			}
 		})
 
@@ -71,7 +71,7 @@ describe('Email', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('Formato de email inválido')
+				expect(result.value.message).toBe('Invalid email format')
 			}
 		})
 
@@ -80,7 +80,7 @@ describe('Email', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('Formato de email inválido')
+				expect(result.value.message).toBe('Invalid email format')
 			}
 		})
 
@@ -89,7 +89,7 @@ describe('Email', () => {
 
 			expect(result.isFailure()).toBe(true)
 			if (result.isFailure()) {
-				expect(result.value.message).toBe('Formato de email inválido')
+				expect(result.value.message).toBe('Invalid email format')
 			}
 		})
 	})
