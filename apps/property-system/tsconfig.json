@@ -9,9 +9,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "[ROOT]/*": ["./*"],
-      "[SHARED]": ["../../packages/shared"],
-      "[SHARED]/*": ["../../packages/shared/*"]
+      "[ROOT]/*": ["./*"]
     }
   },
   "include": [
