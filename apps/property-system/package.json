@@ -7,7 +7,7 @@
     "lint": "biome check ."
   },
   "devDependencies": {
-    "@repo/shared": "*",
+    "@repo/core": "*",
     "@repo/typescript-config": "*",
     "@types/node": "^25.0.1",
     "typescript": "^5.9.2"
