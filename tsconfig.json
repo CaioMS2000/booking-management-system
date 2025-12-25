@@ -2,7 +2,6 @@
   "files": [],
   "references": [
     { "path": "./packages/core" },
-    { "path": "./apps/property-system" },
-    { "path": "./apps/payment-system" }
+    { "path": "./apps/property-system" }
   ]
 }

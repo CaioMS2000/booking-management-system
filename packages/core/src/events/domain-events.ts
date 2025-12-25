@@ -82,8 +82,10 @@ export class DomainEvents {
 		if (isEventRegistered) {
 			const handlers = this.handlersMap[eventClassName]
 
-			for (const handler of handlers) {
-				handler(event)
+			if (handlers) {
+				for (const handler of handlers) {
+					handler(event)
+				}
 			}
 		}
 	}

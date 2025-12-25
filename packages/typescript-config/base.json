@@ -3,14 +3,19 @@
   "_version": "20.1.0",
 
   "compilerOptions": {
-    "lib": ["ES2023"],
-    "target": "ES2023",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-
-    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "incremental": false,
+    "isolatedModules": true,
+    "lib": ["es2023"],
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022"
   },
   "exclude": ["node_modules", "**/*.old*"]
 }
