@@ -11,7 +11,7 @@
     "lib": ["es2023"],
     "module": "ESNext",
     "moduleDetection": "force",
-    "moduleResolution": "bundler",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,

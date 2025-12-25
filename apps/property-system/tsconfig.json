@@ -4,7 +4,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "[ROOT]/*": ["./*"]
+      "[ROOT]/*": ["./*"],
+      "@repo/core": ["../../packages/core/src/index.ts"],
+      "@repo/core/*": ["../../packages/core/src/*"]
     }
   },
   "include": [
