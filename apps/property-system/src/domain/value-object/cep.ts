@@ -1,5 +1,5 @@
 import { Either, failure, success, ValueObject } from '@repo/core'
-import { CEPLengthRule } from './rules/cep-length-rule.js'
+import { CEPLengthRule } from './rules/cep-length-rule'
 
 export class CEP extends ValueObject<string> {
 	static create(value: string): Either<null, CEP> {

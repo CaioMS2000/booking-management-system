@@ -1,6 +1,7 @@
 {
   "name": "@repo/core",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "license": "MIT",
   "exports": {
@@ -9,9 +10,12 @@
     "./value-object": "./src/value-object.ts",
     "./either": "./src/either.ts",
     "./events": "./src/events/index.ts",
+    "./events/*": "./src/events/*.ts",
     "./config": "./src/config/index.ts",
     "./domain": "./src/domain/index.ts",
+    "./domain/*": "./src/domain/*.ts",
     "./cryptography": "./src/cryptography/index.ts",
+    "./cryptography/*": "./src/cryptography/*.ts",
     "./rules": "./src/rules/index.ts",
     "./id-generator": "./src/id-generator/index.ts",
     "./logging": "./src/logging/index.ts"
