@@ -15,6 +15,14 @@
 
 # production
 /build
+/dist
+
+# typescript build artifacts in src (should never be committed)
+src/**/*.js
+src/**/*.d.ts
+src/**/*.d.ts.map
+!src/**/*.spec.js
+!src/**/*.test.js
 
 # misc
 .DS_Store
