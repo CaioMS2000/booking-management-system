@@ -3,18 +3,19 @@
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
+  "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
     "./entity": "./src/entity/index.ts",
     "./value-object": "./src/value-object.ts",
     "./either": "./src/either.ts",
-    "./events": "./src/events/index.ts",
-    "./config": "./src/config/index.ts",
-    "./domain": "./src/domain/index.ts",
-    "./cryptography": "./src/cryptography/index.ts",
+    "./events/*": "./src/events/*.ts",
+    "./config/*": "./src/config/*.ts",
+    "./domain/*": "./src/domain/*.ts",
+    "./cryptography/*": "./src/cryptography/*.ts",
     "./rules": "./src/rules/index.ts",
-    "./id-generator": "./src/id-generator/index.ts",
-    "./logging": "./src/logging/index.ts"
+    "./id-generator/*": "./src/id-generator/*.ts",
+    "./logging/*": "./src/logging/*.ts"
   },
   "publishConfig": {
     "access": "public"
