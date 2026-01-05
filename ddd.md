@@ -78,19 +78,696 @@ Isso diminui a complexidade do código e o tempo de bloqueio do banco.
 
 ---
 
-## 4. Onde colocar a lógica?
+## 4. Onde colocar a lógica? (Os 3 Tipos de Services)
 
-### Domain Services vs. Application Services
+### Entidade
+Lógica que só depende dos dados daquela entidade.
+*   **Exemplo:** `pedido.calcularTotal()`
+*   **Quando usar:** Comportamento que pertence naturalmente àquela entidade
+*   **Vive na camada:** Domain
 
-*   **Entidade:** Lógica que só depende dos dados daquela entidade. (`pedido.calcularTotal()`)
-*   **Domain Service:** Lógica que envolve múltiplas entidades de domínio. (`calculadoraImposto.calcular(pedido, regrasFiscais)`)
-*   **Application Service (Use Case):** O regente da orquestra. Ele não tem regra de negócio. Ele só:
-    1.  Busca no Repositório.
-    2.  Chama a Entidade/Domain Service.
-    3.  Salva no Repositório.
-    4.  Envia Email / Loga.
+### Domain Service (Regras de Negócio entre Agregados)
+**TEM lógica de negócio**, mas não pertence a uma única entidade.
+*   **Quando usar:** Operação envolve múltiplas entidades/agregados do mesmo domínio
+*   **Exemplo:** `CalculadoraImpostoService.calcular(pedido, cliente, regrasFiscais)`
+*   **Características:**
+    *   Contém regras de negócio complexas
+    *   Não tem estado (stateless)
+    *   Opera sobre múltiplos agregados
+*   **Vive na camada:** Domain
 
-**Seu Application Service está "Gordo"?** Ele provavelmente está roubando regras que deveriam estar na Entidade ou num Domain Service.
+**Exemplo Prático:**
+```typescript
+// Domain Service - Contém regra de negócio
+class CalculadoraFreteService {
+    calcular(pedido: Pedido, endereco: Endereco, transportadora: Transportadora): Money {
+        // Lógica de negócio que envolve 3 agregados diferentes
+        // Não pertence a nenhum deles especificamente
+        const distancia = this.calcularDistancia(endereco);
+        const peso = pedido.calcularPesoTotal();
+        const taxaBase = transportadora.obterTaxaBase();
+
+        return new Money(distancia * peso * taxaBase);
+    }
+}
+
+// Domain Service - Operação entre dois agregados
+class TransferenciaEntreContasService {
+    transferir(contaOrigem: Conta, contaDestino: Conta, valor: Money): void {
+        // Regra de negócio que não pode estar em uma Conta só
+        contaOrigem.debitar(valor);
+        contaDestino.creditar(valor);
+
+        // Emite evento de transferência realizada
+        this.eventos.adicionar(new TransferenciaRealizadaEvent(...));
+    }
+}
+```
+
+### Application Service (Use Case)
+**NÃO TEM lógica de negócio**. É o regente da orquestra que coordena o fluxo.
+*   **Quando usar:** Coordenar um fluxo completo de negócio (um caso de uso)
+*   **Responsabilidades:**
+    1.  Busca no Repositório
+    2.  Chama Entidade/Domain Service (onde estão as regras)
+    3.  Salva no Repositório
+    4.  Dispara eventos/notificações
+*   **Características:**
+    *   Sem regras de negócio (apenas orquestração)
+    *   Gerencia transações
+    *   Coordena múltiplos componentes
+*   **Vive na camada:** Application
+
+**Exemplo Prático:**
+```typescript
+// Application Service - Apenas orquestra
+class CriarPedidoUseCase {
+    async execute(command: CriarPedidoCommand): Promise<void> {
+        // 1. Busca dados
+        const cliente = await this.clienteRepo.findById(command.clienteId);
+        const produtos = await this.produtoRepo.findByIds(command.produtoIds);
+
+        // 2. Chama domínio (regras estão LÁ dentro)
+        const pedido = Pedido.criar(cliente.id, produtos);
+
+        // 3. Usa Domain Service se necessário
+        const frete = this.calculadoraFrete.calcular(pedido, cliente.endereco, transportadora);
+        pedido.aplicarFrete(frete);
+
+        // 4. Persiste
+        await this.pedidoRepo.save(pedido);
+
+        // 5. Eventos são despachados automaticamente pelo framework
+    }
+}
+```
+
+### Infrastructure Service (Serviços Técnicos)
+**NÃO TEM lógica de negócio**. Apenas operações técnicas de infraestrutura.
+*   **Quando usar:** Email, SMS, Logger, Encriptação, Storage, APIs externas
+*   **Exemplo:** `EmailService.send()`, `LoggerService.log()`, `StorageService.upload()`
+*   **Características:**
+    *   Puramente técnico (sem regras de negócio)
+    *   Abstrai detalhes de infraestrutura
+    *   Injetado nos Application Services quando necessário
+*   **Vive na camada:** Infrastructure
+
+**Exemplo Prático:**
+```typescript
+// Infrastructure Service - Apenas técnico
+class EmailService {
+    async send(to: string, subject: string, body: string): Promise<void> {
+        // Código técnico: SMTP, API externa, etc.
+        await this.smtpClient.sendMail({ to, subject, body });
+    }
+}
+
+class LoggerService {
+    log(level: string, message: string): void {
+        // Código técnico: write to file, cloud logging, etc.
+        console.log(`[${level}] ${message}`);
+    }
+}
+
+class FileStorageService {
+    async upload(file: Buffer, path: string): Promise<string> {
+        // Código técnico: S3, filesystem, etc.
+        return await this.s3Client.upload(file, path);
+    }
+}
+```
+
+---
+
+### Como Decidir Onde Colocar a Lógica?
+
+Use este fluxo de decisão:
+
+**Pergunta 1:** *"Isso é uma regra de negócio?"*
+*   **SIM** e pertence a UMA entidade → **Entidade**
+*   **SIM** e envolve MÚLTIPLAS entidades → **Domain Service**
+*   **NÃO** → Continua para pergunta 2...
+
+**Pergunta 2:** *"Isso coordena um fluxo completo de negócio?"*
+*   **SIM** → **Application Service (Use Case)**
+*   **NÃO** → **Infrastructure Service**
+
+---
+
+### Exemplo Comparativo: Certo vs. Errado
+
+**❌ ERRADO: Application Service com regra de negócio**
+```typescript
+class CriarPedidoUseCase {
+    async execute(command: CriarPedidoCommand) {
+        const pedido = new Pedido();
+
+        // 🚨 ERRO: Regra de negócio vazou pro Use Case!
+        if (command.valorTotal > 1000) {
+            pedido.desconto = command.valorTotal * 0.1; // Regra de desconto aqui!
+        }
+
+        // 🚨 ERRO: Mais regras de negócio!
+        if (command.cliente.isPremium && command.valorTotal > 500) {
+            pedido.freteGratis = true;
+        }
+
+        await this.repo.save(pedido);
+    }
+}
+```
+
+**✅ CERTO: Regras na Entidade**
+```typescript
+class Pedido extends AggregateRoot {
+    aplicarDesconto(valorTotal: Money): void {
+        // ✅ Regra de negócio DENTRO da entidade
+        if (valorTotal.valor > 1000) {
+            this.desconto = valorTotal.multiplicar(0.1);
+        }
+    }
+
+    avaliarFreteGratis(cliente: Cliente, valorTotal: Money): void {
+        // ✅ Outra regra de negócio encapsulada
+        if (cliente.isPremium() && valorTotal.valor > 500) {
+            this.freteGratis = true;
+        }
+    }
+}
+
+class CriarPedidoUseCase {
+    async execute(command: CriarPedidoCommand) {
+        const cliente = await this.clienteRepo.findById(command.clienteId);
+        const pedido = new Pedido();
+
+        // ✅ Use Case apenas DELEGA para o domínio
+        pedido.aplicarDesconto(command.valorTotal);
+        pedido.avaliarFreteGratis(cliente, command.valorTotal);
+
+        await this.repo.save(pedido);
+    }
+}
+```
+
+**✅ CERTO: Regra em Domain Service (múltiplos agregados)**
+```typescript
+// Domain Service quando envolve VÁRIOS agregados
+class CalculadoraImpostoService {
+    calcular(pedido: Pedido, cliente: Cliente, regrasFiscais: RegrasFiscais): Money {
+        // ✅ Lógica de negócio que precisa de 3 agregados diferentes
+        const aliquota = regrasFiscais.obterAliquota(cliente.estado);
+        const baseCalculo = pedido.calcularTotal();
+
+        if (cliente.isIsento()) {
+            return Money.zero();
+        }
+
+        return baseCalculo.multiplicar(aliquota);
+    }
+}
+
+class CriarPedidoUseCase {
+    async execute(command: CriarPedidoCommand) {
+        const cliente = await this.clienteRepo.findById(command.clienteId);
+        const regrasFiscais = await this.regrasFiscaisRepo.findByCidade(cliente.cidade);
+        const pedido = Pedido.criar(command.itens);
+
+        // ✅ Use Case coordena, Domain Service calcula
+        const imposto = this.calculadoraImposto.calcular(pedido, cliente, regrasFiscais);
+        pedido.aplicarImposto(imposto);
+
+        await this.repo.save(pedido);
+    }
+}
+```
+
+---
+
+### Resumo Visual
+
+```
+┌─────────────────────────────────────────────────┐
+│      APPLICATION LAYER                          │
+│  ┌───────────────────────────────────────┐     │
+│  │ Application Service (Use Case)         │     │
+│  │ - Orquestra o fluxo                    │     │
+│  │ - SEM regras de negócio                │     │
+│  │ - Gerencia transação                   │     │
+│  └───────────────────────────────────────┘     │
+└─────────────────────────────────────────────────┘
+                   ↓ chama
+┌─────────────────────────────────────────────────┐
+│         DOMAIN LAYER                            │
+│  ┌─────────────┐  ┌───────────────────┐        │
+│  │ Entidades   │  │ Domain Service    │        │
+│  │ - Pedido    │  │ - Calcula Imposto │        │
+│  │ - Cliente   │  │ - Transferência   │        │
+│  │ COM regras! │  │ COM regras!       │        │
+│  └─────────────┘  └───────────────────┘        │
+└─────────────────────────────────────────────────┘
+                   ↓ usa
+┌─────────────────────────────────────────────────┐
+│      INFRASTRUCTURE LAYER                       │
+│  ┌──────────────┐  ┌──────────────────┐        │
+│  │ Repositories │  │ Infrastructure   │        │
+│  │              │  │ Services         │        │
+│  │              │  │ - Email, Logger  │        │
+│  │              │  │ SEM regras!      │        │
+│  └──────────────┘  └──────────────────┘        │
+└─────────────────────────────────────────────────┘
+```
+
+**Seu Application Service está "Gordo" com if/else?** Ele provavelmente está roubando regras que deveriam estar na Entidade ou num Domain Service.
+
+---
+
+### Dependências entre Services: Quem Pode Importar Quem?
+
+A arquitetura em camadas define regras claras de dependência. **A regra de ouro:** Camadas superiores podem depender de camadas inferiores, mas nunca o contrário.
+
+```
+┌─────────────────────────────────┐
+│   APPLICATION LAYER             │
+│   (Application Services)        │
+└─────────────────────────────────┘
+         ↓ pode depender de
+┌─────────────────────────────────┐
+│   DOMAIN LAYER                  │
+│   (Entities, Domain Services)   │
+└─────────────────────────────────┘
+         ↓ NÃO pode depender de
+┌─────────────────────────────────┐
+│   INFRASTRUCTURE LAYER          │
+│   (Repositories, Infra Services)│
+└─────────────────────────────────┘
+```
+
+#### ✅ Dependências PERMITIDAS:
+
+**Application Service → Domain Service**
+```typescript
+class CriarPedidoUseCase {
+    constructor(
+        private pedidoRepo: IPedidoRepository,
+        private calculadoraImposto: CalculadoraImpostoService // ✅ PODE
+    ) {}
+
+    async execute(command: CriarPedidoCommand) {
+        const pedido = Pedido.criar(command.itens);
+        const imposto = this.calculadoraImposto.calcular(pedido); // ✅ PODE
+        await this.pedidoRepo.save(pedido);
+    }
+}
+```
+
+**Application Service → Infrastructure Service** (via interface)
+```typescript
+// Domain/Application define a INTERFACE
+interface IEmailService {
+    send(to: string, subject: string, body: string): Promise<void>;
+}
+
+// Application Service depende da INTERFACE (não da implementação)
+class CriarUsuarioUseCase {
+    constructor(
+        private usuarioRepo: IUsuarioRepository,
+        private emailService: IEmailService // ✅ PODE (via abstração - DIP)
+    ) {}
+
+    async execute(command: CriarUsuarioCommand) {
+        const usuario = Usuario.criar(command.email);
+        await this.usuarioRepo.save(usuario);
+        await this.emailService.send(usuario.email, "Bem-vindo", "..."); // ✅ PODE
+    }
+}
+
+// Infrastructure IMPLEMENTA a interface (Dependency Inversion Principle)
+class SmtpEmailService implements IEmailService {
+    async send(to: string, subject: string, body: string) {
+        // implementação técnica SMTP
+    }
+}
+```
+
+**Domain Service → Domain Service**
+```typescript
+class CalculadoraImpostoService {
+    constructor(
+        private calculadoraDescontoService: CalculadoraDescontoService // ✅ PODE
+    ) {}
+
+    calcular(pedido: Pedido): Money {
+        const desconto = this.calculadoraDescontoService.calcular(pedido);
+        const baseCalculo = pedido.calcularTotal().subtrair(desconto);
+        return baseCalculo.multiplicar(0.15); // 15% de imposto
+    }
+}
+```
+
+**Infrastructure → Qualquer camada**
+```typescript
+// Infrastructure pode depender de tudo (está na camada mais externa)
+class DrizzlePedidoRepository implements IPedidoRepository {
+    constructor(
+        private db: DrizzleDb,
+        private mapper: PedidoMapper // ✅ PODE usar mappers
+    ) {}
+
+    async save(pedido: Pedido): Promise<void> {
+        const model = this.mapper.toPersistence(pedido);
+        await this.db.insert(pedidos).values(model);
+    }
+}
+```
+
+#### ❌ Dependências PROIBIDAS:
+
+**Domain Service → Infrastructure Service**
+```typescript
+// ❌ ERRADO: Domain não pode conhecer Infrastructure
+class CalculadoraImpostoService {
+    constructor(
+        private emailService: EmailService // ❌ NÃO PODE!
+        // Domain não deve saber que existe "email"
+    ) {}
+}
+```
+
+**Domain Service → Application Service**
+```typescript
+// ❌ ERRADO: Inversão de dependência (camada inferior depende da superior)
+class CalculadoraImpostoService {
+    constructor(
+        private criarPedidoUseCase: CriarPedidoUseCase // ❌ NÃO PODE!
+    ) {}
+}
+```
+
+**Entidade → Qualquer Service**
+```typescript
+// ❌ ERRADO: Entidade não deve conhecer Services
+class Pedido extends AggregateRoot {
+    constructor(
+        private calculadoraImposto: CalculadoraImpostoService // ❌ NÃO PODE!
+        // Entidades devem ser puras, sem dependências externas
+    ) {}
+}
+```
+
+**Domain Layer → Infrastructure Layer**
+```typescript
+// ❌ ERRADO: Domain não pode conhecer detalhes de infraestrutura
+class Pedido extends AggregateRoot {
+    async salvar() {
+        await db.insert(pedidos).values(this); // ❌ NÃO PODE!
+        // Isso é Active Record, não DDD
+    }
+}
+```
+
+#### Tabela de Dependências Permitidas
+
+| De \ Para | Entidade | Domain Service | Application Service | Infrastructure | Repository |
+|-----------|----------|----------------|---------------------|----------------|------------|
+| **Entidade** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Domain Service** | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Application Service** | ✅ | ✅ | ❌ | ✅ (via interface) | ✅ (via interface) |
+| **Infrastructure** | ✅ | ✅ | ✅ | ✅ | N/A |
+| **Repository (Infra)** | ✅ | ❌ | ❌ | ✅ | ✅ |
+
+**Legenda:**
+- ✅ = Pode depender diretamente
+- ✅ (via interface) = Pode depender, mas através de uma interface/abstração (DIP)
+- ❌ = Não pode depender
+
+---
+
+### Quantos Métodos Cada Service Deve Ter?
+
+A resposta varia conforme o tipo de Service:
+
+#### Application Service (Use Case): **1 método por classe**
+
+**Princípio:** 1 Use Case = 1 Intenção de Negócio = 1 Classe = 1 Método `execute`
+
+✅ **CERTO: Uma responsabilidade por classe**
+```typescript
+// Arquivo: criar-pedido.use-case.ts
+class CriarPedidoUseCase {
+    async execute(command: CriarPedidoCommand): Promise<void> {
+        // ... lógica de criar pedido
+    }
+}
+
+// Arquivo: cancelar-pedido.use-case.ts
+class CancelarPedidoUseCase {
+    async execute(command: CancelarPedidoCommand): Promise<void> {
+        // ... lógica de cancelar pedido
+    }
+}
+
+// Arquivo: confirmar-pedido.use-case.ts
+class ConfirmarPedidoUseCase {
+    async execute(command: ConfirmarPedidoCommand): Promise<void> {
+        // ... lógica de confirmar pedido
+    }
+}
+```
+
+❌ **ERRADO: "Service Faz-Tudo"**
+```typescript
+// ❌ NÃO FAÇA: Um service com múltiplos casos de uso
+class PedidoService {
+    async criarPedido(command: CriarPedidoCommand) { }
+    async cancelarPedido(command: CancelarPedidoCommand) { }
+    async confirmarPedido(command: ConfirmarPedidoCommand) { }
+    async adicionarItem(command: AdicionarItemCommand) { }
+    async removerItem(command: RemoverItemCommand) { }
+    async calcularTotal(pedidoId: string) { }
+    async enviarEmailConfirmacao(pedidoId: string) { }
+    // ... 50 métodos depois...
+}
+```
+
+**Por que separar em classes com 1 método?**
+- ✅ **Single Responsibility Principle:** Cada classe tem uma única razão para mudar
+- ✅ **Testabilidade:** Testa um caso de uso isoladamente
+- ✅ **Clareza:** O nome da classe já diz exatamente o que ela faz
+- ✅ **Manutenção:** Mudanças em "Criar" não afetam "Cancelar"
+- ✅ **Deploy independente:** Em microserviços, cada Use Case pode virar um endpoint
+- ✅ **Histórico Git mais limpo:** Commits afetam apenas o Use Case modificado
+
+---
+
+#### Domain Service: **Múltiplos métodos relacionados**
+
+**Princípio:** Métodos que compartilham a mesma **responsabilidade de domínio** podem viver juntos.
+
+✅ **CERTO: Métodos coesos (relacionados)**
+```typescript
+// Domain Service com métodos relacionados ao cálculo de impostos
+class CalculadoraImpostoService {
+    calcularICMS(pedido: Pedido, estado: string): Money {
+        // ... lógica de ICMS
+        const aliquota = this.obterAliquotaICMS(estado);
+        return pedido.calcularTotal().multiplicar(aliquota);
+    }
+
+    calcularIPI(pedido: Pedido, produto: Produto): Money {
+        // ... lógica de IPI
+        if (produto.isNacional()) return Money.zero();
+        return produto.preco.multiplicar(0.1);
+    }
+
+    calcularTotal(pedido: Pedido, estado: string): Money {
+        // Método que compõe os outros
+        const icms = this.calcularICMS(pedido, estado);
+        const ipi = this.calcularIPI(pedido, pedido.produto);
+        return icms.somar(ipi);
+    }
+
+    // Método privado auxiliar (coesão)
+    private obterAliquotaICMS(estado: string): number {
+        const aliquotas = { SP: 0.18, RJ: 0.20, MG: 0.18 };
+        return aliquotas[estado] || 0.17;
+    }
+}
+
+// Outro Domain Service, outra responsabilidade
+class ValidadorDocumentoService {
+    validarCPF(cpf: string): boolean {
+        // ... lógica de validação
+    }
+
+    validarCNPJ(cnpj: string): boolean {
+        // ... lógica de validação
+    }
+
+    formatarCPF(cpf: string): string {
+        // Método auxiliar relacionado
+        return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+}
+```
+
+❌ **ERRADO: Métodos sem relação (baixa coesão)**
+```typescript
+// ❌ NÃO FAÇA: "HelperService" genérico
+class UtilsService {
+    calcularImposto(pedido: Pedido): Money { }
+    enviarEmail(email: string): void { }
+    validarCPF(cpf: string): boolean { }
+    formatarData(data: Date): string { }
+    comprimirImagem(imagem: Buffer): Buffer { }
+    // Métodos sem relação entre si = baixa coesão!
+}
+```
+
+**Regra de Coesão:** Se você não consegue dar um nome específico para o Domain Service (tipo "CalculadoraX", "ValidadorY"), provavelmente ele está fazendo muita coisa diferente.
+
+---
+
+#### Infrastructure Service: **Múltiplos métodos relacionados**
+
+**Princípio:** Métodos técnicos relacionados à mesma **infraestrutura/tecnologia**.
+
+✅ **CERTO: Múltiplos métodos técnicos coesos**
+```typescript
+// Infrastructure Service - Email
+class EmailService {
+    async send(to: string, subject: string, body: string): Promise<void> {
+        await this.smtpClient.sendMail({ to, subject, html: body });
+    }
+
+    async sendBulk(recipients: string[], subject: string, body: string): Promise<void> {
+        const promises = recipients.map(to => this.send(to, subject, body));
+        await Promise.all(promises);
+    }
+
+    async sendWithTemplate(to: string, templateId: string, data: any): Promise<void> {
+        const template = await this.loadTemplate(templateId);
+        const body = this.renderTemplate(template, data);
+        await this.send(to, template.subject, body);
+    }
+
+    private async loadTemplate(id: string): Promise<EmailTemplate> { /* ... */ }
+    private renderTemplate(template: string, data: any): string { /* ... */ }
+}
+
+// Infrastructure Service - Storage
+class StorageService {
+    async upload(file: Buffer, path: string): Promise<string> {
+        return await this.s3.upload({ Bucket: 'mybucket', Key: path, Body: file });
+    }
+
+    async download(path: string): Promise<Buffer> {
+        const result = await this.s3.getObject({ Bucket: 'mybucket', Key: path });
+        return result.Body as Buffer;
+    }
+
+    async delete(path: string): Promise<void> {
+        await this.s3.deleteObject({ Bucket: 'mybucket', Key: path });
+    }
+
+    async exists(path: string): Promise<boolean> {
+        try {
+            await this.s3.headObject({ Bucket: 'mybucket', Key: path });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+}
+```
+
+**Regra:** Todos os métodos devem lidar com a mesma tecnologia/infraestrutura (Email, Storage, Logger, etc.).
+
+---
+
+### Resumo: Quantos Métodos?
+
+| Tipo de Service | Quantos Métodos? | Motivo |
+|-----------------|------------------|--------|
+| **Application Service (Use Case)** | **1 método `execute`** | 1 Use Case = 1 Responsabilidade = 1 Classe |
+| **Domain Service** | **Múltiplos métodos relacionados** | Métodos que compartilham a mesma responsabilidade de domínio |
+| **Infrastructure Service** | **Múltiplos métodos relacionados** | Métodos técnicos da mesma infraestrutura/tecnologia |
+
+### Exemplo Real Completo
+
+```typescript
+// ===== APPLICATION LAYER =====
+// Arquivo: criar-pedido.use-case.ts
+class CriarPedidoUseCase {
+    constructor(
+        private pedidoRepo: IPedidoRepository,
+        private clienteRepo: IClienteRepository,
+        private calculadoraImposto: CalculadoraImpostoService, // Domain Service
+        private emailService: IEmailService // Infrastructure (via interface)
+    ) {}
+
+    // ✅ Um único método: execute
+    async execute(command: CriarPedidoCommand): Promise<void> {
+        // Orquestração pura
+        const cliente = await this.clienteRepo.findById(command.clienteId);
+        const pedido = Pedido.criar(command.itens, cliente.id);
+
+        const imposto = this.calculadoraImposto.calcularTotal(pedido, cliente.estado);
+        pedido.aplicarImposto(imposto);
+
+        await this.pedidoRepo.save(pedido);
+        await this.emailService.send(cliente.email, "Pedido criado", "...");
+    }
+}
+
+// ===== DOMAIN LAYER =====
+// Arquivo: calculadora-imposto.service.ts
+class CalculadoraImpostoService {
+    // ✅ Múltiplos métodos relacionados (mesma responsabilidade)
+    calcularICMS(pedido: Pedido, estado: string): Money {
+        const aliquota = this.obterAliquotaICMS(estado);
+        return pedido.calcularTotal().multiplicar(aliquota);
+    }
+
+    calcularIPI(pedido: Pedido): Money {
+        if (pedido.contemProdutosImportados()) {
+            return pedido.calcularTotal().multiplicar(0.1);
+        }
+        return Money.zero();
+    }
+
+    calcularTotal(pedido: Pedido, estado: string): Money {
+        const icms = this.calcularICMS(pedido, estado);
+        const ipi = this.calcularIPI(pedido);
+        return icms.somar(ipi);
+    }
+
+    private obterAliquotaICMS(estado: string): number {
+        // Lógica auxiliar privada
+        const aliquotas = { SP: 0.18, RJ: 0.20, MG: 0.18 };
+        return aliquotas[estado] || 0.17;
+    }
+}
+
+// ===== INFRASTRUCTURE LAYER =====
+// Arquivo: smtp-email.service.ts
+class SmtpEmailService implements IEmailService {
+    // ✅ Múltiplos métodos técnicos relacionados
+    async send(to: string, subject: string, body: string): Promise<void> {
+        await this.smtpClient.sendMail({ to, subject, html: body });
+    }
+
+    async sendBulk(recipients: string[], subject: string, body: string): Promise<void> {
+        const promises = recipients.map(to => this.send(to, subject, body));
+        await Promise.all(promises);
+    }
+}
+```
+
+**Lembre-se:** Se você está criando um "Service" e não sabe se deve ter 1 ou múltiplos métodos, pergunte-se:
+
+- **É um Use Case (fluxo de negócio)?** → 1 método `execute`
+- **É um Domain Service (regras de negócio)?** → Múltiplos métodos relacionados à mesma responsabilidade
+- **É um Infrastructure Service (técnico)?** → Múltiplos métodos da mesma tecnologia
 
 ---
 
