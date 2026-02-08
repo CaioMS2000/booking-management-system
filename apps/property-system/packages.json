@@ -1,4 +1,22 @@
 {
-    "prod":[],
+    "prod":[
+        "@fastify/cookie",
+        "@fastify/cors",
+        "@fastify/swagger",
+        "@fastify/swagger-ui",
+        "@fastify/multipart",
+        "@scalar/fastify-api-reference",
+        "fastify",
+        "fastify-plugin",
+        "fastify-type-provider-zod",
+        "swagger-themes",
+        "dayjs",
+        "better-auth",
+        "better-auth-localization",
+        "tsyringe",
+        "winston",
+        "winston-daily-rotate-file",
+        "winston-loki"
+    ],
     "dev":["@types/node", "typescript"]
 }
