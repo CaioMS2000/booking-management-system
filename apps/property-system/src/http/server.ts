@@ -1,4 +1,5 @@
 import '@/globals'
+import '@/init'
 import fastifyCors from '@fastify/cors'
 import fastifyMultipart from '@fastify/multipart'
 import { FastifyListenOptions, FastifyReply, FastifyRequest } from 'fastify'

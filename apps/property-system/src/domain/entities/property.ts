@@ -11,8 +11,9 @@ type PropertyProps = {
 	propertyType: PropertyType
 	address: Address
 	status: 'active' | 'inactive'
+	imagesUrls: string[]
 }
-type PropertyCreateInput = Optional<PropertyProps, 'status'> & {
+type PropertyCreateInput = Optional<PropertyProps, 'status' | 'imagesUrls'> & {
 	id: UniqueEntityID
 }
 
@@ -64,6 +65,7 @@ export class Property extends Entity<PropertyProps> {
 			address,
 			propertyType,
 			status = 'active',
+			imagesUrls = [],
 		} = input
 
 		if (!pricePerNight) {
@@ -79,6 +81,7 @@ export class Property extends Entity<PropertyProps> {
 				address,
 				propertyType,
 				status,
+				imagesUrls,
 			},
 			id
 		)
