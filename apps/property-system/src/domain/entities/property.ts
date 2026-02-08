@@ -1,4 +1,5 @@
-import { Entity } from '@repo/core'
+import { Entity, Optional, UniqueEntityID } from '@repo/core'
+import { appContext } from '@/application-context'
 import { PropertyType } from '../@types'
 import { Address, Money } from '../value-object'
 
@@ -6,10 +7,13 @@ type PropertyProps = {
 	name: string
 	description: string
 	capacity: number
-	pricePerNight: Money
+	pricePerNight?: Money
 	propertyType: PropertyType
 	address: Address
 	status: 'active' | 'inactive'
+}
+type PropertyCreateInput = Optional<PropertyProps, 'status'> & {
+	id: UniqueEntityID
 }
 
 export class Property extends Entity<PropertyProps> {
@@ -38,10 +42,45 @@ export class Property extends Entity<PropertyProps> {
 	// }
 
 	calculateTotalPrice(nights: number): Money {
-		const totalCents = this.props.pricePerNight.getAmount() * nights
+		const context = appContext.get()
+		const moneyAmount = this.props.pricePerNight?.getAmount() ?? 0
+		const currency =
+			this.props.pricePerNight?.getCurrency() ?? context.currentCurrency
+		const totalCents = moneyAmount * nights
+
 		return Money.create({
 			valueInCents: totalCents,
-			currency: this.props.pricePerNight.getCurrency(),
+			currency: currency,
 		})
+	}
+
+	static create(input: PropertyCreateInput) {
+		let {
+			id,
+			name,
+			description,
+			capacity,
+			pricePerNight,
+			address,
+			propertyType,
+			status = 'active',
+		} = input
+
+		if (!pricePerNight) {
+			status = 'inactive'
+		}
+
+		return new Property(
+			{
+				name,
+				description,
+				capacity,
+				pricePerNight,
+				address,
+				propertyType,
+				status,
+			},
+			id
+		)
 	}
 }
