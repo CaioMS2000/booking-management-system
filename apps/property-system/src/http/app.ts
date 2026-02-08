@@ -30,17 +30,17 @@ const safeTransform: typeof jsonSchemaTransform = input => {
 app.register(swagger, {
 	openapi: {
 		openapi: '3.1.0',
-		info: { title: 'WPP Bot API', version: '1.0.0' },
+		info: { title: 'Property System API', version: '1.0.0' },
 		components: {
 			securitySchemes: {
-				cookieAuth: {
-					type: 'apiKey',
-					in: 'cookie',
-					name: 'better-auth.session_token',
+				bearerAuth: {
+					type: 'http',
+					scheme: 'bearer',
+					bearerFormat: 'JWT',
 				},
 			},
 		},
-		security: [{ cookieAuth: [] }],
+		security: [{ bearerAuth: [] }],
 	},
 	transform: safeTransform,
 })
@@ -59,28 +59,6 @@ app.register(swaggerUI, {
 		],
 	},
 	transformSpecificationClone: true,
-	transformSpecification(spec, req) {
-		const authSpec = (req.server as any)._cachedAuthSpec
-		if (!authSpec) return spec
-
-		// Mesclar specs
-		return {
-			...spec,
-			paths: { ...spec.paths, ...authSpec.paths },
-			tags: [...(spec.tags ?? []), ...(authSpec.tags ?? [])],
-			components: {
-				...spec.components,
-				schemas: {
-					...spec.components?.schemas,
-					...authSpec.components?.schemas,
-				},
-				securitySchemes: {
-					...spec.components?.securitySchemes,
-					...authSpec.components?.securitySchemes,
-				},
-			},
-		}
-	},
 })
 app.register(ScalarApiReference, {
 	routePrefix: '/docs',

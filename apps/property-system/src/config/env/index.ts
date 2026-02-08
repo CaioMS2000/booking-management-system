@@ -14,8 +14,7 @@ export const envSchema = z.object({
 	DATABASE_URL: z.string(),
 	PORT: z.coerce.number().catch(8000),
 
-	// Better-auth
-	APP_BASE_URL: z.string().optional(),
+	AUTH_JWKS_URL: z.string(),
 
 	// WhatsApp API
 	VERIFICATION_TOKEN: z.string(),

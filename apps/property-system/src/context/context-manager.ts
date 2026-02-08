@@ -26,6 +26,10 @@ export class ContextManager<TContext extends Record<string, unknown>> {
 		return this.storage.getStore()
 	}
 
+	enterWith(context: TContext): void {
+		this.storage.enterWith(context)
+	}
+
 	hasContext(): boolean {
 		return this.storage.getStore() !== undefined
 	}
