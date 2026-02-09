@@ -1,19 +1,29 @@
+import { Command, CommandHandler, CommandResult } from './command'
 import { CommandHandlerNotFoundError } from './@errors'
-import { Command, CommandHandler } from './command'
+
+type CommandClass<T extends Command<any>> = abstract new (...args: any[]) => T
 
 export class CommandBus {
-	private handlers: Map<string, CommandHandler<any>> = new Map()
+	private handlers = new Map<CommandClass<any>, CommandHandler<any>>()
 
-	register<T>(command: Command<T>, handler: CommandHandler<T>) {
-		this.handlers.set(command.constructor.name, handler)
+	register<TCommand extends Command<any>>(
+		commandClass: CommandClass<TCommand>,
+		handler: CommandHandler<TCommand>
+	) {
+		this.handlers.set(commandClass, handler)
 	}
 
-	async execute<T>(command: Command<T>): Promise<T> {
-		const key = command.constructor.name
-		const handler = this.handlers.get(key) as CommandHandler<T> | undefined
+	async execute<TCommand extends Command<any>>(
+		command: TCommand
+	): Promise<CommandResult<TCommand>> {
+		const handler = this.handlers.get(
+			command.constructor as CommandClass<TCommand>
+		) as CommandHandler<TCommand> | undefined
 
 		if (!handler) {
-			throw new CommandHandlerNotFoundError(`Handler for ${key} not found`)
+			throw new CommandHandlerNotFoundError(
+				`Handler for ${command.constructor.name} not found`
+			)
 		}
 
 		return await handler.execute(command)

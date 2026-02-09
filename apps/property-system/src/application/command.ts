@@ -1,33 +1,12 @@
-// import { appContext } from '@/application-context'
 import { UniqueEntityID } from '@repo/core'
 
-export abstract class BasicCommand {
-	protected constructor(public readonly id: UniqueEntityID) {}
-
-	// Exemple
-	// static async create(id?: UniqueEntityID): Promise<Command>{
-	//     let resolvedId: UniqueEntityID
-	//     if(id){
-	//         resolvedId = id
-	//     } else {
-	//         const context = appContext.get()
-	//         const idGenerator = context.idGenerator.V4
-	//         const newId = await idGenerator.generate()
-	//         resolvedId = newId
-	//     }
-	//     return new Command(resolvedId)
-	// }
-}
-
-export abstract class CommandWithResult<ResultType> {
-	readonly resultType?: ResultType
+export abstract class Command<TResult = void> {
+	readonly __resultType?: TResult
 	protected constructor(public readonly id: UniqueEntityID) {}
 }
 
-export type Command<ResultType = unknown> =
-	| BasicCommand
-	| CommandWithResult<ResultType>
+export type CommandResult<T> = T extends Command<infer R> ? R : never
 
-export abstract class CommandHandler<T = unknown> {
-	abstract execute(command: Command<T>): Promise<T>
+export abstract class CommandHandler<TCommand extends Command<any>> {
+	abstract execute(command: TCommand): Promise<CommandResult<TCommand>>
 }

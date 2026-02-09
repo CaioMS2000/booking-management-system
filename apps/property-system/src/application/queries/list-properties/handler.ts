@@ -5,9 +5,7 @@ import { PropertyRepository } from '@/application/repositories/property-reposito
 import { OwnerRepository } from '@/application/repositories/owner-repository'
 import { Owner } from '@/domain/entities/owner'
 
-export class ListPropertiesQueryHandler extends QueryHandler<
-	PropertyWithOwnerReadModel[]
-> {
+export class ListPropertiesQueryHandler extends QueryHandler<ListPropertiesQuery> {
 	constructor(
 		private propertyRepository: PropertyRepository,
 		private ownerRepository: OwnerRepository
