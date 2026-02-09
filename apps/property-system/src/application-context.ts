@@ -1,3 +1,4 @@
+import { IdGenerator } from '@repo/core'
 import { ContextManager } from './context/context-manager'
 import { Currency } from './domain'
 
@@ -6,6 +7,10 @@ export type ApplicationContext = {
 	requestId: string
 	userId?: string
 	timestamp: Date
+	idGenerator: {
+		V4: IdGenerator
+		V7: IdGenerator
+	}
 }
 
 export const appContext = new ContextManager<ApplicationContext>()

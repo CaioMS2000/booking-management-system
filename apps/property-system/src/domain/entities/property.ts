@@ -3,7 +3,8 @@ import { appContext } from '@/application-context'
 import { PropertyType } from '../@types'
 import { Address, Money } from '../value-object'
 
-type PropertyProps = {
+export type PropertyProps = {
+	ownerId: UniqueEntityID
 	name: string
 	description: string
 	capacity: number
@@ -18,29 +19,41 @@ type PropertyCreateInput = Optional<PropertyProps, 'status' | 'imagesUrls'> & {
 }
 
 export class Property extends Entity<PropertyProps> {
-	// get name() {
-	// 	return this.props.name
-	// }
+	get ownerId() {
+		return this.props.ownerId
+	}
 
-	// get description() {
-	// 	return this.props.description
-	// }
+	get name() {
+		return this.props.name
+	}
 
-	// get capacity() {
-	// 	return this.props.capacity
-	// }
+	get description() {
+		return this.props.description
+	}
 
-	// get pricePerNight() {
-	// 	return this.props.pricePerNight
-	// }
+	get capacity() {
+		return this.props.capacity
+	}
 
-	// get type() {
-	// 	return this.props.propertyType
-	// }
+	get pricePerNight() {
+		return this.props.pricePerNight
+	}
 
-	// get address() {
-	// 	return this.props.address
-	// }
+	get type() {
+		return this.props.propertyType
+	}
+
+	get address() {
+		return this.props.address
+	}
+
+	get status() {
+		return this.props.status
+	}
+
+	get imagesUrls() {
+		return this.props.imagesUrls
+	}
 
 	calculateTotalPrice(nights: number): Money {
 		const context = appContext.get()
@@ -57,6 +70,7 @@ export class Property extends Entity<PropertyProps> {
 
 	static create(input: PropertyCreateInput) {
 		let {
+			ownerId,
 			id,
 			name,
 			description,
@@ -74,6 +88,7 @@ export class Property extends Entity<PropertyProps> {
 
 		return new Property(
 			{
+				ownerId,
 				name,
 				description,
 				capacity,

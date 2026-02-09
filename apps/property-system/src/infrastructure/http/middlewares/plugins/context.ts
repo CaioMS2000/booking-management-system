@@ -39,11 +39,17 @@ export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 			)
 		}
 
+		const IdGeneratorV4 = container.resolve(TOKENS.IdGeneratorV4)
+		const IdGeneratorV7 = container.resolve(TOKENS.IdGeneratorV7)
 		appContext.enterWith({
 			currentCurrency: extractCurrency(req),
 			requestId: req.id,
 			userId: payload.sub,
 			timestamp: new Date(),
+			idGenerator: {
+				V4: IdGeneratorV4,
+				V7: IdGeneratorV7,
+			},
 		})
 	})
 })
