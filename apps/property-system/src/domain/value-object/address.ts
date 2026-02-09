@@ -28,4 +28,8 @@ export class Address extends ValueObject<AddressProps> {
 	get zipCode() {
 		return this._value.zipCode
 	}
+
+	static create(props: AddressProps) {
+		return new Address(props)
+	}
 }

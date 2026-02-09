@@ -1,7 +1,7 @@
+import { CPFLengthRule } from '@/domain/value-objects/rules/cpf-length-rule'
 import { Either, failure, success } from '@/either'
 import { ValueObject } from '../../value-object'
 import { InvalidValueError } from '../@errors/domain-errors/invalid-value-error'
-import { CPFLengthRule } from '@/domain/value-objects/rules/cpf-length-rule'
 
 export class CPF extends ValueObject<string> {
 	private constructor(value: string) {

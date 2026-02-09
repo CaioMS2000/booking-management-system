@@ -1,5 +1,6 @@
 export * from './entity'
 export * from './value-object'
+export * from './domain'
 export * from './either'
 export * from './config'
 export * from './typescript'
