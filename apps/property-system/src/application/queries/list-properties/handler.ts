@@ -1,10 +1,13 @@
-import { Command, CommandHandler } from '@/application/command'
-import { ListPropertiesCommand, PropertyWithOwner } from './command'
+import { QueryHandler } from '@/application/query'
+import { ListPropertiesQuery } from './query'
+import { PropertyWithOwnerReadModel } from './read-model'
 import { PropertyRepository } from '@/application/repositories/property-repository'
 import { OwnerRepository } from '@/application/repositories/owner-repository'
 import { Owner } from '@/domain/entities/owner'
 
-export class ListPropertiesCommandHandler extends CommandHandler {
+export class ListPropertiesQueryHandler extends QueryHandler<
+	PropertyWithOwnerReadModel[]
+> {
 	constructor(
 		private propertyRepository: PropertyRepository,
 		private ownerRepository: OwnerRepository
@@ -12,10 +15,10 @@ export class ListPropertiesCommandHandler extends CommandHandler {
 		super()
 	}
 
-	async execute(_command: ListPropertiesCommand) {
+	async execute(_query: ListPropertiesQuery) {
 		const allProperties = await this.propertyRepository.getAll()
 		const ownersCache: Map<string, Owner> = new Map()
-		const propertiesWithOwner: PropertyWithOwner[] = await Promise.all(
+		const propertiesWithOwner: PropertyWithOwnerReadModel[] = await Promise.all(
 			allProperties.map(async property => {
 				let owner: Owner
 				const cachedOwner = ownersCache.get(property.ownerId.toString())
@@ -27,7 +30,7 @@ export class ListPropertiesCommandHandler extends CommandHandler {
 					ownersCache.set(property.ownerId.toString(), owner)
 				}
 
-				const propertyWithOwner: PropertyWithOwner = {
+				const propertyWithOwner: PropertyWithOwnerReadModel = {
 					name: property.name,
 					description: property.description,
 					capacity: property.capacity,
