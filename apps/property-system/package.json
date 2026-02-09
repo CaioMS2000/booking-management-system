@@ -7,16 +7,24 @@
     "build": "tsup src/index.ts --format esm --dts --clean",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "lint": "biome check ."
+    "lint": "biome check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "test:debug": "vitest --inspect-brk --inspect --logHeapUsage --threads=false"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.3.0",
+    "@johanblumenberg/ts-mockito": "^1.0.52",
     "@repo/core": "*",
     "@repo/system-settings-manager": "*",
     "@repo/typescript-config": "*",
     "@types/node": "^25.2.2",
     "tsup": "^8.5.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vite-tsconfig-paths": "^6.1.0",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

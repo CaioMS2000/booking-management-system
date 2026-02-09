@@ -17,5 +17,5 @@
         "winston-daily-rotate-file",
         "winston-loki"
     ],
-    "dev":["@types/node", "typescript"]
+    "dev":["@types/node", "typescript", "vite-tsconfig-paths", "vitest", "@johanblumenberg/ts-mockito", "@faker-js/faker"]
 }
