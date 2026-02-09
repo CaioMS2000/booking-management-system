@@ -105,7 +105,7 @@ export class EventBus {
 
 		// Execute all handlers in parallel
 		const results = await Promise.allSettled(
-			[...handlers].map(handler => Promise.resolve(handler(event)))
+			[...handlers].map(async handler => handler(event))
 		)
 
 		// Log errors but don't throw (other handlers should continue)

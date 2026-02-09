@@ -1,7 +1,6 @@
 export * from './entity'
 export * from './value-object'
 export * from './either'
-export * from './events'
 export * from './config'
 export * from './typescript'
 export * from './id-generator'

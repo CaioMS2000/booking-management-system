@@ -197,6 +197,10 @@ describe('EventBus', () => {
 
 	describe('Error Handling', () => {
 		it('should not throw if handler fails', async () => {
+			const consoleErrorSpy = vi
+				.spyOn(console, 'error')
+				.mockImplementation(() => {})
+
 			const errorHandler = vi.fn(() => {
 				throw new Error('Handler error')
 			})
@@ -216,6 +220,8 @@ describe('EventBus', () => {
 			// Both handlers should be called
 			expect(errorHandler).toHaveBeenCalledTimes(1)
 			expect(successHandler).toHaveBeenCalledTimes(1)
+
+			consoleErrorSpy.mockRestore()
 		})
 
 		it('should log error when handler fails', async () => {
