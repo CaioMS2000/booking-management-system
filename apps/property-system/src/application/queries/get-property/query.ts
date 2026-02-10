@@ -1,13 +1,17 @@
-import { UniqueEntityID } from '@repo/core'
-import { appContext } from '@/application-context'
+import { Either, UniqueEntityID } from '@repo/core'
+import { PropertyNotFoundError } from '@/application/@errors'
+import { resolveId } from '@/application/utils/resolve-id'
+
 import { Query } from '../../query'
-import { NullablePropertyReadModel } from './read-model'
+import { PropertyReadModel } from './read-model'
 
 type GetPropertyQueryParams = {
 	propertyId: string
 }
 
-export class GetPropertyQuery extends Query<NullablePropertyReadModel> {
+export class GetPropertyQuery extends Query<
+	Either<PropertyNotFoundError, PropertyReadModel>
+> {
 	readonly props: GetPropertyQueryParams
 
 	get propertyId() {
@@ -18,17 +22,7 @@ export class GetPropertyQuery extends Query<NullablePropertyReadModel> {
 		params: GetPropertyQueryParams,
 		id?: UniqueEntityID
 	): Promise<GetPropertyQuery> {
-		let resolvedId: UniqueEntityID
-
-		if (id) {
-			resolvedId = id
-		} else {
-			const context = appContext.get()
-			const idGenerator = context.idGenerator.V4
-			const newId = await idGenerator.generate()
-			resolvedId = newId
-		}
-
+		const resolvedId = await resolveId(id)
 		return new GetPropertyQuery(resolvedId, params)
 	}
 

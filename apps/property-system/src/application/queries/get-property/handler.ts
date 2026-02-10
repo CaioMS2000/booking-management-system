@@ -1,12 +1,11 @@
+import { failure, success } from '@repo/core'
+import { PropertyNotFoundError } from '@/application/@errors'
 import { QueryHandler } from '@/application/query'
 import { OwnerRepository } from '@/application/repositories/owner-repository'
 import { PropertyRepository } from '@/application/repositories/property-repository'
-import { Owner } from '@/domain/entities/owner'
 import { GetPropertyQuery } from './query'
-import { NullablePropertyReadModel } from './read-model'
-import { createLogger } from '@/logging/logger'
+import { PropertyReadModel } from './read-model'
 
-const logger = createLogger({ component: 'GetPropertyQueryHandler' })
 export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 	constructor(
 		private propertyRepository: PropertyRepository,
@@ -16,29 +15,32 @@ export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 	}
 
 	async execute(query: GetPropertyQuery) {
-		try {
-			const property = await this.propertyRepository.get(query.propertyId)
-			const owner: Owner = await this.ownerRepository.get(property.ownerId)
-			const propertyWithOwner: NullablePropertyReadModel = {
-				name: property.name,
-				description: property.description,
-				capacity: property.capacity,
-				pricePerNight: property.pricePerNight,
-				propertyType: property.type,
-				address: property.address,
-				status: property.status,
-				imagesUrls: property.imagesUrls,
-				owner: {
-					name: owner.name,
-					email: owner.email,
-					phone: owner.phone,
-				},
-			}
+		const property = await this.propertyRepository.findById(query.propertyId)
 
-			return propertyWithOwner
-		} catch (error) {
-			logger.error(JSON.stringify(error, null, 2))
-			return null
+		if (!property) {
+			return failure<PropertyNotFoundError, PropertyReadModel>(
+				new PropertyNotFoundError(`Property ${query.propertyId} not found`)
+			)
 		}
+
+		const owner = await this.ownerRepository.getById(property.ownerId)
+
+		const propertyWithOwner: PropertyReadModel = {
+			name: property.name,
+			description: property.description,
+			capacity: property.capacity,
+			pricePerNight: property.pricePerNight,
+			propertyType: property.type,
+			address: property.address,
+			status: property.status,
+			imagesUrls: property.imagesUrls,
+			owner: {
+				name: owner.name,
+				email: owner.email,
+				phone: owner.phone,
+			},
+		}
+
+		return success<PropertyNotFoundError, PropertyReadModel>(propertyWithOwner)
 	}
 }

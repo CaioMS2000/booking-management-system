@@ -10,6 +10,7 @@
     "test:debug": "turbo run test:debug",
     "test:watch": "turbo run test:watch",
     "format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
+    "biome:check": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true",
     "check-types": "turbo run check-types",
     "prepare": "husky"
   },

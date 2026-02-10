@@ -2,7 +2,7 @@ import { Email, Phone } from '@repo/core'
 import { PropertyType } from '@/domain/@types'
 import { Address, Money } from '@/domain/value-object'
 
-export type NullablePropertyReadModel = {
+export type PropertyReadModel = {
 	name: string
 	description: string
 	capacity: number
@@ -16,4 +16,4 @@ export type NullablePropertyReadModel = {
 		email: Email
 		phone: Phone
 	}
-} | null
+}

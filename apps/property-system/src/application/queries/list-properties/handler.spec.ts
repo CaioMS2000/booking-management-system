@@ -29,8 +29,8 @@ describe('ListPropertiesQueryHandler', () => {
 			const property = await makeProperty(owner.id)
 			const query = await ListPropertiesQuery.create()
 
-			when(propertyRepo.getAll()).thenResolve([property])
-			when(ownerRepo.get(anything())).thenResolve(owner)
+			when(propertyRepo.findAll()).thenResolve([property])
+			when(ownerRepo.getById(anything())).thenResolve(owner)
 
 			const result = await sut.execute(query)
 
@@ -57,7 +57,7 @@ describe('ListPropertiesQueryHandler', () => {
 		return appContext.run(makeAppContext(), async () => {
 			const query = await ListPropertiesQuery.create()
 
-			when(propertyRepo.getAll()).thenResolve([])
+			when(propertyRepo.findAll()).thenResolve([])
 
 			const result = await sut.execute(query)
 

@@ -2,6 +2,7 @@ import { Property } from '@/domain/entities/property'
 import { UniqueEntityID } from '@repo/core'
 
 export abstract class PropertyRepository {
-	abstract getAll(): Promise<Property[]>
-	abstract get(id: UniqueEntityID): Promise<Property>
+	abstract findAll(): Promise<Property[]>
+	abstract findById(id: UniqueEntityID): Promise<Property | null>
+	abstract getById(id: UniqueEntityID): Promise<Property>
 }

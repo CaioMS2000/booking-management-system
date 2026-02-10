@@ -1,23 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mock, instance, when, anything } from '@johanblumenberg/ts-mockito'
+import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { PropertyNotFoundError } from '@/application/@errors'
+import { OwnerRepository } from '@/application/repositories/owner-repository'
+import { PropertyRepository } from '@/application/repositories/property-repository'
 import { appContext } from '@/application-context'
-
-vi.mock('@/logging/logger', () => ({
-	createLogger: () => ({
-		debug: vi.fn(),
-		info: vi.fn(),
-		warn: vi.fn(),
-		error: vi.fn(),
-		child: vi.fn(),
-	}),
-}))
 import { makeAppContext } from '@/test/factories/make-app-context'
+import { makeOwner } from '@/test/factories/make-owner'
+import { makeProperty } from '@/test/factories/make-property'
 import { GetPropertyQueryHandler } from './handler'
 import { GetPropertyQuery } from './query'
-import { PropertyRepository } from '@/application/repositories/property-repository'
-import { OwnerRepository } from '@/application/repositories/owner-repository'
-import { makeProperty } from '@/test/factories/make-property'
-import { makeOwner } from '@/test/factories/make-owner'
 
 describe('GetPropertyQueryHandler', () => {
 	let propertyRepo: PropertyRepository
@@ -33,23 +24,22 @@ describe('GetPropertyQueryHandler', () => {
 		)
 	})
 
-	it('should return null when property is not found', () => {
+	it('should return failure when property is not found', () => {
 		return appContext.run(makeAppContext(), async () => {
 			const query = await GetPropertyQuery.create({
 				propertyId: 'non-existent-id',
 			})
 
-			when(propertyRepo.get(anything())).thenReject(
-				new Error('Property not found')
-			)
+			when(propertyRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute(query)
 
-			expect(result).toBeNull()
+			expect(result.isFailure()).toBe(true)
+			expect(result.value).toBeInstanceOf(PropertyNotFoundError)
 		})
 	})
 
-	it('should return property with owner data', () => {
+	it('should return success with property and owner data', () => {
 		return appContext.run(makeAppContext(), async () => {
 			const owner = await makeOwner()
 			const property = await makeProperty(owner.id)
@@ -57,12 +47,13 @@ describe('GetPropertyQueryHandler', () => {
 				propertyId: property.id.toString(),
 			})
 
-			when(propertyRepo.get(anything())).thenResolve(property)
-			when(ownerRepo.get(anything())).thenResolve(owner)
+			when(propertyRepo.findById(anything())).thenResolve(property)
+			when(ownerRepo.getById(anything())).thenResolve(owner)
 
 			const result = await sut.execute(query)
 
-			expect(result).toEqual({
+			expect(result.isSuccess()).toBe(true)
+			expect(result.value).toEqual({
 				name: property.name,
 				description: property.description,
 				capacity: property.capacity,

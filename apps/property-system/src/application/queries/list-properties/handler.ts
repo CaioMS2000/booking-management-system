@@ -14,7 +14,7 @@ export class ListPropertiesQueryHandler extends QueryHandler<ListPropertiesQuery
 	}
 
 	async execute(_query: ListPropertiesQuery) {
-		const allProperties = await this.propertyRepository.getAll()
+		const allProperties = await this.propertyRepository.findAll()
 		const ownersCache: Map<string, Owner> = new Map()
 		const propertiesWithOwner: PropertyWithOwnerReadModel[] = await Promise.all(
 			allProperties.map(async property => {
@@ -24,7 +24,7 @@ export class ListPropertiesQueryHandler extends QueryHandler<ListPropertiesQuery
 				if (cachedOwner) {
 					owner = cachedOwner
 				} else {
-					owner = await this.ownerRepository.get(property.ownerId)
+					owner = await this.ownerRepository.getById(property.ownerId)
 					ownersCache.set(property.ownerId.toString(), owner)
 				}
 
