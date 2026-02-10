@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import '@/globals'
 import '@/init'
 import fastifyCors from '@fastify/cors'
@@ -10,7 +11,9 @@ import {
 	systemSettingDefaults,
 	SystemSettingKey,
 } from '@repo/system-settings-manager'
+import { createLogger } from '@repo/core'
 
+const logger = createLogger({ component: 'HTTP Server' })
 async function logHealthRequest(
 	request: FastifyRequest,
 	_reply: FastifyReply,
@@ -97,7 +100,7 @@ async function bootstrap() {
 		const nodeEnv = String(env.NODE_ENV).toLowerCase()
 		str += `\nlog level: ${nodeEnv === 'development' || nodeEnv === 'test' ? 'debug' : 'info'}`
 		str += '\n'
-		// logger.debug(str)
+		logger.debug(str)
 	} catch (error) {
 		app.log.error(error)
 		process.exit(1)

@@ -5,7 +5,7 @@ import { SystemSettingKey, SystemSettingValue } from './system-settings'
 import { systemSettings } from './schemas/system-settings'
 import { SystemSetting } from './models/settings'
 
-const logger = createLogger('SystemConfigService')
+const logger = createLogger({ component: 'SystemConfigService' })
 
 export class SystemConfigService {
 	private cache: Map<SystemSettingKey, unknown> = new Map()

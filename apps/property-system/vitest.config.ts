@@ -8,7 +8,11 @@ export default defineConfig({
 	},
 	plugins: [
 		tsConfigPaths({
-			projects: ['./tsconfig.json', '../../packages/core/tsconfig.json'],
+			projects: [
+				'./tsconfig.json',
+				'../../packages/core/tsconfig.json',
+				'../../packages/system-settings-manager/tsconfig.json',
+			],
 		}),
 	],
 })

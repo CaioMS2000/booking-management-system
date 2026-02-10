@@ -1,3 +1,4 @@
+import 'reflect-metadata'
 import { SystemConfigService } from '@repo/system-settings-manager'
 import { UUIDV4Generator, UUIDV7Generator } from '@repo/core'
 
