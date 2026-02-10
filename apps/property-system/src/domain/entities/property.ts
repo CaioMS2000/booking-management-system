@@ -14,7 +14,11 @@ export type PropertyProps = {
 	status: 'active' | 'inactive'
 	imagesUrls: string[]
 }
-type PropertyCreateInput = Optional<PropertyProps, 'status' | 'imagesUrls'> & {
+
+export type PropertyCreateInput = Optional<
+	PropertyProps,
+	'status' | 'imagesUrls'
+> & {
 	id: UniqueEntityID
 }
 

@@ -8,7 +8,8 @@ export type OwnerProps = {
 	phone: Phone
 	propertiesIds: string[]
 }
-type OwnerCreateInput = Omit<OwnerProps, 'propertiesIds'> & {
+
+export type OwnerCreateInput = Omit<OwnerProps, 'propertiesIds'> & {
 	id: UniqueEntityID
 }
 

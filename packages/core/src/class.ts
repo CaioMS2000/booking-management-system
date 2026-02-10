@@ -4,4 +4,7 @@ export type Resources = {
 
 export abstract class Class<T extends Resources> {
 	protected abstract readonly resources: T
+	protected get props() {
+		return this.resources
+	}
 }
