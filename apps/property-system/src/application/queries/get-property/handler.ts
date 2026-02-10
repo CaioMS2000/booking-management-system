@@ -18,7 +18,7 @@ export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 		const property = await this.propertyRepository.findById(query.propertyId)
 
 		if (!property) {
-			return failure<PropertyNotFoundError, PropertyReadModel>(
+			return failure(
 				new PropertyNotFoundError(`Property ${query.propertyId} not found`)
 			)
 		}
@@ -41,6 +41,6 @@ export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 			},
 		}
 
-		return success<PropertyNotFoundError, PropertyReadModel>(propertyWithOwner)
+		return success(propertyWithOwner)
 	}
 }

@@ -5,4 +5,5 @@ export abstract class PropertyRepository {
 	abstract findAll(): Promise<Property[]>
 	abstract findById(id: UniqueEntityID): Promise<Property | null>
 	abstract getById(id: UniqueEntityID): Promise<Property>
+	abstract findManyByOwnerId(ownerId: UniqueEntityID): Promise<Property[]>
 }

@@ -69,3 +69,6 @@ Thumbs.db
 
 # others
 *.sh
+*.md
+!Arquitetura de microserviços para plataforma de reservas.md
+!Filosofia de desenvolvimento dos microserviços.md

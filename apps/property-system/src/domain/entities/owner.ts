@@ -6,7 +6,7 @@ export type OwnerProps = {
 	name: string
 	email: Email
 	phone: Phone
-	propertiesIds: string[]
+	propertiesIds: UniqueEntityID[]
 }
 
 export type OwnerCreateInput = Omit<OwnerProps, 'propertiesIds'> & {
