@@ -1,6 +1,6 @@
 import { Entity } from '@repo/core'
-import { Email, Phone } from '@repo/core/domain/value-objects'
-import { UniqueEntityID } from '@repo/core/entity'
+import { Email, Phone } from '@repo/core'
+import { UniqueEntityID } from '@repo/core'
 
 export type OwnerProps = {
 	name: string

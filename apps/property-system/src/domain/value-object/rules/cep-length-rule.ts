@@ -1,4 +1,4 @@
-import { Rule } from '@repo/core/rules'
+import { Rule } from '@repo/core'
 
 export class CEPLengthRule extends Rule<string> {
 	message = 'CEP must have 8 digits'

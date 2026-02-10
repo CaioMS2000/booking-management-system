@@ -1,6 +1,6 @@
 import { Address, Money } from '@/domain/value-object'
 import { PropertyType } from '@/domain/@types'
-import { Email, Phone } from '@repo/core/domain/value-objects'
+import { Email, Phone } from '@repo/core'
 
 export type PropertyWithOwnerReadModel = {
 	name: string

@@ -2,12 +2,11 @@
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
     "types": ["vitest/globals", "node"],
+    "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "[ROOT]/*": ["./*"],
-      "@repo/core": ["../../packages/core/src/index.ts"],
-      "@repo/core/*": ["../../packages/core/src/*"]
+      "[ROOT]/*": ["./*"]
     }
   },
   "include": ["src/**/*.ts"],
