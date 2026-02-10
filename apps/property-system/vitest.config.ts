@@ -6,5 +6,9 @@ export default defineConfig({
 		globals: true,
 		root: './',
 	},
-	plugins: [tsConfigPaths()],
+	plugins: [
+		tsConfigPaths({
+			projects: ['./tsconfig.json', '../../packages/core/tsconfig.json'],
+		}),
+	],
 })

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mock, instance, when, anything } from '@johanblumenberg/ts-mockito'
-import { UniqueEntityID } from '@repo/core'
+import { UniqueEntityID, Email, Phone } from '@repo/core'
 import { appContext } from '@/application-context'
 import { makeAppContext } from '@/test/factories/make-app-context'
 import { ListPropertiesQueryHandler } from './handler'
@@ -11,7 +11,6 @@ import { Property } from '@/domain/entities/property'
 import { Owner } from '@/domain/entities/owner'
 import { makeAddress } from '@/test/factories/make-address'
 import { Money } from '@/domain/value-object/money'
-import { Email, Phone } from '@repo/core/domain/value-objects'
 
 function makeProperty(overrides?: { id?: string; ownerId?: string }): Property {
 	return Property.create({
