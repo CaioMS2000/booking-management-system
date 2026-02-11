@@ -5,16 +5,16 @@ import {
 	verify,
 	when,
 } from '@johanblumenberg/ts-mockito'
-import { beforeEach, describe, expect, it } from 'vitest'
 import { UniqueEntityID } from '@repo/core'
-import { OwnerRepository } from '@/application/repositories/owner-repository'
-import { OwnerNotFoundError } from '@/application/@errors'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { appContext } from '@/application-context'
+import { OwnerNotFoundError } from '@/modules/property-module/application/@errors'
+import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
 import { makeAppContext } from '@/test/factories/make-app-context'
 import { makeOwner } from '@/test/factories/make-owner'
-import { RegisterPropertyCommandHandler } from './handler'
 import { RegisterPropertyCommand } from './command'
-import { PropertyRepository } from '@/application/repositories/property-repository'
+import { RegisterPropertyCommandHandler } from './handler'
 
 describe('RegisterPropertyCommandHandler', () => {
 	let ownerRepo: OwnerRepository

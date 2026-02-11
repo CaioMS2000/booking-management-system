@@ -1,6 +1,6 @@
 import { Either, UniqueEntityID } from '@repo/core'
-import { OwnerNotFoundError } from '@/application/@errors'
-import { resolveId } from '@/application/utils/resolve-id'
+import { OwnerNotFoundError } from '@/modules/property-module/application/@errors'
+import { resolveId } from '@/modules/property-module/application/utils/resolve-id'
 
 import { Query } from '../../query'
 import { OwnerReadModel } from './read-model'

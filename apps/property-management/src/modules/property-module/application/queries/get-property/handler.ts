@@ -1,8 +1,8 @@
 import { failure, success } from '@repo/core'
-import { PropertyNotFoundError } from '@/application/@errors'
-import { QueryHandler } from '@/application/query'
-import { OwnerRepository } from '@/application/repositories/owner-repository'
-import { PropertyRepository } from '@/application/repositories/property-repository'
+import { PropertyNotFoundError } from '@/modules/property-module/application/@errors'
+import { QueryHandler } from '@/modules/property-module/application/query'
+import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
 import { GetPropertyQuery } from './query'
 import { PropertyReadModel } from './read-model'
 

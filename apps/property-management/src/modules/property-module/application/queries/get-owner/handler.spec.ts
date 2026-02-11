@@ -1,12 +1,12 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { appContext } from '@/application-context'
 import {
 	OwnerNotFoundError,
 	PropertyNotFoundError,
-} from '@/application/@errors'
-import { OwnerRepository } from '@/application/repositories/owner-repository'
-import { PropertyRepository } from '@/application/repositories/property-repository'
-import { appContext } from '@/application-context'
+} from '@/modules/property-module/application/@errors'
+import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
 import { makeAppContext } from '@/test/factories/make-app-context'
 import { makeOwner } from '@/test/factories/make-owner'
 import { makeProperty } from '@/test/factories/make-property'

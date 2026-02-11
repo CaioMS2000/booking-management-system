@@ -1,5 +1,5 @@
 import { Either, InvalidValueError, UniqueEntityID } from '@repo/core'
-import { resolveId } from '@/application/utils/resolve-id'
+import { resolveId } from '@/modules/property-module/application/utils/resolve-id'
 import { Command } from '../../command'
 import { RegisterOwnerReturnModel } from './return-model'
 

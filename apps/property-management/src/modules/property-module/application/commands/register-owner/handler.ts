@@ -1,8 +1,8 @@
-import { Email, Phone, failure, success } from '@repo/core'
+import { Email, failure, Phone, success } from '@repo/core'
 import { appContext } from '@/application-context'
-import { CommandHandler } from '@/application/command'
-import { OwnerRepository } from '@/application/repositories/owner-repository'
 import { Owner } from '@/domain/entities/owner'
+import { CommandHandler } from '@/modules/property-module/application/command'
+import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
 import { RegisterOwnerCommand } from './command'
 
 export class RegisterOwnerCommandHandler extends CommandHandler<RegisterOwnerCommand> {

@@ -1,11 +1,11 @@
 import { failure, success } from '@repo/core'
-import { OwnerNotFoundError } from '@/application/@errors'
-import { CommandHandler } from '@/application/command'
-import { OwnerRepository } from '@/application/repositories/owner-repository'
-import { PropertyRepository } from '@/application/repositories/property-repository'
 import { appContext } from '@/application-context'
 import { Property } from '@/domain/entities/property'
 import { Address, Money } from '@/domain/value-object'
+import { OwnerNotFoundError } from '@/modules/property-module/application/@errors'
+import { CommandHandler } from '@/modules/property-module/application/command'
+import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
 import { RegisterPropertyCommand } from './command'
 
 export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPropertyCommand> {

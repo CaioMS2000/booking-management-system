@@ -1,5 +1,5 @@
 import { UniqueEntityID } from '@repo/core'
-import { resolveId } from '@/application/utils/resolve-id'
+import { resolveId } from '@/modules/property-module/application/utils/resolve-id'
 import { Query } from '../../query'
 import { PropertyWithOwnerReadModel } from './read-model'
 

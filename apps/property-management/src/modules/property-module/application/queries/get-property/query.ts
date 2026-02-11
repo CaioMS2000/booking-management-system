@@ -1,6 +1,6 @@
 import { Either, UniqueEntityID } from '@repo/core'
-import { PropertyNotFoundError } from '@/application/@errors'
-import { resolveId } from '@/application/utils/resolve-id'
+import { PropertyNotFoundError } from '@/modules/property-module/application/@errors'
+import { resolveId } from '@/modules/property-module/application/utils/resolve-id'
 
 import { Query } from '../../query'
 import { PropertyReadModel } from './read-model'

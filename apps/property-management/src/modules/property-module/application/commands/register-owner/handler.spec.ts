@@ -5,14 +5,14 @@ import {
 	verify,
 	when,
 } from '@johanblumenberg/ts-mockito'
-import { beforeEach, describe, expect, it } from 'vitest'
 import { InvalidValueError } from '@repo/core'
-import { OwnerRepository } from '@/application/repositories/owner-repository'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { appContext } from '@/application-context'
-import { makeAppContext } from '@/test/factories/make-app-context'
 import { Owner } from '@/domain/entities/owner'
-import { RegisterOwnerCommandHandler } from './handler'
+import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { makeAppContext } from '@/test/factories/make-app-context'
 import { RegisterOwnerCommand } from './command'
+import { RegisterOwnerCommandHandler } from './handler'
 
 describe('RegisterOwnerCommandHandler', () => {
 	let ownerRepo: OwnerRepository

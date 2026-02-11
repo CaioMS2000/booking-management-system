@@ -1,11 +1,11 @@
 import { Either, InvalidValueError, UniqueEntityID } from '@repo/core'
-import { resolveId } from '@/application/utils/resolve-id'
-import { Command } from '../../command'
-import { RegisterPropertyReturnModel } from './return-model'
-import { OwnerNotFoundError } from '@/application/@errors'
+import type { PropertyType } from '@/domain/@types'
 import type { AddressProps } from '@/domain/value-object/address'
 import type { MoneyProps } from '@/domain/value-object/money'
-import type { PropertyType } from '@/domain/@types'
+import { OwnerNotFoundError } from '@/modules/property-module/application/@errors'
+import { resolveId } from '@/modules/property-module/application/utils/resolve-id'
+import { Command } from '../../command'
+import { RegisterPropertyReturnModel } from './return-model'
 
 type RegisterPropertyCommandParams = {
 	ownerId: UniqueEntityID

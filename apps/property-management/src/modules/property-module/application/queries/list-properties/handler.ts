@@ -1,9 +1,9 @@
-import { QueryHandler } from '@/application/query'
+import { Owner } from '@/domain/entities/owner'
+import { QueryHandler } from '@/modules/property-module/application/query'
+import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
 import { ListPropertiesQuery } from './query'
 import { PropertyWithOwnerReadModel } from './read-model'
-import { PropertyRepository } from '@/application/repositories/property-repository'
-import { OwnerRepository } from '@/application/repositories/owner-repository'
-import { Owner } from '@/domain/entities/owner'
 
 export class ListPropertiesQueryHandler extends QueryHandler<ListPropertiesQuery> {
 	constructor(
