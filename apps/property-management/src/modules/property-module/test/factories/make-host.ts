@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { appContext } from '@/modules/property-module/application-context'
+import { appContext } from '@/application-context'
 import {
 	Host,
 	HostCreateInput,

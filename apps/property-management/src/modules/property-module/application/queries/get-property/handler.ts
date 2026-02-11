@@ -29,10 +29,8 @@ export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 			name: property.name,
 			description: property.description,
 			capacity: property.capacity,
-			pricePerNight: property.pricePerNight,
 			propertyType: property.type,
 			address: property.address,
-			status: property.status,
 			imagesUrls: property.imagesUrls,
 			host: {
 				name: host.name,

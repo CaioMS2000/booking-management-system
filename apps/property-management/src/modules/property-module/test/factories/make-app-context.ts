@@ -1,4 +1,4 @@
-import { ApplicationContext } from '@/modules/property-module/application-context'
+import { ApplicationContext } from '@/application-context'
 import { FakeIdGenerator } from '../fake-id-generator'
 
 export function makeAppContext(

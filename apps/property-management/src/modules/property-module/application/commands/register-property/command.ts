@@ -1,7 +1,6 @@
 import { Either, InvalidValueError, UniqueEntityID } from '@repo/core'
 import type { PropertyType } from '@/modules/property-module/domain/@types'
 import type { AddressProps } from '@/modules/property-module/domain/value-object/address'
-import type { MoneyProps } from '@/modules/property-module/domain/value-object/money'
 import { HostNotFoundError } from '@/modules/property-module/application/@errors'
 import { resolveId } from '@/modules/property-module/application/utils/resolve-id'
 import { Command } from '../../command'
@@ -13,10 +12,8 @@ type RegisterPropertyCommandParams = {
 	name: string
 	description: string
 	capacity: number
-	pricePerNight?: MoneyProps
 	propertyType: PropertyType
 	address: AddressProps
-	status?: 'active' | 'inactive'
 	imagesUrls?: string[]
 }
 

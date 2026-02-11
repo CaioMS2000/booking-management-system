@@ -1,11 +1,11 @@
 import { failure, success } from '@repo/core'
-import { Property } from '@/modules/property-module/domain/entities/property'
-import { Address, Money } from '@/modules/property-module/domain/value-object'
+import { appContext } from '@/application-context'
 import { HostNotFoundError } from '@/modules/property-module/application/@errors'
 import { CommandHandler } from '@/modules/property-module/application/command'
 import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
 import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
-import { appContext } from '@/modules/property-module/application-context'
+import { Property } from '@/modules/property-module/domain/entities/property'
+import { Address } from '@/modules/property-module/domain/value-object'
 import { RegisterPropertyCommand } from './command'
 
 export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPropertyCommand> {
@@ -27,9 +27,6 @@ export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPrope
 		const id = await context.idGenerator.V4.generate()
 
 		const address = Address.create(command.params.address)
-		const pricePerNight = command.params.pricePerNight
-			? Money.create(command.params.pricePerNight)
-			: undefined
 
 		const newProperty = Property.create({
 			id,
@@ -37,11 +34,9 @@ export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPrope
 			name: command.params.name,
 			description: command.params.description,
 			capacity: command.params.capacity,
-			pricePerNight,
 			propertyType: command.params.propertyType,
 			publicId: command.params.publicId,
 			address,
-			status: command.params.status,
 			imagesUrls: command.params.imagesUrls,
 		})
 

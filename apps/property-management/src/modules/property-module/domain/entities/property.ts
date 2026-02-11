@@ -1,7 +1,7 @@
 import { Entity, Optional, UniqueEntityID } from '@repo/core'
-import { appContext } from '@/modules/property-module/application-context'
+import { appContext } from '@/application-context'
 import { PropertyType } from '../@types'
-import { Address, Money } from '../value-object'
+import { Address } from '../value-object'
 
 export type PropertyProps = {
 	hostId: UniqueEntityID
@@ -9,17 +9,12 @@ export type PropertyProps = {
 	name: string
 	description: string
 	capacity: number
-	pricePerNight?: Money
 	propertyType: PropertyType
 	address: Address
-	status: 'active' | 'inactive'
 	imagesUrls: string[]
 }
 
-export type PropertyCreateInput = Optional<
-	PropertyProps,
-	'status' | 'imagesUrls'
-> & {
+export type PropertyCreateInput = Optional<PropertyProps, 'imagesUrls'> & {
 	id: UniqueEntityID
 }
 
@@ -40,10 +35,6 @@ export class Property extends Entity<PropertyProps> {
 		return this.props.capacity
 	}
 
-	get pricePerNight() {
-		return this.props.pricePerNight
-	}
-
 	get type() {
 		return this.props.propertyType
 	}
@@ -56,45 +47,22 @@ export class Property extends Entity<PropertyProps> {
 		return this.props.address
 	}
 
-	get status() {
-		return this.props.status
-	}
-
 	get imagesUrls() {
 		return this.props.imagesUrls
 	}
 
-	calculateTotalPrice(nights: number): Money {
-		const context = appContext.get()
-		const moneyAmount = this.props.pricePerNight?.getAmount() ?? 0
-		const currency =
-			this.props.pricePerNight?.getCurrency() ?? context.currentCurrency
-		const totalCents = moneyAmount * nights
-
-		return Money.create({
-			valueInCents: totalCents,
-			currency: currency,
-		})
-	}
-
 	static create(input: PropertyCreateInput) {
-		let {
+		const {
 			hostId,
 			id,
 			name,
 			description,
 			capacity,
-			pricePerNight,
 			address,
 			propertyType,
 			publicId,
-			status = 'active',
 			imagesUrls = [],
 		} = input
-
-		if (!pricePerNight) {
-			status = 'inactive'
-		}
 
 		return new Property(
 			{
@@ -102,11 +70,9 @@ export class Property extends Entity<PropertyProps> {
 				name,
 				description,
 				capacity,
-				pricePerNight,
 				address,
 				propertyType,
 				publicId,
-				status,
 				imagesUrls,
 			},
 			id

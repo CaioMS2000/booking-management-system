@@ -7,12 +7,12 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { InvalidValueError } from '@repo/core'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { appContext } from '@/application-context'
 import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
-import { appContext } from '@/modules/property-module/application-context'
 import { Host } from '@/modules/property-module/domain/entities/host'
+import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { RegisterHostCommand } from './command'
 import { RegisterHostCommandHandler } from './handler'
-import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 
 describe('RegisterHostCommandHandler', () => {
 	let hostRepo: HostRepository

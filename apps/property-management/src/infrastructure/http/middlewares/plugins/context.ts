@@ -1,9 +1,9 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
-import { appContext } from '@/modules/property-module/application-context'
-import { Currency } from '@/modules/property-module/domain'
+import { appContext } from '@/application-context'
 import { AppError } from '../../errors'
 import { verifyJwt } from '../../jwt/verify-jwt'
+import { Currency } from '@/modules/listing-module/domain'
 
 function extractToken(req: FastifyRequest): string | null {
 	const auth = req.headers.authorization

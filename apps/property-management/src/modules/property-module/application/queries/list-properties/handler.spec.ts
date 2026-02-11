@@ -1,8 +1,8 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { appContext } from '@/application-context'
 import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
 import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
-import { appContext } from '@/modules/property-module/application-context'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
@@ -39,10 +39,8 @@ describe('ListPropertiesQueryHandler', () => {
 				name: property.name,
 				description: property.description,
 				capacity: property.capacity,
-				pricePerNight: property.pricePerNight,
 				propertyType: property.type,
 				address: property.address,
-				status: property.status,
 				imagesUrls: property.imagesUrls,
 				host: {
 					name: host.name,

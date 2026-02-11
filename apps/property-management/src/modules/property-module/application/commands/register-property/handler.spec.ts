@@ -7,10 +7,10 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { UniqueEntityID } from '@repo/core'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { appContext } from '@/application-context'
 import { HostNotFoundError } from '@/modules/property-module/application/@errors'
 import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
 import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
-import { appContext } from '@/modules/property-module/application-context'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { RegisterPropertyCommand } from './command'
@@ -39,7 +39,6 @@ describe('RegisterPropertyCommandHandler', () => {
 				name: 'Beach House',
 				description: 'A nice beach house',
 				capacity: 4,
-				pricePerNight: { valueInCents: 15000, currency: 'BRL' },
 				propertyType: 'Apartment',
 				address: {
 					street: 'Rua X',
@@ -70,7 +69,6 @@ describe('RegisterPropertyCommandHandler', () => {
 				name: 'Beach House',
 				description: 'A nice beach house',
 				capacity: 4,
-				pricePerNight: { valueInCents: 15000, currency: 'BRL' },
 				propertyType: 'Apartment',
 				address: {
 					street: 'Rua X',

@@ -1,7 +1,7 @@
 import { Email, failure, Phone, success } from '@repo/core'
+import { appContext } from '@/application-context'
 import { CommandHandler } from '@/modules/property-module/application/command'
 import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
-import { appContext } from '@/modules/property-module/application-context'
 import { Host } from '@/modules/property-module/domain/entities/host'
 import { RegisterHostCommand } from './command'
 
