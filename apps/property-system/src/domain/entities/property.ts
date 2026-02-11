@@ -5,6 +5,7 @@ import { Address, Money } from '../value-object'
 
 export type PropertyProps = {
 	ownerId: UniqueEntityID
+	publicId: number
 	name: string
 	description: string
 	capacity: number
@@ -47,6 +48,10 @@ export class Property extends Entity<PropertyProps> {
 		return this.props.propertyType
 	}
 
+	get publicId() {
+		return this.props.publicId
+	}
+
 	get address() {
 		return this.props.address
 	}
@@ -82,6 +87,7 @@ export class Property extends Entity<PropertyProps> {
 			pricePerNight,
 			address,
 			propertyType,
+			publicId,
 			status = 'active',
 			imagesUrls = [],
 		} = input
@@ -99,6 +105,7 @@ export class Property extends Entity<PropertyProps> {
 				pricePerNight,
 				address,
 				propertyType,
+				publicId,
 				status,
 				imagesUrls,
 			},

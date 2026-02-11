@@ -38,6 +38,7 @@ export async function makeProperty(ownerId: UniqueEntityID): Promise<Property> {
 		propertyType,
 		address,
 		status,
+		publicId: faker.number.int(),
 		imagesUrls,
 	}
 
