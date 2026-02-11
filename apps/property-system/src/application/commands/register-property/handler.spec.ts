@@ -32,6 +32,8 @@ describe('RegisterPropertyCommandHandler', () => {
 
 	it('should return failure when owner is not found', () => {
 		return appContext.run(makeAppContext(), async () => {
+			when(ownerRepo.findById(anything())).thenResolve(null)
+
 			const command = await RegisterPropertyCommand.create({
 				ownerId: new UniqueEntityID('non-existent-id'),
 				name: 'Beach House',
