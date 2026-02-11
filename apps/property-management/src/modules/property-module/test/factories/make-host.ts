@@ -1,17 +1,20 @@
-import { appContext } from '@/application-context'
 import { faker } from '@faker-js/faker'
-import { Owner, OwnerCreateInput } from '@/domain/entities/owner'
+import { appContext } from '@/modules/property-module/application-context'
+import {
+	Host,
+	HostCreateInput,
+} from '@/modules/property-module/domain/entities/host'
 import { makeEmail } from './make-email'
 import { makePhone } from './make-phone'
 
-export async function makeOwner(): Promise<Owner> {
+export async function makeHost(): Promise<Host> {
 	const context = appContext.get()
-	const props: OwnerCreateInput = {
+	const props: HostCreateInput = {
 		id: await context.idGenerator.V4.generate(),
 		name: faker.person.fullName(),
 		email: makeEmail(),
 		phone: makePhone(),
 	}
 
-	return Owner.create(props)
+	return Host.create(props)
 }

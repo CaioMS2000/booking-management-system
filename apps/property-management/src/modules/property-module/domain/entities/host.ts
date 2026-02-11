@@ -2,18 +2,18 @@ import { Entity } from '@repo/core'
 import { Email, Phone } from '@repo/core'
 import { UniqueEntityID } from '@repo/core'
 
-export type OwnerProps = {
+export type HostProps = {
 	name: string
 	email: Email
 	phone: Phone
 	propertiesIds: UniqueEntityID[]
 }
 
-export type OwnerCreateInput = Omit<OwnerProps, 'propertiesIds'> & {
+export type HostCreateInput = Omit<HostProps, 'propertiesIds'> & {
 	id: UniqueEntityID
 }
 
-export class Owner extends Entity<OwnerProps> {
+export class Host extends Entity<HostProps> {
 	get name() {
 		return this.props.name
 	}
@@ -30,10 +30,10 @@ export class Owner extends Entity<OwnerProps> {
 		return this.props.propertiesIds
 	}
 
-	static create(input: OwnerCreateInput) {
+	static create(input: HostCreateInput) {
 		const { name, email, phone, id } = input
 
-		return new Owner(
+		return new Host(
 			{
 				name,
 				email,

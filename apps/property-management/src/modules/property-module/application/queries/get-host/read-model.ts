@@ -1,6 +1,6 @@
 import { Email, Phone, UniqueEntityID } from '@repo/core'
 
-export type OwnerReadModel = {
+export type HostReadModel = {
 	name: string
 	email: Email
 	phone: Phone

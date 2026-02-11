@@ -1,7 +1,7 @@
 import { failure, success } from '@repo/core'
 import { PropertyNotFoundError } from '@/modules/property-module/application/@errors'
 import { QueryHandler } from '@/modules/property-module/application/query'
-import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
 import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
 import { GetPropertyQuery } from './query'
 import { PropertyReadModel } from './read-model'
@@ -9,7 +9,7 @@ import { PropertyReadModel } from './read-model'
 export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 	constructor(
 		private propertyRepository: PropertyRepository,
-		private ownerRepository: OwnerRepository
+		private hostRepository: HostRepository
 	) {
 		super()
 	}
@@ -23,9 +23,9 @@ export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 			)
 		}
 
-		const owner = await this.ownerRepository.getById(property.ownerId)
+		const host = await this.hostRepository.getById(property.hostId)
 
-		const propertyWithOwner: PropertyReadModel = {
+		const propertyWithHost: PropertyReadModel = {
 			name: property.name,
 			description: property.description,
 			capacity: property.capacity,
@@ -34,13 +34,13 @@ export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 			address: property.address,
 			status: property.status,
 			imagesUrls: property.imagesUrls,
-			owner: {
-				name: owner.name,
-				email: owner.email,
-				phone: owner.phone,
+			host: {
+				name: host.name,
+				email: host.email,
+				phone: host.phone,
 			},
 		}
 
-		return success(propertyWithOwner)
+		return success(propertyWithHost)
 	}
 }

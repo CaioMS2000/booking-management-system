@@ -1,26 +1,26 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { appContext } from '@/application-context'
 import { PropertyNotFoundError } from '@/modules/property-module/application/@errors'
-import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
 import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
-import { makeAppContext } from '@/test/factories/make-app-context'
-import { makeOwner } from '@/test/factories/make-owner'
-import { makeProperty } from '@/test/factories/make-property'
+import { appContext } from '@/modules/property-module/application-context'
+import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
+import { makeHost } from '@/modules/property-module/test/factories/make-host'
+import { makeProperty } from '@/modules/property-module/test/factories/make-property'
 import { GetPropertyQueryHandler } from './handler'
 import { GetPropertyQuery } from './query'
 
 describe('GetPropertyQueryHandler', () => {
 	let propertyRepo: PropertyRepository
-	let ownerRepo: OwnerRepository
+	let hostRepo: HostRepository
 	let sut: GetPropertyQueryHandler
 
 	beforeEach(() => {
 		propertyRepo = mock(PropertyRepository)
-		ownerRepo = mock(OwnerRepository)
+		hostRepo = mock(HostRepository)
 		sut = new GetPropertyQueryHandler(
 			instance(propertyRepo),
-			instance(ownerRepo)
+			instance(hostRepo)
 		)
 	})
 
@@ -39,16 +39,16 @@ describe('GetPropertyQueryHandler', () => {
 		})
 	})
 
-	it('should return success with property and owner data', () => {
+	it('should return success with property and host data', () => {
 		return appContext.run(makeAppContext(), async () => {
-			const owner = await makeOwner()
-			const property = await makeProperty(owner.id)
+			const host = await makeHost()
+			const property = await makeProperty(host.id)
 			const query = await GetPropertyQuery.create({
 				propertyId: property.id.toString(),
 			})
 
 			when(propertyRepo.findById(anything())).thenResolve(property)
-			when(ownerRepo.getById(anything())).thenResolve(owner)
+			when(hostRepo.getById(anything())).thenResolve(host)
 
 			const result = await sut.execute(query)
 
@@ -62,10 +62,10 @@ describe('GetPropertyQueryHandler', () => {
 				address: property.address,
 				status: property.status,
 				imagesUrls: property.imagesUrls,
-				owner: {
-					name: owner.name,
-					email: owner.email,
-					phone: owner.phone,
+				host: {
+					name: host.name,
+					email: host.email,
+					phone: host.phone,
 				},
 			})
 		})

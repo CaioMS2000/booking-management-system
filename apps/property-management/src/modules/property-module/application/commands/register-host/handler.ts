@@ -1,16 +1,16 @@
 import { Email, failure, Phone, success } from '@repo/core'
-import { appContext } from '@/application-context'
-import { Owner } from '@/domain/entities/owner'
 import { CommandHandler } from '@/modules/property-module/application/command'
-import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
-import { RegisterOwnerCommand } from './command'
+import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
+import { appContext } from '@/modules/property-module/application-context'
+import { Host } from '@/modules/property-module/domain/entities/host'
+import { RegisterHostCommand } from './command'
 
-export class RegisterOwnerCommandHandler extends CommandHandler<RegisterOwnerCommand> {
-	constructor(private ownerRepository: OwnerRepository) {
+export class RegisterHostCommandHandler extends CommandHandler<RegisterHostCommand> {
+	constructor(private hostRepository: HostRepository) {
 		super()
 	}
 
-	async execute(command: RegisterOwnerCommand) {
+	async execute(command: RegisterHostCommand) {
 		const emailResult = Email.create(command.email)
 
 		if (emailResult.isFailure()) {
@@ -26,15 +26,15 @@ export class RegisterOwnerCommandHandler extends CommandHandler<RegisterOwnerCom
 		const context = appContext.get()
 		const id = await context.idGenerator.V4.generate()
 
-		const owner = Owner.create({
+		const host = Host.create({
 			id,
 			name: command.name,
 			email: emailResult.value,
 			phone: phoneResult.value,
 		})
 
-		await this.ownerRepository.save(owner)
+		await this.hostRepository.save(host)
 
-		return success(owner)
+		return success(host)
 	}
 }

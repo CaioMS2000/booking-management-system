@@ -1,12 +1,12 @@
-import { appContext } from '@/application-context'
 import { faker } from '@faker-js/faker'
-import { Property, PropertyCreateInput } from '@/domain/entities/property'
 import { UniqueEntityID } from '@repo/core'
-import { Currency, Money, PropertyType } from '@/domain'
+import { Currency, Money, PropertyType } from '@/modules/property-module/domain'
+import { Property, PropertyCreateInput } from '@/modules/property-module/domain'
+import { appContext } from '@/modules/property-module/application-context'
 import { makeAddress } from './make-address'
 import { makeMoney } from './make-money'
 
-export async function makeProperty(ownerId: UniqueEntityID): Promise<Property> {
+export async function makeProperty(hostId: UniqueEntityID): Promise<Property> {
 	let pricePerNight: Money | undefined
 	const random = faker.number.int({
 		min: Number.MIN_SAFE_INTEGER,
@@ -30,7 +30,7 @@ export async function makeProperty(ownerId: UniqueEntityID): Promise<Property> {
 
 	const props: PropertyCreateInput = {
 		id: await context.idGenerator.V4.generate(),
-		ownerId,
+		hostId,
 		name: faker.location.secondaryAddress(),
 		description: faker.location.streetAddress(),
 		capacity: faker.number.int({ max: 10 }),

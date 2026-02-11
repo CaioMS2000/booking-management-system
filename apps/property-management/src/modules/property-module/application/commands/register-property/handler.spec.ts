@@ -7,35 +7,35 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { UniqueEntityID } from '@repo/core'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { appContext } from '@/application-context'
-import { OwnerNotFoundError } from '@/modules/property-module/application/@errors'
-import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { HostNotFoundError } from '@/modules/property-module/application/@errors'
+import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
 import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
-import { makeAppContext } from '@/test/factories/make-app-context'
-import { makeOwner } from '@/test/factories/make-owner'
+import { appContext } from '@/modules/property-module/application-context'
+import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
+import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { RegisterPropertyCommand } from './command'
 import { RegisterPropertyCommandHandler } from './handler'
 
 describe('RegisterPropertyCommandHandler', () => {
-	let ownerRepo: OwnerRepository
+	let hostRepo: HostRepository
 	let propertyRepo: PropertyRepository
 	let sut: RegisterPropertyCommandHandler
 
 	beforeEach(() => {
-		ownerRepo = mock(OwnerRepository)
+		hostRepo = mock(HostRepository)
 		propertyRepo = mock(PropertyRepository)
 		sut = new RegisterPropertyCommandHandler(
-			instance(ownerRepo),
+			instance(hostRepo),
 			instance(propertyRepo)
 		)
 	})
 
-	it('should return failure when owner is not found', () => {
+	it('should return failure when host is not found', () => {
 		return appContext.run(makeAppContext(), async () => {
-			when(ownerRepo.findById(anything())).thenResolve(null)
+			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const command = await RegisterPropertyCommand.create({
-				ownerId: new UniqueEntityID('non-existent-id'),
+				hostId: new UniqueEntityID('non-existent-id'),
 				name: 'Beach House',
 				description: 'A nice beach house',
 				capacity: 4,
@@ -54,19 +54,19 @@ describe('RegisterPropertyCommandHandler', () => {
 			const result = await sut.execute(command)
 
 			expect(result.isFailure()).toBe(true)
-			expect(result.value).toBeInstanceOf(OwnerNotFoundError)
+			expect(result.value).toBeInstanceOf(HostNotFoundError)
 			verify(propertyRepo.save(anything())).never()
 		})
 	})
 
 	it('should create and save property successfully', () => {
 		return appContext.run(makeAppContext(), async () => {
-			const owner = await makeOwner()
-			when(ownerRepo.findById(owner.id)).thenResolve(owner)
+			const host = await makeHost()
+			when(hostRepo.findById(host.id)).thenResolve(host)
 			when(propertyRepo.save(anything())).thenResolve()
 
 			const command = await RegisterPropertyCommand.create({
-				ownerId: owner.id,
+				hostId: host.id,
 				name: 'Beach House',
 				description: 'A nice beach house',
 				capacity: 4,

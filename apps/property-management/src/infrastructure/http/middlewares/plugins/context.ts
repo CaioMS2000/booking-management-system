@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
-import { appContext } from '@/application-context'
-import { Currency } from '@/domain'
+import { appContext } from '@/modules/property-module/application-context'
+import { Currency } from '@/modules/property-module/domain'
 import { AppError } from '../../errors'
 import { verifyJwt } from '../../jwt/verify-jwt'
 

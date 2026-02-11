@@ -1,18 +1,18 @@
 import { Either, InvalidValueError, UniqueEntityID } from '@repo/core'
 import { resolveId } from '@/modules/property-module/application/utils/resolve-id'
 import { Command } from '../../command'
-import { RegisterOwnerReturnModel } from './return-model'
+import { RegisterHostReturnModel } from './return-model'
 
-type RegisterOwnerCommandParams = {
+type RegisterHostCommandParams = {
 	name: string
 	email: string
 	phone: string
 }
 
-export class RegisterOwnerCommand extends Command<
-	Either<InvalidValueError, RegisterOwnerReturnModel>
+export class RegisterHostCommand extends Command<
+	Either<InvalidValueError, RegisterHostReturnModel>
 > {
-	readonly params: RegisterOwnerCommandParams
+	readonly params: RegisterHostCommandParams
 
 	get name() {
 		return this.params.name
@@ -27,17 +27,14 @@ export class RegisterOwnerCommand extends Command<
 	}
 
 	static async create(
-		params: RegisterOwnerCommandParams,
+		params: RegisterHostCommandParams,
 		id?: UniqueEntityID
-	): Promise<RegisterOwnerCommand> {
+	): Promise<RegisterHostCommand> {
 		const resolvedId = await resolveId(id)
-		return new RegisterOwnerCommand(resolvedId, params)
+		return new RegisterHostCommand(resolvedId, params)
 	}
 
-	protected constructor(
-		id: UniqueEntityID,
-		params: RegisterOwnerCommandParams
-	) {
+	protected constructor(id: UniqueEntityID, params: RegisterHostCommandParams) {
 		super(id)
 		this.params = params
 	}

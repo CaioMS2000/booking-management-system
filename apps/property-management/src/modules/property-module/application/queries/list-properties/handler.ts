@@ -1,34 +1,34 @@
-import { Owner } from '@/domain/entities/owner'
+import { Host } from '@/modules/property-module/domain/entities/host'
 import { QueryHandler } from '@/modules/property-module/application/query'
-import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
 import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
 import { ListPropertiesQuery } from './query'
-import { PropertyWithOwnerReadModel } from './read-model'
+import { PropertyWithHostReadModel } from './read-model'
 
 export class ListPropertiesQueryHandler extends QueryHandler<ListPropertiesQuery> {
 	constructor(
 		private propertyRepository: PropertyRepository,
-		private ownerRepository: OwnerRepository
+		private hostRepository: HostRepository
 	) {
 		super()
 	}
 
 	async execute(_query: ListPropertiesQuery) {
 		const allProperties = await this.propertyRepository.findAll()
-		const ownersCache: Map<string, Owner> = new Map()
-		const propertiesWithOwner: PropertyWithOwnerReadModel[] = await Promise.all(
+		const hostsCache: Map<string, Host> = new Map()
+		const propertiesWithHost: PropertyWithHostReadModel[] = await Promise.all(
 			allProperties.map(async property => {
-				let owner: Owner
-				const cachedOwner = ownersCache.get(property.ownerId.toString())
+				let host: Host
+				const cachedHost = hostsCache.get(property.hostId.toString())
 
-				if (cachedOwner) {
-					owner = cachedOwner
+				if (cachedHost) {
+					host = cachedHost
 				} else {
-					owner = await this.ownerRepository.getById(property.ownerId)
-					ownersCache.set(property.ownerId.toString(), owner)
+					host = await this.hostRepository.getById(property.hostId)
+					hostsCache.set(property.hostId.toString(), host)
 				}
 
-				const propertyWithOwner: PropertyWithOwnerReadModel = {
+				const propertyWithHost: PropertyWithHostReadModel = {
 					name: property.name,
 					description: property.description,
 					capacity: property.capacity,
@@ -37,17 +37,17 @@ export class ListPropertiesQueryHandler extends QueryHandler<ListPropertiesQuery
 					address: property.address,
 					status: property.status,
 					imagesUrls: property.imagesUrls,
-					owner: {
-						name: owner.name,
-						email: owner.email,
-						phone: owner.phone,
+					host: {
+						name: host.name,
+						email: host.email,
+						phone: host.phone,
 					},
 				}
 
-				return propertyWithOwner
+				return propertyWithHost
 			})
 		)
 
-		return propertiesWithOwner
+		return propertiesWithHost
 	}
 }

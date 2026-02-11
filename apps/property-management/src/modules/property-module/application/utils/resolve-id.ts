@@ -1,5 +1,5 @@
 import { UniqueEntityID } from '@repo/core'
-import { appContext } from '@/application-context'
+import { appContext } from '@/modules/property-module/application-context'
 
 export async function resolveId(id?: UniqueEntityID) {
 	let resolvedId: UniqueEntityID

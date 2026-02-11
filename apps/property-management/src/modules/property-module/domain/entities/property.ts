@@ -1,10 +1,10 @@
 import { Entity, Optional, UniqueEntityID } from '@repo/core'
-import { appContext } from '@/application-context'
+import { appContext } from '@/modules/property-module/application-context'
 import { PropertyType } from '../@types'
 import { Address, Money } from '../value-object'
 
 export type PropertyProps = {
-	ownerId: UniqueEntityID
+	hostId: UniqueEntityID
 	publicId: number
 	name: string
 	description: string
@@ -24,8 +24,8 @@ export type PropertyCreateInput = Optional<
 }
 
 export class Property extends Entity<PropertyProps> {
-	get ownerId() {
-		return this.props.ownerId
+	get hostId() {
+		return this.props.hostId
 	}
 
 	get name() {
@@ -79,7 +79,7 @@ export class Property extends Entity<PropertyProps> {
 
 	static create(input: PropertyCreateInput) {
 		let {
-			ownerId,
+			hostId,
 			id,
 			name,
 			description,
@@ -98,7 +98,7 @@ export class Property extends Entity<PropertyProps> {
 
 		return new Property(
 			{
-				ownerId,
+				hostId,
 				name,
 				description,
 				capacity,

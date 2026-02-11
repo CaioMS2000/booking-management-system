@@ -1,26 +1,26 @@
 import { failure, success } from '@repo/core'
-import { appContext } from '@/application-context'
-import { Property } from '@/domain/entities/property'
-import { Address, Money } from '@/domain/value-object'
-import { OwnerNotFoundError } from '@/modules/property-module/application/@errors'
+import { Property } from '@/modules/property-module/domain/entities/property'
+import { Address, Money } from '@/modules/property-module/domain/value-object'
+import { HostNotFoundError } from '@/modules/property-module/application/@errors'
 import { CommandHandler } from '@/modules/property-module/application/command'
-import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
+import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
 import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
+import { appContext } from '@/modules/property-module/application-context'
 import { RegisterPropertyCommand } from './command'
 
 export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPropertyCommand> {
 	constructor(
-		private ownerRepository: OwnerRepository,
+		private hostRepository: HostRepository,
 		private propertyRepository: PropertyRepository
 	) {
 		super()
 	}
 
 	async execute(command: RegisterPropertyCommand) {
-		const owner = await this.ownerRepository.findById(command.params.ownerId)
+		const host = await this.hostRepository.findById(command.params.hostId)
 
-		if (!owner) {
-			return failure(new OwnerNotFoundError())
+		if (!host) {
+			return failure(new HostNotFoundError())
 		}
 
 		const context = appContext.get()
@@ -33,7 +33,7 @@ export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPrope
 
 		const newProperty = Property.create({
 			id,
-			ownerId: command.params.ownerId,
+			hostId: command.params.hostId,
 			name: command.params.name,
 			description: command.params.description,
 			capacity: command.params.capacity,

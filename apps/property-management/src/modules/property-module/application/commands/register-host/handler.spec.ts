@@ -7,25 +7,25 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { InvalidValueError } from '@repo/core'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { appContext } from '@/application-context'
-import { Owner } from '@/domain/entities/owner'
-import { OwnerRepository } from '@/modules/property-module/application/repositories/owner-repository'
-import { makeAppContext } from '@/test/factories/make-app-context'
-import { RegisterOwnerCommand } from './command'
-import { RegisterOwnerCommandHandler } from './handler'
+import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
+import { appContext } from '@/modules/property-module/application-context'
+import { Host } from '@/modules/property-module/domain/entities/host'
+import { RegisterHostCommand } from './command'
+import { RegisterHostCommandHandler } from './handler'
+import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 
-describe('RegisterOwnerCommandHandler', () => {
-	let ownerRepo: OwnerRepository
-	let sut: RegisterOwnerCommandHandler
+describe('RegisterHostCommandHandler', () => {
+	let hostRepo: HostRepository
+	let sut: RegisterHostCommandHandler
 
 	beforeEach(() => {
-		ownerRepo = mock(OwnerRepository)
-		sut = new RegisterOwnerCommandHandler(instance(ownerRepo))
+		hostRepo = mock(HostRepository)
+		sut = new RegisterHostCommandHandler(instance(hostRepo))
 	})
 
 	it('should return failure when email is invalid', () => {
 		return appContext.run(makeAppContext(), async () => {
-			const command = await RegisterOwnerCommand.create({
+			const command = await RegisterHostCommand.create({
 				name: 'John Doe',
 				email: 'invalid-email',
 				phone: '5511999999999',
@@ -40,7 +40,7 @@ describe('RegisterOwnerCommandHandler', () => {
 
 	it('should return failure when phone is invalid', () => {
 		return appContext.run(makeAppContext(), async () => {
-			const command = await RegisterOwnerCommand.create({
+			const command = await RegisterHostCommand.create({
 				name: 'John Doe',
 				email: 'john@example.com',
 				phone: '',
@@ -53,11 +53,11 @@ describe('RegisterOwnerCommandHandler', () => {
 		})
 	})
 
-	it('should create and save owner successfully', () => {
+	it('should create and save host successfully', () => {
 		return appContext.run(makeAppContext(), async () => {
-			when(ownerRepo.save(anything())).thenResolve()
+			when(hostRepo.save(anything())).thenResolve()
 
-			const command = await RegisterOwnerCommand.create({
+			const command = await RegisterHostCommand.create({
 				name: 'John Doe',
 				email: 'john@example.com',
 				phone: '5511999999999',
@@ -67,10 +67,10 @@ describe('RegisterOwnerCommandHandler', () => {
 
 			expect(result.isSuccess()).toBe(true)
 
-			const owner = result.value as Owner
-			expect(owner.name).toBe('John Doe')
+			const host = result.value as Host
+			expect(host.name).toBe('John Doe')
 
-			verify(ownerRepo.save(anything())).once()
+			verify(hostRepo.save(anything())).once()
 		})
 	})
 })

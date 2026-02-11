@@ -1,14 +1,14 @@
 import { Either, InvalidValueError, UniqueEntityID } from '@repo/core'
-import type { PropertyType } from '@/domain/@types'
-import type { AddressProps } from '@/domain/value-object/address'
-import type { MoneyProps } from '@/domain/value-object/money'
-import { OwnerNotFoundError } from '@/modules/property-module/application/@errors'
+import type { PropertyType } from '@/modules/property-module/domain/@types'
+import type { AddressProps } from '@/modules/property-module/domain/value-object/address'
+import type { MoneyProps } from '@/modules/property-module/domain/value-object/money'
+import { HostNotFoundError } from '@/modules/property-module/application/@errors'
 import { resolveId } from '@/modules/property-module/application/utils/resolve-id'
 import { Command } from '../../command'
 import { RegisterPropertyReturnModel } from './return-model'
 
 type RegisterPropertyCommandParams = {
-	ownerId: UniqueEntityID
+	hostId: UniqueEntityID
 	publicId: number
 	name: string
 	description: string
@@ -21,7 +21,7 @@ type RegisterPropertyCommandParams = {
 }
 
 export class RegisterPropertyCommand extends Command<
-	Either<InvalidValueError | OwnerNotFoundError, RegisterPropertyReturnModel>
+	Either<InvalidValueError | HostNotFoundError, RegisterPropertyReturnModel>
 > {
 	readonly params: RegisterPropertyCommandParams
 

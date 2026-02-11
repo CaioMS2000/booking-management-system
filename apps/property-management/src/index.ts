@@ -1,2 +1,2 @@
 // Entry point for property-management application
-export * from './domain'
+export * from './modules/property-module/domain'

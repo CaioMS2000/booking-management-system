@@ -1,8 +1,8 @@
-import { Address, Money } from '@/domain/value-object'
-import { PropertyType } from '@/domain/@types'
 import { Email, Phone } from '@repo/core'
+import { PropertyType } from '@/modules/property-module/domain/@types'
+import { Address, Money } from '@/modules/property-module/domain/value-object'
 
-export type PropertyWithOwnerReadModel = {
+export type PropertyWithHostReadModel = {
 	name: string
 	description: string
 	capacity: number
@@ -11,7 +11,7 @@ export type PropertyWithOwnerReadModel = {
 	address: Address
 	status: 'active' | 'inactive'
 	imagesUrls: string[]
-	owner: {
+	host: {
 		name: string
 		email: Email
 		phone: Phone

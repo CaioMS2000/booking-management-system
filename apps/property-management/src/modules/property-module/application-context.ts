@@ -1,5 +1,5 @@
 import { IdGenerator } from '@repo/core'
-import { ContextManager } from './context/context-manager'
+import { ContextManager } from '../../context/context-manager'
 import { Currency } from './domain'
 
 export type ApplicationContext = {

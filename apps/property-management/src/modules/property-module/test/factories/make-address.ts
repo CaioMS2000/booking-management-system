@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { Address, AddressProps } from '@/domain'
+import { Address, AddressProps } from '@/modules/property-module/domain'
 
 export function makeAddress(): Address {
 	// const props: AddressProps = {
