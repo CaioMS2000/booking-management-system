@@ -1,4 +1,4 @@
-import { Rule } from '@/rules/rule'
+import { Rule } from '../../../rules/rule'
 
 export class CPFLengthRule extends Rule<string> {
 	message = 'CPF must have 11 digits'

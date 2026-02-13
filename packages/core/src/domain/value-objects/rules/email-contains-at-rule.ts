@@ -1,4 +1,4 @@
-import { Rule } from '@/rules/rule'
+import { Rule } from '../../../rules/rule'
 
 export class EmailContainsAtRule extends Rule<string> {
 	message = 'Invalid email'

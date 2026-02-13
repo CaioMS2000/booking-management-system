@@ -1,4 +1,4 @@
-import { Rule } from '@/rules/rule'
+import { Rule } from '../../../rules/rule'
 
 export class EmailFormatRule extends Rule<string> {
 	message = 'Invalid email format'

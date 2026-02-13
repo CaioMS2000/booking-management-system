@@ -1,5 +1,5 @@
-import { CPFLengthRule } from '@/domain/value-objects/rules/cpf-length-rule'
-import { Either, failure, success } from '@/either'
+import { Either, failure, success } from '../../either'
+import { CPFLengthRule } from './rules/cpf-length-rule'
 import { ValueObject } from '../../value-object'
 import { InvalidValueError } from '../@errors/domain-errors/invalid-value-error'
 

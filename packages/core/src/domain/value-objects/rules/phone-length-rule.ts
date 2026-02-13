@@ -1,4 +1,4 @@
-import { Rule } from '@/rules/rule'
+import { Rule } from '../../../rules/rule'
 
 export class PhoneLengthRule extends Rule<string> {
 	message = 'Phone must have between 12 and 13 digits'

@@ -1,4 +1,4 @@
-import { Either, success } from '@/either'
+import { Either, success } from '../../either'
 import { ValueObject } from '../../value-object'
 
 export class Name extends ValueObject<string> {

@@ -1,4 +1,4 @@
-import { Either, failure, success } from '@/either'
+import { Either, failure, success } from '../../either'
 import { ValueObject } from '../../value-object'
 import { InvalidValueError } from '../@errors/domain-errors/invalid-value-error'
 import { PhoneLengthRule } from './rules/phone-length-rule'
