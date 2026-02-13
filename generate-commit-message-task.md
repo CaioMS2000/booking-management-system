@@ -8,6 +8,7 @@
 <!-- Prompt -->
 <!-- realize a tarefa que eu descrevi em @generate-commit-message-task.md  -->
 <!-- script: git-info-for-commit.sh -->
+<!--
 ```sh
 clear
 echo '' 2>&1 | tee staged-info.txt
@@ -17,3 +18,4 @@ git diff --cached 2>&1 | tee -a staged-info.txt
 echo -e "\n--- FILES ---\n" | tee -a staged-info.txt
 git diff --cached --name-only 2>&1 | tee -a staged-info.txt
 ```
+-->
