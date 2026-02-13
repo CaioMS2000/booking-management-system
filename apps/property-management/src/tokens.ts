@@ -1,5 +1,5 @@
 import { SystemConfigService } from '@repo/system-settings-manager'
-import { IdGenerator } from '@repo/core'
+import { IdGenerator, IncrementalIdGenerator } from '@repo/core'
 
 export const TOKENS = {
 	SystemConfigService: Symbol(
@@ -7,4 +7,7 @@ export const TOKENS = {
 	) as InjectionToken<SystemConfigService>,
 	IdGeneratorV4: Symbol('IdGeneratorV4') as InjectionToken<IdGenerator>,
 	IdGeneratorV7: Symbol('IdGeneratorV7') as InjectionToken<IdGenerator>,
+	IncrementalIdGenerator: Symbol(
+		'IncrementalIdGenerator'
+	) as InjectionToken<IncrementalIdGenerator>,
 } as const

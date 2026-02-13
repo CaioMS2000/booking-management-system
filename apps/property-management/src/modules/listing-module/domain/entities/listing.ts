@@ -1,11 +1,10 @@
 import { Entity, Optional, UniqueEntityID } from '@repo/core'
 import { Money } from '../value-object/money'
-import { appContext } from '@/application-context'
 
 export type ListingProps = {
 	propertyId: UniqueEntityID
 	publicId: number
-	pricePerNight?: Money
+	pricePerNight: Money
 	status: 'active' | 'inactive'
 }
 
@@ -15,10 +14,8 @@ export type ListingCreateInput = Optional<ListingProps, 'status'> & {
 
 export class Listing extends Entity<ListingProps> {
 	calculateTotalPrice(nights: number): Money {
-		const context = appContext.get()
-		const moneyAmount = this.props.pricePerNight?.getAmount() ?? 0
-		const currency =
-			this.props.pricePerNight?.getCurrency() ?? context.currentCurrency
+		const moneyAmount = this.props.pricePerNight.getAmount()
+		const currency = this.props.pricePerNight.getCurrency()
 		const totalCents = moneyAmount * nights
 
 		return Money.create({
@@ -28,11 +25,7 @@ export class Listing extends Entity<ListingProps> {
 	}
 
 	static create(input: ListingCreateInput) {
-		let { id, pricePerNight, publicId, propertyId, status = 'active' } = input
-
-		if (!pricePerNight) {
-			status = 'inactive'
-		}
+		const { id, pricePerNight, publicId, propertyId, status = 'active' } = input
 
 		return new Listing(
 			{
