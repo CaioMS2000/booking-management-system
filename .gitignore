@@ -73,5 +73,8 @@ Thumbs.db
 !Arquitetura de microserviços para plataforma de reservas.md
 !Filosofia de desenvolvimento dos microserviços.md
 !generate-commit-message-task.md
+!ARCHITECTURE.md
+!docker.md
 !/**/adr/**/*.md
 !/**/notes/**/*.md
+.mcp.json
