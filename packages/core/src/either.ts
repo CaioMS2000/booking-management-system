@@ -46,11 +46,11 @@ export class Success<L, R> {
 
 export type Either<L, R> = Failure<L, R> | Success<L, R>
 
-export function failure<L>(value: ConstructorWithGenerics<L>): Either<L, never>
+export function failure<L extends Constructor>(
+	value: L
+): Either<InstanceType<L>, never>
 export function failure<L>(value: L): Either<L, never>
-export function failure<L>(
-	value: L | ConstructorWithGenerics<L>
-): Either<L, never> {
+export function failure<L>(value: L | Constructor): Either<any, never> {
 	if (isConstructor(value)) {
 		return new Failure(new value())
 	}
@@ -58,11 +58,11 @@ export function failure<L>(
 	return new Failure(value)
 }
 
-export function success<R>(value: ConstructorWithGenerics<R>): Either<never, R>
+export function success<R extends Constructor>(
+	value: R
+): Either<never, InstanceType<R>>
 export function success<R>(value: R): Either<never, R>
-export function success<R>(
-	value: R | ConstructorWithGenerics<R>
-): Either<never, R> {
+export function success<R>(value: R | Constructor): Either<never, any> {
 	if (isConstructor(value)) {
 		return new Success(new value())
 	}
