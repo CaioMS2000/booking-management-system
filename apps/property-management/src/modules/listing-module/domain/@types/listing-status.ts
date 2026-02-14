@@ -1,7 +1,7 @@
-export const ListingStatus = [
+export const IntervalStatus = [
 	'AVAILABLE',
 	'BLOCKED',
 	'HOLD',
 	'RESERVED',
 ] as const
-export type ListingStatus = (typeof ListingStatus)[number]
+export type IntervalStatus = (typeof IntervalStatus)[number]
