@@ -5,7 +5,6 @@ import {
 	container as _container,
 	InjectionToken as _InjectionToken,
 } from 'tsyringe'
-import { TOKENS as _TOKENS } from './tokens'
 
 declare global {
 	const injectable: typeof _injectable
@@ -13,7 +12,6 @@ declare global {
 	const singleton: typeof _singleton
 	const container: typeof _container
 	type InjectionToken<T> = _InjectionToken<T>
-	const TOKENS: typeof _TOKENS
 }
 
 Object.assign(globalThis, {
@@ -21,5 +19,4 @@ Object.assign(globalThis, {
 	inject: _inject,
 	singleton: _singleton,
 	container: _container,
-	TOKENS: _TOKENS,
 })

@@ -16,8 +16,6 @@
   "devDependencies": {
     "@faker-js/faker": "^10.3.0",
     "@johanblumenberg/ts-mockito": "^1.0.52",
-    "@repo/core": "*",
-    "@repo/system-settings-manager": "*",
     "@repo/typescript-config": "*",
     "@types/node": "^25.2.2",
     "tsup": "^8.5.1",
@@ -28,6 +26,9 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "@repo/core": "*",
+    "@repo/system-settings-manager": "*",
+    "@repo/modules-contracts": "*",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
     "@fastify/multipart": "^9.4.0",

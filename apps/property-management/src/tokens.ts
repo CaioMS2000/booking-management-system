@@ -1,7 +1,7 @@
 import { SystemConfigService } from '@repo/system-settings-manager'
 import { IdGenerator, IncrementalIdGenerator } from '@repo/core'
 
-export const TOKENS = {
+export const APP_TOKENS = {
 	SystemConfigService: Symbol(
 		'SystemConfigService'
 	) as InjectionToken<SystemConfigService>,
