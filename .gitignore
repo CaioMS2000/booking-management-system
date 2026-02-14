@@ -77,4 +77,4 @@ Thumbs.db
 !docker.md
 !/**/adr/**/*.md
 !/**/notes/**/*.md
-.mcp.json
+!todo.md

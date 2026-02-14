@@ -1,11 +1,12 @@
 import { Entity, Optional, UniqueEntityID } from '@repo/core'
 import { Money } from '../value-object/money'
+import { ListingStatus } from '../@types'
 
 export type ListingProps = {
 	propertyId: UniqueEntityID
 	publicId: number
 	pricePerNight: Money
-	status: 'active' | 'inactive'
+	status: ListingStatus
 }
 
 export type ListingCreateInput = Optional<ListingProps, 'status'> & {
@@ -25,7 +26,13 @@ export class Listing extends Entity<ListingProps> {
 	}
 
 	static create(input: ListingCreateInput) {
-		const { id, pricePerNight, publicId, propertyId, status = 'active' } = input
+		const {
+			id,
+			pricePerNight,
+			publicId,
+			propertyId,
+			status = 'AVAILABLE',
+		} = input
 
 		return new Listing(
 			{
