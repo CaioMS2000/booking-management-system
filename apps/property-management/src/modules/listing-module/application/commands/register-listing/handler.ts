@@ -1,47 +1,44 @@
-import { failure, success } from '@repo/core'
+import { failure, success, UniqueEntityID } from '@repo/core'
 import { appContext } from '@/application-context'
-import { HostNotFoundError } from '@/modules/property-module/application/@errors'
-import { CommandHandler } from '@/modules/property-module/application/command'
-import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
-import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
-import { Property } from '@/modules/property-module/domain/entities/property'
-import { Address } from '@/modules/property-module/domain/value-object'
-import { RegisterPropertyCommand } from './command'
+import { CommandHandler } from '@/modules/listing-module/application/command'
+import { Listing } from '@/modules/listing-module/domain/entities/listing'
+import { RegisterListingCommand } from './command'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
+import { PropertyNotFoundError } from '../../@errors'
+import { ListingRepository } from '../../repositories'
 
-export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPropertyCommand> {
+export class RegisterListingCommandHandler extends CommandHandler<RegisterListingCommand> {
 	constructor(
-		private hostRepository: HostRepository,
-		private propertyRepository: PropertyRepository
+		private propertyModule: PropertyModuleInterface,
+		private listingRepository: ListingRepository
 	) {
 		super()
 	}
 
-	async execute(command: RegisterPropertyCommand) {
-		const host = await this.hostRepository.findById(command.params.hostId)
+	async execute(command: RegisterListingCommand) {
+		const property = await this.propertyModule.findProperty(
+			command.params.propertyId.toString()
+		)
 
-		if (!host) {
-			return failure(new HostNotFoundError())
+		if (!property) {
+			// return failure(new PropertyNotFoundError())
+			// OR
+			return failure(PropertyNotFoundError)
 		}
 
 		const context = appContext.get()
 		const id = await context.idGenerator.V4.generate()
+		const incrementalId = await context.idGenerator.Incremental.generate()
 
-		const address = Address.create(command.params.address)
-
-		const newProperty = Property.create({
+		const newListing = Listing.create({
 			id,
-			hostId: command.params.hostId,
-			name: command.params.name,
-			description: command.params.description,
-			capacity: command.params.capacity,
-			propertyType: command.params.propertyType,
-			publicId: command.params.publicId,
-			address,
-			imagesUrls: command.params.imagesUrls,
+			propertyId: new UniqueEntityID(property.id),
+			publicId: incrementalId,
+			pricePerNight: command.params.pricePerNight,
 		})
 
-		await this.propertyRepository.save(newProperty)
+		await this.listingRepository.save(newListing)
 
-		return success(newProperty)
+		return success(newListing)
 	}
 }

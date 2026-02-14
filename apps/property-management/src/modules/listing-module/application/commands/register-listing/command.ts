@@ -3,6 +3,7 @@ import { resolveId } from '@/modules/listing-module/application/utils/resolve-id
 import { Command } from '../../command'
 import { RegisterListingReturnModel } from './return-model'
 import { Money } from '@/modules/listing-module/domain'
+import { PropertyNotFoundError } from '../../@errors'
 
 type RegisterListingCommandParams = {
 	hostId: UniqueEntityID
@@ -11,7 +12,7 @@ type RegisterListingCommandParams = {
 }
 
 export class RegisterListingCommand extends Command<
-	Either<null, RegisterListingReturnModel>
+	Either<PropertyNotFoundError, RegisterListingReturnModel>
 > {
 	readonly params: RegisterListingCommandParams
 

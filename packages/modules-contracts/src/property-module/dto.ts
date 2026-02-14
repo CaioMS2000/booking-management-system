@@ -1,6 +1,7 @@
 import { Address, PropertyType } from './types'
 
 export type PropertyDTO = {
+	id: string
 	hostId: string
 	publicId: number
 	name: string
