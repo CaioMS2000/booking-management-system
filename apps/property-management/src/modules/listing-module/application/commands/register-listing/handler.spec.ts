@@ -8,82 +8,64 @@ import {
 import { UniqueEntityID } from '@repo/core'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { appContext } from '@/application-context'
-import { HostNotFoundError } from '@/modules/property-module/application/@errors'
-import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
-import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
-import { makeHost } from '@/modules/property-module/test/factories/make-host'
-import { RegisterPropertyCommand } from './command'
-import { RegisterPropertyCommandHandler } from './handler'
+import { RegisterListingCommand } from './command'
+import { RegisterListingCommandHandler } from './handler'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
+import { ListingRepository } from '../../repositories'
+import { makeMoney } from '@/modules/listing-module/test/factories/make-money'
+import { makePropertyDTO } from '@/modules/listing-module/test/factories/make-property-dto'
+import { PropertyNotFoundError } from '../../@errors'
 
-describe('RegisterPropertyCommandHandler', () => {
-	let hostRepo: HostRepository
-	let propertyRepo: PropertyRepository
-	let sut: RegisterPropertyCommandHandler
+describe('RegisterListingCommandHandler', () => {
+	let propertyModule: PropertyModuleInterface
+	let listingRepository: ListingRepository
+	let sut: RegisterListingCommandHandler
 
 	beforeEach(() => {
-		hostRepo = mock(HostRepository)
-		propertyRepo = mock(PropertyRepository)
-		sut = new RegisterPropertyCommandHandler(
-			instance(hostRepo),
-			instance(propertyRepo)
+		propertyModule = mock(PropertyModuleInterface)
+		listingRepository = mock(ListingRepository)
+		sut = new RegisterListingCommandHandler(
+			instance(propertyModule),
+			instance(listingRepository)
 		)
 	})
 
-	it('should return failure when host is not found', () => {
+	it('should return failure when property is not found', () => {
 		return appContext.run(makeAppContext(), async () => {
-			when(hostRepo.findById(anything())).thenResolve(null)
+			when(propertyModule.findProperty(anything())).thenResolve(null)
 
-			const command = await RegisterPropertyCommand.create({
-				hostId: new UniqueEntityID('non-existent-id'),
-				name: 'Beach House',
-				description: 'A nice beach house',
-				capacity: 4,
-				propertyType: 'Apartment',
-				address: {
-					street: 'Rua X',
-					city: 'São Paulo',
-					state: 'SP',
-					country: 'BR',
-					zipCode: '01234567',
-				},
-				publicId: 1,
+			const command = await RegisterListingCommand.create({
+				hostId: new UniqueEntityID('any-host-id'),
+				pricePerNight: makeMoney(),
+				propertyId: new UniqueEntityID('non-existent-id'),
 			})
 
 			const result = await sut.execute(command)
 
 			expect(result.isFailure()).toBe(true)
-			expect(result.value).toBeInstanceOf(HostNotFoundError)
-			verify(propertyRepo.save(anything())).never()
+			expect(result.value).toBeInstanceOf(PropertyNotFoundError)
+			verify(listingRepository.save(anything())).never()
 		})
 	})
 
-	it('should create and save property successfully', () => {
+	it('should create and save listing successfully', () => {
 		return appContext.run(makeAppContext(), async () => {
-			const host = await makeHost()
-			when(hostRepo.findById(host.id)).thenResolve(host)
-			when(propertyRepo.save(anything())).thenResolve()
+			const propertyDTO = makePropertyDTO()
 
-			const command = await RegisterPropertyCommand.create({
-				hostId: host.id,
-				name: 'Beach House',
-				description: 'A nice beach house',
-				capacity: 4,
-				propertyType: 'Apartment',
-				address: {
-					street: 'Rua X',
-					city: 'São Paulo',
-					state: 'SP',
-					country: 'BR',
-					zipCode: '01234567',
-				},
-				publicId: 1,
+			when(propertyModule.findProperty(propertyDTO.id)).thenResolve(propertyDTO)
+			when(listingRepository.save(anything())).thenResolve()
+
+			const command = await RegisterListingCommand.create({
+				hostId: new UniqueEntityID(propertyDTO.hostId),
+				pricePerNight: makeMoney(),
+				propertyId: new UniqueEntityID(propertyDTO.id),
 			})
 
 			const result = await sut.execute(command)
 
 			expect(result.isSuccess()).toBe(true)
-			verify(propertyRepo.save(anything())).once()
+			verify(listingRepository.save(anything())).once()
 		})
 	})
 })
