@@ -26,6 +26,8 @@ export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 		const host = await this.hostRepository.getById(property.hostId)
 
 		const propertyWithHost: PropertyReadModel = {
+			id: property.id.toString(),
+			publicId: property.publicId,
 			name: property.name,
 			description: property.description,
 			capacity: property.capacity,
@@ -33,6 +35,7 @@ export class GetPropertyQueryHandler extends QueryHandler<GetPropertyQuery> {
 			address: property.address,
 			imagesUrls: property.imagesUrls,
 			host: {
+				id: host.id.toString(),
 				name: host.name,
 				email: host.email,
 				phone: host.phone,

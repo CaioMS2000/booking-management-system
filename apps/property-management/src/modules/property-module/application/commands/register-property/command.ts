@@ -8,7 +8,6 @@ import { RegisterPropertyReturnModel } from './return-model'
 
 type RegisterPropertyCommandParams = {
 	hostId: UniqueEntityID
-	publicId: number
 	name: string
 	description: string
 	capacity: number

@@ -25,7 +25,7 @@ export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPrope
 
 		const context = appContext.get()
 		const id = await context.idGenerator.V4.generate()
-
+		const incrementalId = await context.idGenerator.Incremental.generate()
 		const address = Address.create(command.params.address)
 
 		const newProperty = Property.create({
@@ -35,7 +35,7 @@ export class RegisterPropertyCommandHandler extends CommandHandler<RegisterPrope
 			description: command.params.description,
 			capacity: command.params.capacity,
 			propertyType: command.params.propertyType,
-			publicId: command.params.publicId,
+			publicId: incrementalId,
 			address,
 			imagesUrls: command.params.imagesUrls,
 		})

@@ -54,6 +54,8 @@ describe('GetPropertyQueryHandler', () => {
 
 			expect(result.isSuccess()).toBe(true)
 			expect(result.value).toEqual({
+				id: property.id.toString(),
+				publicId: property.publicId,
 				name: property.name,
 				description: property.description,
 				capacity: property.capacity,
@@ -61,6 +63,7 @@ describe('GetPropertyQueryHandler', () => {
 				address: property.address,
 				imagesUrls: property.imagesUrls,
 				host: {
+					id: host.id.toString(),
 					name: host.name,
 					email: host.email,
 					phone: host.phone,
