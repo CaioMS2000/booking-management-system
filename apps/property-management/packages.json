@@ -1,0 +1,22 @@
+{
+    "prod":[
+        "@fastify/cookie",
+        "@fastify/cors",
+        "@fastify/swagger",
+        "@fastify/swagger-ui",
+        "@fastify/multipart",
+        "@scalar/fastify-api-reference",
+        "fastify",
+        "fastify-plugin",
+        "fastify-type-provider-zod",
+        "swagger-themes",
+        "dayjs",
+        "jose",
+        "tsyringe",
+        "winston",
+        "winston-daily-rotate-file",
+        "winston-loki",
+        "reflect-metadata"
+    ],
+    "dev":["@types/node", "typescript", "vite-tsconfig-paths", "vitest", "@johanblumenberg/ts-mockito", "@faker-js/faker", "vite-node"]
+}

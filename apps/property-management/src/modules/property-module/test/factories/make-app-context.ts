@@ -1,0 +1,19 @@
+import { ApplicationContext } from '@/application-context'
+import { FakeIdGenerator } from '../fake-id-generator'
+import { FakeIncrementalIdGenerator } from '../fake-incremental-id-generator'
+
+export function makeAppContext(
+	overrides?: Partial<ApplicationContext>
+): ApplicationContext {
+	return {
+		currentCurrency: 'BRL',
+		requestId: 'test-request',
+		timestamp: new Date(),
+		idGenerator: {
+			V4: new FakeIdGenerator(),
+			V7: new FakeIdGenerator(),
+			Incremental: new FakeIncrementalIdGenerator(),
+		},
+		...overrides,
+	}
+}

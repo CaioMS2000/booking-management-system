@@ -1,0 +1,22 @@
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# production
+/dist
+
+# typescript build artifacts in src (should never be committed)
+src/**/*.js
+src/**/*.d.ts
+src/**/*.d.ts.map
+!src/**/*.spec.js
+!src/**/*.test.js
+
+# misc
+.DS_Store
+*.tsbuildinfo
+
+# env files
+.env*
