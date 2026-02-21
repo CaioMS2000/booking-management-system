@@ -1,3 +1,3 @@
-import { ApplicationError } from './app-error'
+import { PropertyModuleApplicationError } from './app-error'
 
-export class HostNotFoundError extends ApplicationError {}
+export class HostNotFoundError extends PropertyModuleApplicationError {}

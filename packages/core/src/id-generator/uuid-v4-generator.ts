@@ -1,16 +1,16 @@
 import { randomUUID } from 'node:crypto'
+import { UniqueId } from '../unique-id'
 import { IdGenerator } from './id-generator'
-import { UniqueEntityID } from '../entity/unique-entity-id'
 
 export class UUIDV4Generator extends IdGenerator {
-	generate(prefix?: string): Promise<UniqueEntityID> {
+	generate(prefix?: string): Promise<UniqueId> {
 		const uuid = randomUUID()
 		const id = prefix ? `${prefix}:${uuid}` : uuid
 
-		return Promise.resolve(new UniqueEntityID(id))
+		return Promise.resolve(new UniqueId(id))
 	}
 
-	generateBatch(count: number, prefix?: string): Promise<UniqueEntityID[]> {
+	generateBatch(count: number, prefix?: string): Promise<UniqueId[]> {
 		const ids = Array.from({ length: count }, () => this.generate(prefix))
 		return Promise.all(ids)
 	}

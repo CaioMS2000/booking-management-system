@@ -11,12 +11,11 @@
     "test:watch": "turbo run test:watch",
     "format": "biome format --write --no-errors-on-unmatched --files-ignore-unknown=true",
     "biome:check": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true",
-    "check-types": "turbo run check-types",
-    "prepare": "husky"
+    "check-types": "turbo run check-types"
   },
   "devDependencies": {
     "@caioms/pre-git-auto-format": "latest",
-    "turbo": "^2.6.3",
+    "turbo": "^2.8.10",
     "typescript": "5.9.2"
   },
   "engines": {

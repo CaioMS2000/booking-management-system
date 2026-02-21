@@ -1,1 +1,1 @@
-export abstract class ApplicationError extends Error {}
+export abstract class PropertyModuleApplicationError extends Error {}

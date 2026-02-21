@@ -3,7 +3,7 @@ import { appContext } from '@/application-context'
 import {
 	Host,
 	HostCreateInput,
-} from '@/modules/property-module/domain/entities/host'
+} from '@/modules/property-module/domain/models/host'
 import { makeEmail } from './make-email'
 import { makePhone } from './make-phone'
 

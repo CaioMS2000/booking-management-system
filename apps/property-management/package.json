@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "tsup src/infrastructure/http/server.ts --format esm --dts --clean",
-    "dev": "vite-node --config vitest.config.ts src/infrastructure/http/server.ts",
+    "dev": "tsx --watch src/infrastructure/http/server.ts",
     "start": "node dist/index.js",
     "lint": "biome check .",
     "test": "vitest run",

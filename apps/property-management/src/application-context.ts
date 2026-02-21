@@ -1,6 +1,5 @@
-import { IdGenerator, IncrementalIdGenerator } from '@repo/core'
+import { IdGenerator, IncrementalIdGenerator, Currency } from '@repo/core'
 import { ContextManager } from './context/context-manager'
-import { Currency } from './modules/listing-module/domain'
 
 export type ApplicationContext = {
 	currentCurrency: Currency

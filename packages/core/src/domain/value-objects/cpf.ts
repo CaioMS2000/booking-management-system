@@ -1,14 +1,14 @@
-import { Either, failure, success } from '../../either'
-import { CPFLengthRule } from './rules/cpf-length-rule'
+import { failure, Result, success } from '../../result'
 import { ValueObject } from '../../value-object'
 import { InvalidValueError } from '../@errors/domain-errors/invalid-value-error'
+import { CPFLengthRule } from './rules/cpf-length-rule'
 
 export class CPF extends ValueObject<string> {
 	private constructor(value: string) {
 		super(value)
 	}
 
-	static create(cpf: string): Either<InvalidValueError, CPF> {
+	static create(cpf: string): Result<InvalidValueError, CPF> {
 		const cpfLengthRule = new CPFLengthRule()
 		const cleaned = cpf.replace(/\D/g, '')
 

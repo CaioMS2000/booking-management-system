@@ -1,4 +1,4 @@
-import { Either, failure, success } from '../../either'
+import { failure, Result, success } from '../../result'
 import { ValueObject } from '../../value-object'
 import { InvalidValueError } from '../@errors/domain-errors/invalid-value-error'
 import { EmailContainsAtRule } from './rules/email-contains-at-rule'
@@ -9,7 +9,7 @@ export class Email extends ValueObject<string> {
 		super(value)
 	}
 
-	static create(email: string): Either<InvalidValueError, Email> {
+	static create(email: string): Result<InvalidValueError, Email> {
 		const containsAtRule = new EmailContainsAtRule()
 		const formatRule = new EmailFormatRule()
 

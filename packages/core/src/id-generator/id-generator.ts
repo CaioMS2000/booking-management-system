@@ -1,4 +1,4 @@
-import { UniqueEntityID } from '../entity/unique-entity-id'
+import { UniqueId } from '../unique-id'
 
 export abstract class IdGenerator {
 	/**
@@ -6,13 +6,10 @@ export abstract class IdGenerator {
 	 * @param prefix - Prefixo opcional para namespacing (ex: 'booking', 'listing')
 	 * @returns ID único no formato Base62 ofuscado
 	 */
-	abstract generate(prefix?: string): Promise<UniqueEntityID>
+	abstract generate(prefix?: string): Promise<UniqueId>
 
 	/**
 	 * Gera múltiplos IDs em batch (otimização)
 	 */
-	abstract generateBatch(
-		count: number,
-		prefix?: string
-	): Promise<UniqueEntityID[]>
+	abstract generateBatch(count: number, prefix?: string): Promise<UniqueId[]>
 }

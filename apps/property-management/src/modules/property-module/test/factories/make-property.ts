@@ -1,14 +1,10 @@
 import { faker } from '@faker-js/faker'
-import { UniqueEntityID } from '@repo/core'
+import { PropertyType, UniqueId } from '@repo/core'
 import { appContext } from '@/application-context'
-import {
-	Property,
-	PropertyCreateInput,
-	PropertyType,
-} from '@/modules/property-module/domain'
+import { Property, PropertyCreateInput } from '@/modules/property-module/domain'
 import { makeAddress } from './make-address'
 
-export async function makeProperty(hostId: UniqueEntityID): Promise<Property> {
+export async function makeProperty(hostId: UniqueId): Promise<Property> {
 	const propertyType: PropertyType = 'Apartment'
 	const numberArray = new Array({
 		length: faker.number.int({ min: 1, max: 10 }),

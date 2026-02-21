@@ -1,4 +1,4 @@
-import { Address, PropertyType } from './types'
+import { Address, PropertyType } from '@repo/core'
 
 export type PropertyDTO = {
 	id: string

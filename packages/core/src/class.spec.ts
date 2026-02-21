@@ -7,20 +7,20 @@ type TestResources = {
 }
 
 class TestClass extends Class<TestResources> {
-	constructor(protected readonly resources: TestResources) {
+	constructor(protected readonly props: TestResources) {
 		super()
 	}
 
 	get name() {
-		return this.resources.name
+		return this.props.name
 	}
 
 	get age() {
-		return this.resources.age
+		return this.props.age
 	}
 
 	greet(greeting: string) {
-		return this.resources.greet(greeting)
+		return this.props.greet(greeting)
 	}
 }
 
@@ -78,24 +78,24 @@ test('should support different resource types', () => {
 	}
 
 	class ComplexClass extends Class<ComplexResources> {
-		constructor(protected readonly resources: ComplexResources) {
+		constructor(protected readonly props: ComplexResources) {
 			super()
 		}
 
 		get id() {
-			return this.resources.id
+			return this.props.id
 		}
 
 		get metadata() {
-			return this.resources.metadata
+			return this.props.metadata
 		}
 
 		get items() {
-			return this.resources.items
+			return this.props.items
 		}
 
 		calculate(a: number, b: number) {
-			return this.resources.calculate(a, b)
+			return this.props.calculate(a, b)
 		}
 	}
 

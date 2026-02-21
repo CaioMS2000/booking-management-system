@@ -1,3 +1,2 @@
-export * from './entities'
+export * from './models'
 export * from './value-object'
-export * from './@types'
