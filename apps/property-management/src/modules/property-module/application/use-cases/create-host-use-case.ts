@@ -5,12 +5,10 @@ import {
 	Name,
 	UseCase,
 	Phone,
-	UniqueId,
 	success,
 } from '@repo/core'
 import { Host } from '../../domain' // OR import { Host } from "@property-module/domain"
 import { InvalidEmailError, InvalidPhoneError } from '../@errors'
-import { appContext } from '@/application-context'
 
 export type CreateHostUseCaseRequest = {
 	name: string
@@ -45,10 +43,7 @@ export class CreateHostUseCase extends UseCase<
 			return failure(InvalidPhoneError)
 		}
 
-		const context = appContext.get()
-		const id = await context.idGenerator.V7.generate()
-		const host = Host.create({
-			id: UniqueId(id),
+		const host = await Host.create({
 			name,
 			email: createEmailResult.value,
 			phone: createPhoneResult.value,

@@ -10,7 +10,6 @@ import {
 } from '@repo/core'
 import { Property } from '../../domain'
 import { HostNotFoundError } from '../@errors'
-import { appContext } from '@/application-context'
 import { HostRepository } from '../repositories/host-repository'
 
 export type CreatePropertyUseCaseRequest = {
@@ -61,12 +60,7 @@ export class CreatePropertyUseCase extends UseCase<
 			return failure(HostNotFoundError)
 		}
 
-		const context = appContext.get()
-		const id = await context.idGenerator.V7.generate()
-		const publicId = await context.idGenerator.Incremental.generate()
-		const property = Property.create({
-			id: id,
-			publicId,
+		const property = await Property.create({
 			hostId: UniqueId(hostId),
 			name,
 			description,

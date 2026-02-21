@@ -1,4 +1,5 @@
 import { Address, Class, Optional, PropertyType, UniqueId } from '@repo/core'
+import { appContext } from '@/application-context'
 
 export type PropertyProps = {
 	id: UniqueId
@@ -12,7 +13,10 @@ export type PropertyProps = {
 	imagesUrls: string[]
 }
 
-export type PropertyCreateInput = Optional<PropertyProps, 'imagesUrls'>
+export type PropertyCreateInput = Omit<
+	Optional<PropertyProps, 'imagesUrls'>,
+	'id' | 'publicId'
+>
 
 export class Property extends Class<PropertyProps> {
 	constructor(protected readonly props: PropertyProps) {
@@ -55,18 +59,23 @@ export class Property extends Class<PropertyProps> {
 		return this.props.imagesUrls
 	}
 
-	static create(input: PropertyCreateInput) {
+	static async create(input: PropertyCreateInput, id?: UniqueId) {
 		const {
 			hostId,
-			id,
 			name,
 			description,
 			capacity,
 			address,
 			propertyType,
-			publicId,
 			imagesUrls = [],
 		} = input
+
+		const context = appContext.get()
+		const publicId = await context.idGenerator.Incremental.generate()
+
+		if (!id) {
+			id = await context.idGenerator.V7.generate()
+		}
 
 		return new Property({
 			id,
