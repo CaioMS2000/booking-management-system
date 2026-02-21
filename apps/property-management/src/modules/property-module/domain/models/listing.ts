@@ -7,11 +7,16 @@ export type ListingProps = {
 	publicId: number
 	pricePerNight: Money
 	intervals: DateInterval[]
+	deletedAt: Date | null
 }
 
 export type ListingCreateInput = Omit<
-	Optional<ListingProps, 'intervals'>,
+	Optional<ListingProps, 'intervals' | 'deletedAt'>,
 	'id' | 'publicId'
+>
+
+export type ListingUpdateInput = Partial<
+	Pick<ListingProps, 'pricePerNight' | 'intervals'>
 >
 
 export class Listing extends Class<ListingProps> {
@@ -20,7 +25,12 @@ export class Listing extends Class<ListingProps> {
 	}
 
 	static async create(input: ListingCreateInput, id?: UniqueId) {
-		const { pricePerNight, propertyId, intervals = [] } = input
+		const {
+			pricePerNight,
+			propertyId,
+			intervals = [],
+			deletedAt = null,
+		} = input
 		const context = appContext.get()
 		const publicId = await context.idGenerator.Incremental.generate()
 
@@ -34,6 +44,21 @@ export class Listing extends Class<ListingProps> {
 			pricePerNight,
 			publicId,
 			intervals,
+			deletedAt,
+		})
+	}
+
+	update(input: ListingUpdateInput): Listing {
+		return new Listing({
+			...this.props,
+			...input,
+		})
+	}
+
+	delete(): Listing {
+		return new Listing({
+			...this.props,
+			deletedAt: new Date(),
 		})
 	}
 
@@ -55,5 +80,13 @@ export class Listing extends Class<ListingProps> {
 
 	get intervals() {
 		return this.props.intervals
+	}
+
+	get deletedAt() {
+		return this.props.deletedAt
+	}
+
+	get isDeleted() {
+		return this.props.deletedAt !== null
 	}
 }

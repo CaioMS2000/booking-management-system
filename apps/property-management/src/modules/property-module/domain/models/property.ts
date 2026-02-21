@@ -11,11 +11,24 @@ export type PropertyProps = {
 	propertyType: PropertyType
 	address: Address
 	imagesUrls: string[]
+	deletedAt: Date | null
 }
 
 export type PropertyCreateInput = Omit<
-	Optional<PropertyProps, 'imagesUrls'>,
+	Optional<PropertyProps, 'imagesUrls' | 'deletedAt'>,
 	'id' | 'publicId'
+>
+
+export type PropertyUpdateInput = Partial<
+	Pick<
+		PropertyProps,
+		| 'name'
+		| 'description'
+		| 'capacity'
+		| 'propertyType'
+		| 'address'
+		| 'imagesUrls'
+	>
 >
 
 export class Property extends Class<PropertyProps> {
@@ -59,6 +72,28 @@ export class Property extends Class<PropertyProps> {
 		return this.props.imagesUrls
 	}
 
+	get deletedAt() {
+		return this.props.deletedAt
+	}
+
+	get isDeleted() {
+		return this.props.deletedAt !== null
+	}
+
+	update(input: PropertyUpdateInput): Property {
+		return new Property({
+			...this.props,
+			...input,
+		})
+	}
+
+	delete(): Property {
+		return new Property({
+			...this.props,
+			deletedAt: new Date(),
+		})
+	}
+
 	static async create(input: PropertyCreateInput, id?: UniqueId) {
 		const {
 			hostId,
@@ -68,6 +103,7 @@ export class Property extends Class<PropertyProps> {
 			address,
 			propertyType,
 			imagesUrls = [],
+			deletedAt = null,
 		} = input
 
 		const context = appContext.get()
@@ -87,6 +123,7 @@ export class Property extends Class<PropertyProps> {
 			propertyType,
 			publicId,
 			imagesUrls,
+			deletedAt,
 		})
 	}
 }

@@ -5,4 +5,5 @@ export abstract class HostRepository {
 	abstract findById(id: UniqueId): Promise<Host | null>
 	abstract getById(id: UniqueId): Promise<Host>
 	abstract save(host: Host): Promise<void>
+	abstract update(host: Host): Promise<void>
 }

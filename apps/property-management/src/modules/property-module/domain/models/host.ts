@@ -11,6 +11,10 @@ export type HostProps = {
 
 export type HostCreateInput = Omit<Optional<HostProps, 'propertiesIds'>, 'id'>
 
+export type HostUpdateInput = Partial<
+	Pick<HostProps, 'name' | 'email' | 'phone'>
+>
+
 export class Host extends Class<HostProps> {
 	constructor(protected readonly props: HostProps) {
 		super()
@@ -34,6 +38,13 @@ export class Host extends Class<HostProps> {
 
 	get propertiesIds() {
 		return this.props.propertiesIds
+	}
+
+	update(input: HostUpdateInput): Host {
+		return new Host({
+			...this.props,
+			...input,
+		})
 	}
 
 	static async create(input: HostCreateInput, id?: UniqueId) {
