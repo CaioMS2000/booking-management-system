@@ -493,3 +493,78 @@ Não sequencial, não reversível, mas curto. Precisa de index unique no banco.
 ### Decisão para o projeto
 
 Para um sistema de reservas onde listings e properties são conteúdo público, incremental puro ou Sqids são as opções mais pragmáticas. O importante é que o gerador de IDs incrementais seja **persistido no banco** (Postgres sequence), não em memória — um gerador in-memory reseta no restart do app e não funciona com múltiplas instâncias.
+
+---
+
+## 16. Guest Management — identidade em contexto de microserviços
+
+### O problema
+
+O módulo de booking precisa saber se um guest é válido para criar uma reserva. Mas o CRUD de usuários pertence a outro microserviço (MS4 — Gestão de Usuários & Auth). A pergunta: este MS precisa ter CRUD de Guest?
+
+### Decisão: este MS não é dono do Guest
+
+O booking MS é **consumidor de identidade**, não dono. Ele nunca cria, edita ou deleta usuários — apenas consome a informação de que um usuário existe e é válido.
+
+### Abordagem em duas camadas complementares
+
+**Camada 1: JWT para autenticação**
+
+Cada MS valida o token JWT de forma independente (Zero Trust). O `guestId` vem do `token.sub` — nunca do body da request. Se o token é válido (assinatura ok, não expirado), o usuário está autenticado.
+
+```typescript
+// O guestId SEMPRE vem do token, nunca do body
+clienteId: user.id // extraído do JWT pelo guard/middleware
+```
+
+**Camada 2: Projeção local read-only para dados de referência**
+
+Uma tabela mínima de Guest (id, name, email, status) mantida neste MS, sincronizada via eventos emitidos pelo MS4:
+
+- `UserCreatedEvent` → cria Guest local
+- `UserUpdatedEvent` → atualiza dados
+- `UserDeactivatedEvent` → marca como inativo
+
+Isso permite: verificar se o guest existe na base local, checar se está ativo, e exibir dados do guest em queries de reservas — tudo sem chamar o MS4.
+
+**Nenhum CRUD é exposto por API neste MS.** A projeção é puramente reativa — só muda em resposta a eventos de outro contexto.
+
+### Event Handlers vs Use Cases
+
+Para projeções, **handlers simples chamam o repository diretamente** — sem use cases. A razão: não há lógica de negócio a validar. O MS4 já validou o usuário; este MS está apenas replicando dados.
+
+```typescript
+class GuestEventHandler {
+  constructor(private guestRepo: GuestRepository) {}
+
+  onUserCreated(event: UserCreatedEvent) {
+    const guest = Guest.fromEvent(event)
+    await this.guestRepo.save(guest)
+  }
+
+  onUserDeactivated(event: UserDeactivatedEvent) {
+    await this.guestRepo.deactivate(event.userId)
+  }
+}
+```
+
+**Use cases existem para comandos iniciados por usuários** (criar reserva, cancelar reserva). Handlers de eventos são uma camada diferente — reagem a **fatos que já aconteceram** em outro bounded context.
+
+### Fluxo completo na criação de reserva
+
+```
+Request chega → valida JWT (autenticação)
+             → extrai userId do token
+             → consulta Guest na projeção local (existe? ativo?)
+             → se válido → cria reserva com guestId
+             → se inválido → rejeita
+```
+
+### Quando implementar cada camada
+
+| Fase | O que implementar | Razão |
+|---|---|---|
+| **Monolito modular (agora)** | Apenas JWT — confiar no token | Projeção via eventos é over-engineering sem inter-service communication real |
+| **Microserviços (futuro)** | JWT + projeção local via eventos | Necessário quando os serviços rodam em processos separados e não compartilham banco |
+
+A infraestrutura para a camada 2 já existe no `@repo/core` (`EventBus` com `correlationId`). Quando a migração acontecer, é só ligar os fios.
