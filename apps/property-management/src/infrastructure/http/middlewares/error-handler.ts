@@ -1,5 +1,5 @@
 import { AppError, toErrorEnvelope } from '@/infrastructure/http/errors'
-import { logger } from '@/logging/logger'
+import { logger } from '@repo/core'
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
 import { ZodError } from 'zod'
 

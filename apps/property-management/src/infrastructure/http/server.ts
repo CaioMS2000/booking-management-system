@@ -4,7 +4,7 @@ import '@/init'
 import fastifyCors from '@fastify/cors'
 import fastifyMultipart from '@fastify/multipart'
 import { FastifyListenOptions, FastifyReply, FastifyRequest } from 'fastify'
-import { dayjs } from '@/config/date-and-time'
+import { dayjs } from '@repo/core'
 import { env } from '@/config/env'
 import { app } from './app'
 import {
@@ -12,6 +12,7 @@ import {
 	SystemSettingKey,
 } from '@repo/system-settings-manager'
 import { createLogger } from '@repo/core'
+import { APP_TOKENS } from '@/tokens'
 
 const logger = createLogger({ component: 'HTTP Server' })
 async function logHealthRequest(
@@ -38,7 +39,7 @@ async function logHealthRequest(
 }
 
 async function bootstrap() {
-	const systemConfigService = container.resolve(TOKENS.SystemConfigService)
+	const systemConfigService = container.resolve(APP_TOKENS.SystemConfigService)
 	const corsConfig =
 		systemConfigService.getValue(SystemSettingKey.CORS) ??
 		systemSettingDefaults[SystemSettingKey.CORS]!

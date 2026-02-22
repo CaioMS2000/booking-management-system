@@ -3,7 +3,8 @@ import { fastifyPlugin } from 'fastify-plugin'
 import { appContext } from '@/application-context'
 import { AppError } from '../../errors'
 import { verifyJwt } from '../../jwt/verify-jwt'
-import { Currency } from '@/modules/listing-module/domain'
+import { Currency } from '@repo/core'
+import { APP_TOKENS } from '@/tokens'
 
 function extractToken(req: FastifyRequest): string | null {
 	const auth = req.headers.authorization
@@ -39,8 +40,11 @@ export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 			)
 		}
 
-		const IdGeneratorV4 = container.resolve(TOKENS.IdGeneratorV4)
-		const IdGeneratorV7 = container.resolve(TOKENS.IdGeneratorV7)
+		const IdGeneratorV4 = container.resolve(APP_TOKENS.IdGeneratorV4)
+		const IdGeneratorV7 = container.resolve(APP_TOKENS.IdGeneratorV7)
+		const IncrementalIdGenerator = container.resolve(
+			APP_TOKENS.IncrementalIdGenerator
+		)
 		appContext.enterWith({
 			currentCurrency: extractCurrency(req),
 			requestId: req.id,
@@ -49,6 +53,7 @@ export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 			idGenerator: {
 				V4: IdGeneratorV4,
 				V7: IdGeneratorV7,
+				Incremental: IncrementalIdGenerator,
 			},
 		})
 	})
