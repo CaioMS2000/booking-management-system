@@ -5,6 +5,7 @@ import {
 	PropertyNotOwnedByHostError,
 	PropertyHasActiveListingsError,
 } from '../@errors'
+import type { Property } from '../../domain/models/property'
 import { HostRepository } from '../repositories/host-repository'
 import { PropertyRepository } from '../repositories/property-repository'
 import { ListingRepository } from '../repositories/listing-repository'
@@ -19,7 +20,7 @@ export type DeletePropertyUseCaseResponse = Result<
 	| PropertyNotFoundError
 	| PropertyNotOwnedByHostError
 	| PropertyHasActiveListingsError,
-	null
+	Property
 >
 
 type UseCaseProps = {
@@ -74,6 +75,6 @@ export class DeletePropertyUseCase extends UseCase<
 
 		await this.props.propertyRepository.delete(deletedProperty)
 
-		return success(null)
+		return success(deletedProperty)
 	}
 }

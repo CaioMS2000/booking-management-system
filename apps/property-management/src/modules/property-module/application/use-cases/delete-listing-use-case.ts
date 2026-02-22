@@ -5,6 +5,7 @@ import {
 	PropertyNotFoundError,
 	ListingNotOwnedByHostError,
 } from '../@errors'
+import type { Listing } from '../../domain/models/listing'
 import { HostRepository } from '../repositories/host-repository'
 import { PropertyRepository } from '../repositories/property-repository'
 import { ListingRepository } from '../repositories/listing-repository'
@@ -19,7 +20,7 @@ export type DeleteListingUseCaseResponse = Result<
 	| ListingNotFoundError
 	| PropertyNotFoundError
 	| ListingNotOwnedByHostError,
-	null
+	Listing
 >
 
 type UseCaseProps = {
@@ -72,6 +73,6 @@ export class DeleteListingUseCase extends UseCase<
 
 		await this.props.listingRepository.delete(deletedListing)
 
-		return success(null)
+		return success(deletedListing)
 	}
 }
