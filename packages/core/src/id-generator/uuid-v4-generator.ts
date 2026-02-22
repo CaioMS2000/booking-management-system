@@ -7,7 +7,7 @@ export class UUIDV4Generator extends IdGenerator {
 		const uuid = randomUUID()
 		const id = prefix ? `${prefix}:${uuid}` : uuid
 
-		return Promise.resolve(new UniqueId(id))
+		return Promise.resolve(UniqueId(id))
 	}
 
 	generateBatch(count: number, prefix?: string): Promise<UniqueId[]> {
