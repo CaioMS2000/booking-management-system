@@ -1,4 +1,4 @@
-import { database } from '@/lib/drizzle'
+import { database } from './lib/drizzle'
 import { eq, isNull } from 'drizzle-orm'
 import { createLogger } from '@repo/core'
 import { SystemSettingKey, SystemSettingValue } from './system-settings'

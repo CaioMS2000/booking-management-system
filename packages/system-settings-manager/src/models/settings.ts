@@ -11,7 +11,7 @@ type SystemSettingProps = {
 }
 
 export class SystemSetting extends Class<SystemSettingProps> {
-	constructor(protected resources: SystemSettingProps) {
+	constructor(protected props: SystemSettingProps) {
 		super()
 	}
 
@@ -20,30 +20,30 @@ export class SystemSetting extends Class<SystemSettingProps> {
 	}
 
 	get createdAt() {
-		return this.resources.createdAt
+		return this.props.createdAt
 	}
 
 	get updatedAt() {
-		return this.resources.updatedAt
+		return this.props.updatedAt
 	}
 
 	get value() {
-		return this.resources.value
+		return this.props.value
 	}
 
 	get description() {
-		return this.resources.description
+		return this.props.description
 	}
 
 	get key() {
-		return this.resources.key
+		return this.props.key
 	}
 
 	get updatedBy() {
-		return this.resources.updatedBy
+		return this.props.updatedBy
 	}
 
 	get deletedAt() {
-		return this.resources.deletedAt
+		return this.props.deletedAt
 	}
 }
