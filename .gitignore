@@ -79,3 +79,4 @@ Thumbs.db
 !/**/notes/**/*.md
 !todo.md
 !architecture-lessons.md
+logs
