@@ -11,7 +11,11 @@ import {
 import { PropertyModuleInterface } from '@repo/modules-contracts'
 import { Reservation } from '../../domain/models/reservation'
 import { ReservationMinDurationRule } from '../../domain/rules/reservation-min-duration-rule'
-import { InvalidReservationPeriodError, ListingNotFoundError } from '../@errors'
+import {
+	DoubleBookingError,
+	InvalidReservationPeriodError,
+	ListingNotFoundError,
+} from '../@errors'
 import { ReservationCreatedEvent } from '../@events/reservation-created-event'
 import { ReservationRepository } from '../repositories/reservation-repository'
 
@@ -23,7 +27,7 @@ export type CreateReservationUseCaseRequest = {
 }
 
 export type CreateReservationUseCaseResponse = Result<
-	InvalidReservationPeriodError | ListingNotFoundError,
+	InvalidReservationPeriodError | ListingNotFoundError | DoubleBookingError,
 	{
 		reservation: Reservation
 	}
@@ -57,6 +61,15 @@ export class CreateReservationUseCase extends UseCase<
 
 		if (!listing) {
 			return failure(ListingNotFoundError)
+		}
+
+		const isOverlapping = await this.props.reservationRepository.hasOverlapping(
+			UniqueId(input.listingId),
+			input.period
+		)
+
+		if (isOverlapping) {
+			return failure(DoubleBookingError)
 		}
 
 		const reservation = await Reservation.create({

@@ -10,7 +10,11 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
 import { PropertyModuleInterface } from '@repo/modules-contracts'
 import { appContext } from '@/application-context'
-import { InvalidReservationPeriodError, ListingNotFoundError } from '../@errors'
+import {
+	DoubleBookingError,
+	InvalidReservationPeriodError,
+	ListingNotFoundError,
+} from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
 import { ReservationCreatedEvent } from '../@events/reservation-created-event'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
@@ -74,6 +78,34 @@ describe('CreateReservationUseCase', () => {
 		})
 	})
 
+	it('should return failure when a conflicting reservation exists', () => {
+		return appContext.run(makeAppContext(), async () => {
+			const host = await makeHost()
+			const property = await makeProperty(host.id)
+			const listing = await makeListing(property.id)
+
+			when(propertyModule.findListing(anything())).thenResolve(listing)
+			when(reservationRepo.hasOverlapping(anything(), anything())).thenResolve(
+				true
+			)
+
+			const result = await sut.execute({
+				listingId: listing.id,
+				guestId: 'guest-123',
+				period: {
+					from: new Date('2026-04-01'),
+					to: new Date('2026-04-05'),
+				},
+				totalPrice: { valueInCents: 60000, currency: 'BRL' },
+			})
+
+			expect(result.isFailure()).toBe(true)
+			expect(result.value).toBeInstanceOf(DoubleBookingError)
+			verify(reservationRepo.save(anything())).never()
+			verify(eventBusMock.emit(anything())).never()
+		})
+	})
+
 	it('should create reservation successfully', () => {
 		return appContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
@@ -81,6 +113,9 @@ describe('CreateReservationUseCase', () => {
 			const listing = await makeListing(property.id)
 
 			when(propertyModule.findListing(anything())).thenResolve(listing)
+			when(reservationRepo.hasOverlapping(anything(), anything())).thenResolve(
+				false
+			)
 			when(reservationRepo.save(anything())).thenResolve()
 
 			const result = await sut.execute({
@@ -114,6 +149,9 @@ describe('CreateReservationUseCase', () => {
 			const listing = await makeListing(property.id)
 
 			when(propertyModule.findListing(anything())).thenResolve(listing)
+			when(reservationRepo.hasOverlapping(anything(), anything())).thenResolve(
+				false
+			)
 			when(reservationRepo.save(anything())).thenResolve()
 
 			await sut.execute({
