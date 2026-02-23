@@ -10,8 +10,8 @@ import {
 import { Reservation } from '../../domain/models/reservation'
 import { ReservationMinDurationRule } from '../../domain/rules/reservation-min-duration-rule'
 import { InvalidReservationPeriodError, ListingNotFoundError } from '../@errors'
-import { ListingRepository } from '@/modules/property-module/application/repositories/listing-repository'
 import { ReservationRepository } from '../repositories/reservation-repository'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
 
 export type CreateReservationUseCaseRequest = {
 	listingId: string
@@ -28,7 +28,7 @@ export type CreateReservationUseCaseResponse = Result<
 >
 
 type UseCaseProps = {
-	listingRepository: ListingRepository
+	propertyModule: PropertyModuleInterface
 	reservationRepository: ReservationRepository
 }
 
@@ -50,9 +50,7 @@ export class CreateReservationUseCase extends UseCase<
 			return failure(InvalidReservationPeriodError)
 		}
 
-		const listing = await this.props.listingRepository.findById(
-			UniqueId(input.listingId)
-		)
+		const listing = await this.props.propertyModule.findListing(input.listingId)
 
 		if (!listing) {
 			return failure(ListingNotFoundError)
