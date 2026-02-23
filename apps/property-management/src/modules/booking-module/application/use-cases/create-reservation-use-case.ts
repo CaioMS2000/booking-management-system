@@ -1,17 +1,19 @@
 import {
-	Result,
+	EventBus,
 	failure,
-	UseCase,
-	UniqueId,
-	success,
 	Money,
 	ReservationPeriod,
+	Result,
+	success,
+	UniqueId,
+	UseCase,
 } from '@repo/core'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
 import { Reservation } from '../../domain/models/reservation'
 import { ReservationMinDurationRule } from '../../domain/rules/reservation-min-duration-rule'
 import { InvalidReservationPeriodError, ListingNotFoundError } from '../@errors'
+import { ReservationCreatedEvent } from '../@events/reservation-created-event'
 import { ReservationRepository } from '../repositories/reservation-repository'
-import { PropertyModuleInterface } from '@repo/modules-contracts'
 
 export type CreateReservationUseCaseRequest = {
 	listingId: string
@@ -30,6 +32,7 @@ export type CreateReservationUseCaseResponse = Result<
 type UseCaseProps = {
 	propertyModule: PropertyModuleInterface
 	reservationRepository: ReservationRepository
+	eventBus: EventBus
 }
 
 export class CreateReservationUseCase extends UseCase<
@@ -65,6 +68,12 @@ export class CreateReservationUseCase extends UseCase<
 
 		await this.props.reservationRepository.save(reservation)
 
+		this.eventBus.emit(ReservationCreatedEvent.fromReservation(reservation))
+
 		return success({ reservation })
+	}
+
+	get eventBus() {
+		return this.props.eventBus
 	}
 }
