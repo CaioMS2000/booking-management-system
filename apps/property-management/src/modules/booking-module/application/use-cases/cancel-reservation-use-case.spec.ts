@@ -10,8 +10,9 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
 import { appContext } from '@/application-context'
 import {
-	ReservationNotFoundError,
+	CancellationWindowExpiredError,
 	ReservationAlreadyCancelledError,
+	ReservationNotFoundError,
 } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
 import { ReservationCancelledEvent } from '../@events/reservation-cancelled-event'
@@ -64,6 +65,26 @@ describe('CancelReservationUseCase', () => {
 		})
 	})
 
+	it('should return failure when cancellation window has expired', () => {
+		return appContext.run(makeAppContext(), async () => {
+			const checkIn = new Date('2026-04-01T10:00:00Z')
+			const reservation = await makeReservation(UniqueId('listing-123'), {
+				period: { from: checkIn, to: new Date('2026-04-05T10:00:00Z') },
+			})
+			when(reservationRepo.findById(anything())).thenResolve(reservation)
+
+			const result = await sut.execute({
+				reservationId: reservation.id,
+				now: new Date('2026-03-31T22:00:00Z'),
+			})
+
+			expect(result.isFailure()).toBe(true)
+			expect(result.value).toBeInstanceOf(CancellationWindowExpiredError)
+			verify(reservationRepo.save(anything())).never()
+			verify(eventBusMock.emit(anything())).never()
+		})
+	})
+
 	it('should cancel reservation successfully', () => {
 		return appContext.run(makeAppContext(), async () => {
 			const reservation = await makeReservation(UniqueId('listing-123'))
@@ -72,6 +93,7 @@ describe('CancelReservationUseCase', () => {
 
 			const result = await sut.execute({
 				reservationId: reservation.id,
+				now: new Date('2026-01-01'),
 			})
 
 			expect(result.isSuccess()).toBe(true)
@@ -87,6 +109,7 @@ describe('CancelReservationUseCase', () => {
 
 			await sut.execute({
 				reservationId: reservation.id,
+				now: new Date('2026-01-01'),
 			})
 
 			verify(eventBusMock.emit(anything())).once()

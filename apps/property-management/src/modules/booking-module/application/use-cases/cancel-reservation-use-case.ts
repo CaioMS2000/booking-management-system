@@ -7,18 +7,23 @@ import {
 	UseCase,
 } from '@repo/core'
 import {
-	ReservationNotFoundError,
+	CancellationWindowExpiredError,
 	ReservationAlreadyCancelledError,
+	ReservationNotFoundError,
 } from '../@errors'
+import { CancellationWindowRule } from '../../domain/rules/cancellation-window-rule'
 import { ReservationCancelledEvent } from '../@events/reservation-cancelled-event'
 import { ReservationRepository } from '../repositories/reservation-repository'
 
 export type CancelReservationUseCaseRequest = {
 	reservationId: string
+	now?: Date
 }
 
 export type CancelReservationUseCaseResponse = Result<
-	ReservationNotFoundError | ReservationAlreadyCancelledError,
+	| ReservationNotFoundError
+	| ReservationAlreadyCancelledError
+	| CancellationWindowExpiredError,
 	null
 >
 
@@ -49,6 +54,18 @@ export class CancelReservationUseCase extends UseCase<
 
 		if (reservation.status === 'CANCELLED') {
 			return failure(ReservationAlreadyCancelledError)
+		}
+
+		const cancellationWindowRule = new CancellationWindowRule()
+		const now = input.now ?? new Date()
+
+		if (
+			!cancellationWindowRule.validate({
+				checkInDate: reservation.period.from,
+				now,
+			})
+		) {
+			return failure(CancellationWindowExpiredError)
 		}
 
 		const cancelledReservation = reservation.cancel()
