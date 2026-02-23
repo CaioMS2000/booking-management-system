@@ -51,6 +51,20 @@ export class Reservation extends Class<ReservationProps> {
 		return this.props.guestId
 	}
 
+	confirm(): Reservation {
+		return new Reservation({
+			...this.props,
+			status: 'CONFIRMED',
+		})
+	}
+
+	complete(): Reservation {
+		return new Reservation({
+			...this.props,
+			status: 'COMPLETED',
+		})
+	}
+
 	cancel(): Reservation {
 		return new Reservation({
 			...this.props,
