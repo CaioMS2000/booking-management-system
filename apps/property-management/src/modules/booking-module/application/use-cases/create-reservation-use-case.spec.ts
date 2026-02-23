@@ -1,16 +1,18 @@
 import {
 	anything,
+	capture,
 	instance,
 	mock,
 	verify,
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { UniqueId } from '@repo/core'
+import { EventBus, UniqueId } from '@repo/core'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
 import { appContext } from '@/application-context'
 import { InvalidReservationPeriodError, ListingNotFoundError } from '../@errors'
-import { ListingRepository } from '@/modules/property-module/application/repositories/listing-repository'
 import { ReservationRepository } from '../repositories/reservation-repository'
+import { ReservationCreatedEvent } from '../@events/reservation-created-event'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
@@ -18,16 +20,19 @@ import { makeListing } from '@/modules/property-module/test/factories/make-listi
 import { CreateReservationUseCase } from './create-reservation-use-case'
 
 describe('CreateReservationUseCase', () => {
-	let listingRepo: ListingRepository
+	let propertyModule: PropertyModuleInterface
 	let reservationRepo: ReservationRepository
+	let eventBusMock: EventBus
 	let sut: CreateReservationUseCase
 
 	beforeEach(() => {
-		listingRepo = mock(ListingRepository)
+		propertyModule = mock(PropertyModuleInterface)
 		reservationRepo = mock(ReservationRepository)
+		eventBusMock = mock(EventBus)
 		sut = new CreateReservationUseCase({
-			listingRepository: instance(listingRepo),
+			propertyModule: instance(propertyModule),
 			reservationRepository: instance(reservationRepo),
+			eventBus: instance(eventBusMock),
 		})
 	})
 
@@ -45,12 +50,13 @@ describe('CreateReservationUseCase', () => {
 
 			expect(result.isFailure()).toBe(true)
 			expect(result.value).toBeInstanceOf(InvalidReservationPeriodError)
+			verify(eventBusMock.emit(anything())).never()
 		})
 	})
 
 	it('should return failure when listing is not found', () => {
 		return appContext.run(makeAppContext(), async () => {
-			when(listingRepo.findById(anything())).thenResolve(null)
+			when(propertyModule.findListing(anything())).thenResolve(null)
 
 			const result = await sut.execute({
 				listingId: 'non-existent-listing',
@@ -64,6 +70,7 @@ describe('CreateReservationUseCase', () => {
 
 			expect(result.isFailure()).toBe(true)
 			expect(result.value).toBeInstanceOf(ListingNotFoundError)
+			verify(eventBusMock.emit(anything())).never()
 		})
 	})
 
@@ -73,7 +80,7 @@ describe('CreateReservationUseCase', () => {
 			const property = await makeProperty(host.id)
 			const listing = await makeListing(property.id)
 
-			when(listingRepo.findById(anything())).thenResolve(listing)
+			when(propertyModule.findListing(anything())).thenResolve(listing)
 			when(reservationRepo.save(anything())).thenResolve()
 
 			const result = await sut.execute({
@@ -97,6 +104,42 @@ describe('CreateReservationUseCase', () => {
 				})
 			}
 			verify(reservationRepo.save(anything())).once()
+		})
+	})
+
+	it('should emit ReservationCreatedEvent after creating reservation', () => {
+		return appContext.run(makeAppContext(), async () => {
+			const host = await makeHost()
+			const property = await makeProperty(host.id)
+			const listing = await makeListing(property.id)
+
+			when(propertyModule.findListing(anything())).thenResolve(listing)
+			when(reservationRepo.save(anything())).thenResolve()
+
+			await sut.execute({
+				listingId: listing.id,
+				guestId: 'guest-123',
+				period: {
+					from: new Date('2026-04-01'),
+					to: new Date('2026-04-05'),
+				},
+				totalPrice: { valueInCents: 60000, currency: 'BRL' },
+			})
+
+			verify(eventBusMock.emit(anything())).once()
+
+			const [emittedEvent] = capture(eventBusMock.emit).last()
+			expect(emittedEvent).toBeInstanceOf(ReservationCreatedEvent)
+			expect((emittedEvent as ReservationCreatedEvent).payload).toEqual({
+				listingId: UniqueId(listing.id),
+				guestId: UniqueId('guest-123'),
+				period: {
+					from: new Date('2026-04-01'),
+					to: new Date('2026-04-05'),
+				},
+				status: 'PENDING',
+				totalPrice: { valueInCents: 60000, currency: 'BRL' },
+			})
 		})
 	})
 })
