@@ -1,30 +1,35 @@
 import {
 	anything,
+	capture,
 	instance,
 	mock,
 	verify,
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { UniqueId } from '@repo/core'
+import { EventBus, UniqueId } from '@repo/core'
 import { appContext } from '@/application-context'
 import {
 	ReservationNotFoundError,
 	ReservationAlreadyCancelledError,
 } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
+import { ReservationCancelledEvent } from '../@events/reservation-cancelled-event'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'
 import { CancelReservationUseCase } from './cancel-reservation-use-case'
 
 describe('CancelReservationUseCase', () => {
 	let reservationRepo: ReservationRepository
+	let eventBusMock: EventBus
 	let sut: CancelReservationUseCase
 
 	beforeEach(() => {
 		reservationRepo = mock(ReservationRepository)
+		eventBusMock = mock(EventBus)
 		sut = new CancelReservationUseCase({
 			reservationRepository: instance(reservationRepo),
+			eventBus: instance(eventBusMock),
 		})
 	})
 
@@ -38,6 +43,7 @@ describe('CancelReservationUseCase', () => {
 
 			expect(result.isFailure()).toBe(true)
 			expect(result.value).toBeInstanceOf(ReservationNotFoundError)
+			verify(eventBusMock.emit(anything())).never()
 		})
 	})
 
@@ -54,6 +60,7 @@ describe('CancelReservationUseCase', () => {
 
 			expect(result.isFailure()).toBe(true)
 			expect(result.value).toBeInstanceOf(ReservationAlreadyCancelledError)
+			verify(eventBusMock.emit(anything())).never()
 		})
 	})
 
@@ -69,6 +76,28 @@ describe('CancelReservationUseCase', () => {
 
 			expect(result.isSuccess()).toBe(true)
 			verify(reservationRepo.save(anything())).once()
+		})
+	})
+
+	it('should emit ReservationCancelledEvent after cancelling', () => {
+		return appContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation(UniqueId('listing-123'))
+			when(reservationRepo.findById(anything())).thenResolve(reservation)
+			when(reservationRepo.save(anything())).thenResolve()
+
+			await sut.execute({
+				reservationId: reservation.id,
+			})
+
+			verify(eventBusMock.emit(anything())).once()
+
+			const [emittedEvent] = capture(eventBusMock.emit).last()
+			expect(emittedEvent).toBeInstanceOf(ReservationCancelledEvent)
+			expect((emittedEvent as ReservationCancelledEvent).payload).toEqual({
+				reservationId: reservation.id,
+				listingId: reservation.listingId,
+				guestId: reservation.guestId,
+			})
 		})
 	})
 })

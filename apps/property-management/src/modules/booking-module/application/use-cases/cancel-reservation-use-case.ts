@@ -1,8 +1,16 @@
-import { Result, failure, UseCase, UniqueId, success } from '@repo/core'
+import {
+	EventBus,
+	failure,
+	Result,
+	success,
+	UniqueId,
+	UseCase,
+} from '@repo/core'
 import {
 	ReservationNotFoundError,
 	ReservationAlreadyCancelledError,
 } from '../@errors'
+import { ReservationCancelledEvent } from '../@events/reservation-cancelled-event'
 import { ReservationRepository } from '../repositories/reservation-repository'
 
 export type CancelReservationUseCaseRequest = {
@@ -16,6 +24,7 @@ export type CancelReservationUseCaseResponse = Result<
 
 type UseCaseProps = {
 	reservationRepository: ReservationRepository
+	eventBus: EventBus
 }
 
 export class CancelReservationUseCase extends UseCase<
@@ -45,6 +54,10 @@ export class CancelReservationUseCase extends UseCase<
 		const cancelledReservation = reservation.cancel()
 
 		await this.props.reservationRepository.save(cancelledReservation)
+
+		this.props.eventBus.emit(
+			ReservationCancelledEvent.fromReservation(cancelledReservation)
+		)
 
 		return success(null)
 	}
