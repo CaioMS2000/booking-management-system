@@ -8,6 +8,7 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
 import { appContext } from '@/application-context'
 import {
 	ReservationNotFoundError,
@@ -20,14 +21,17 @@ import { makeReservation } from '@/modules/booking-module/test/factories/make-re
 import { ConfirmReservationUseCase } from './confirm-reservation-use-case'
 
 describe('ConfirmReservationUseCase', () => {
+	let propertyModule: PropertyModuleInterface
 	let reservationRepo: ReservationRepository
 	let eventBusMock: EventBus
 	let sut: ConfirmReservationUseCase
 
 	beforeEach(() => {
+		propertyModule = mock(PropertyModuleInterface)
 		reservationRepo = mock(ReservationRepository)
 		eventBusMock = mock(EventBus)
 		sut = new ConfirmReservationUseCase({
+			propertyModule: instance(propertyModule),
 			reservationRepository: instance(reservationRepo),
 			eventBus: instance(eventBusMock),
 		})
@@ -69,6 +73,9 @@ describe('ConfirmReservationUseCase', () => {
 			const reservation = await makeReservation(UniqueId('listing-123'))
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()
+			when(
+				propertyModule.confirmReservationOnListing(anything(), anything())
+			).thenResolve({ success: true, listing: {} as any })
 
 			const result = await sut.execute({
 				reservationId: reservation.id,
@@ -79,11 +86,39 @@ describe('ConfirmReservationUseCase', () => {
 		})
 	})
 
+	it('should call confirmReservationOnListing on property module', () => {
+		return appContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation(UniqueId('listing-123'))
+			when(reservationRepo.findById(anything())).thenResolve(reservation)
+			when(reservationRepo.save(anything())).thenResolve()
+			when(
+				propertyModule.confirmReservationOnListing(anything(), anything())
+			).thenResolve({ success: true, listing: {} as any })
+
+			await sut.execute({
+				reservationId: reservation.id,
+			})
+
+			verify(
+				propertyModule.confirmReservationOnListing(anything(), anything())
+			).once()
+
+			const [listingId, period] = capture(
+				propertyModule.confirmReservationOnListing
+			).last()
+			expect(listingId).toBe(reservation.listingId)
+			expect(period).toEqual(reservation.period)
+		})
+	})
+
 	it('should emit ReservationConfirmedEvent after confirming', () => {
 		return appContext.run(makeAppContext(), async () => {
 			const reservation = await makeReservation(UniqueId('listing-123'))
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()
+			when(
+				propertyModule.confirmReservationOnListing(anything(), anything())
+			).thenResolve({ success: true, listing: {} as any })
 
 			await sut.execute({
 				reservationId: reservation.id,

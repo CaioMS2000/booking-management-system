@@ -8,6 +8,7 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
 import { appContext } from '@/application-context'
 import {
 	CancellationWindowExpiredError,
@@ -21,14 +22,17 @@ import { makeReservation } from '@/modules/booking-module/test/factories/make-re
 import { CancelReservationUseCase } from './cancel-reservation-use-case'
 
 describe('CancelReservationUseCase', () => {
+	let propertyModule: PropertyModuleInterface
 	let reservationRepo: ReservationRepository
 	let eventBusMock: EventBus
 	let sut: CancelReservationUseCase
 
 	beforeEach(() => {
+		propertyModule = mock(PropertyModuleInterface)
 		reservationRepo = mock(ReservationRepository)
 		eventBusMock = mock(EventBus)
 		sut = new CancelReservationUseCase({
+			propertyModule: instance(propertyModule),
 			reservationRepository: instance(reservationRepo),
 			eventBus: instance(eventBusMock),
 		})
@@ -90,6 +94,10 @@ describe('CancelReservationUseCase', () => {
 			const reservation = await makeReservation(UniqueId('listing-123'))
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()
+			when(propertyModule.releaseInterval(anything(), anything())).thenResolve({
+				success: true,
+				listing: {} as any,
+			})
 
 			const result = await sut.execute({
 				reservationId: reservation.id,
@@ -101,11 +109,38 @@ describe('CancelReservationUseCase', () => {
 		})
 	})
 
+	it('should call releaseInterval on property module', () => {
+		return appContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation(UniqueId('listing-123'))
+			when(reservationRepo.findById(anything())).thenResolve(reservation)
+			when(reservationRepo.save(anything())).thenResolve()
+			when(propertyModule.releaseInterval(anything(), anything())).thenResolve({
+				success: true,
+				listing: {} as any,
+			})
+
+			await sut.execute({
+				reservationId: reservation.id,
+				now: new Date('2026-01-01'),
+			})
+
+			verify(propertyModule.releaseInterval(anything(), anything())).once()
+
+			const [listingId, period] = capture(propertyModule.releaseInterval).last()
+			expect(listingId).toBe(reservation.listingId)
+			expect(period).toEqual(reservation.period)
+		})
+	})
+
 	it('should emit ReservationCancelledEvent after cancelling', () => {
 		return appContext.run(makeAppContext(), async () => {
 			const reservation = await makeReservation(UniqueId('listing-123'))
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()
+			when(propertyModule.releaseInterval(anything(), anything())).thenResolve({
+				success: true,
+				listing: {} as any,
+			})
 
 			await sut.execute({
 				reservationId: reservation.id,

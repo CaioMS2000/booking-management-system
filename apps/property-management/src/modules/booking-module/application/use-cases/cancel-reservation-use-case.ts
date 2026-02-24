@@ -6,6 +6,7 @@ import {
 	UniqueId,
 	UseCase,
 } from '@repo/core'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
 import {
 	CancellationWindowExpiredError,
 	ReservationAlreadyCancelledError,
@@ -28,6 +29,7 @@ export type CancelReservationUseCaseResponse = Result<
 >
 
 type UseCaseProps = {
+	propertyModule: PropertyModuleInterface
 	reservationRepository: ReservationRepository
 	eventBus: EventBus
 }
@@ -71,6 +73,11 @@ export class CancelReservationUseCase extends UseCase<
 		const cancelledReservation = reservation.cancel()
 
 		await this.props.reservationRepository.save(cancelledReservation)
+
+		await this.props.propertyModule.releaseInterval(
+			reservation.listingId,
+			reservation.period
+		)
 
 		this.props.eventBus.emit(
 			ReservationCancelledEvent.fromReservation(cancelledReservation)

@@ -11,16 +11,14 @@ import { EventBus, UniqueId } from '@repo/core'
 import { PropertyModuleInterface } from '@repo/modules-contracts'
 import { appContext } from '@/application-context'
 import {
-	DoubleBookingError,
 	InvalidReservationPeriodError,
 	ListingNotFoundError,
+	OutsideSlidingWindowError,
+	PeriodUnavailableError,
 } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
 import { ReservationCreatedEvent } from '../@events/reservation-created-event'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
-import { makeHost } from '@/modules/property-module/test/factories/make-host'
-import { makeProperty } from '@/modules/property-module/test/factories/make-property'
-import { makeListing } from '@/modules/property-module/test/factories/make-listing'
 import { CreateReservationUseCase } from './create-reservation-use-case'
 
 describe('CreateReservationUseCase', () => {
@@ -60,7 +58,10 @@ describe('CreateReservationUseCase', () => {
 
 	it('should return failure when listing is not found', () => {
 		return appContext.run(makeAppContext(), async () => {
-			when(propertyModule.findListing(anything())).thenResolve(null)
+			when(propertyModule.placeHold(anything(), anything())).thenResolve({
+				success: false,
+				reason: 'LISTING_NOT_FOUND',
+			})
 
 			const result = await sut.execute({
 				listingId: 'non-existent-listing',
@@ -78,19 +79,15 @@ describe('CreateReservationUseCase', () => {
 		})
 	})
 
-	it('should return failure when a conflicting reservation exists', () => {
+	it('should return failure when period is unavailable', () => {
 		return appContext.run(makeAppContext(), async () => {
-			const host = await makeHost()
-			const property = await makeProperty(host.id)
-			const listing = await makeListing(property.id)
-
-			when(propertyModule.findListing(anything())).thenResolve(listing)
-			when(reservationRepo.hasOverlapping(anything(), anything())).thenResolve(
-				true
-			)
+			when(propertyModule.placeHold(anything(), anything())).thenResolve({
+				success: false,
+				reason: 'PERIOD_UNAVAILABLE',
+			})
 
 			const result = await sut.execute({
-				listingId: listing.id,
+				listingId: 'listing-123',
 				guestId: 'guest-123',
 				period: {
 					from: new Date('2026-04-01'),
@@ -100,7 +97,31 @@ describe('CreateReservationUseCase', () => {
 			})
 
 			expect(result.isFailure()).toBe(true)
-			expect(result.value).toBeInstanceOf(DoubleBookingError)
+			expect(result.value).toBeInstanceOf(PeriodUnavailableError)
+			verify(reservationRepo.save(anything())).never()
+			verify(eventBusMock.emit(anything())).never()
+		})
+	})
+
+	it('should return failure when period is outside sliding window', () => {
+		return appContext.run(makeAppContext(), async () => {
+			when(propertyModule.placeHold(anything(), anything())).thenResolve({
+				success: false,
+				reason: 'OUTSIDE_SLIDING_WINDOW',
+			})
+
+			const result = await sut.execute({
+				listingId: 'listing-123',
+				guestId: 'guest-123',
+				period: {
+					from: new Date('2028-04-01'),
+					to: new Date('2028-04-05'),
+				},
+				totalPrice: { valueInCents: 60000, currency: 'BRL' },
+			})
+
+			expect(result.isFailure()).toBe(true)
+			expect(result.value).toBeInstanceOf(OutsideSlidingWindowError)
 			verify(reservationRepo.save(anything())).never()
 			verify(eventBusMock.emit(anything())).never()
 		})
@@ -108,18 +129,20 @@ describe('CreateReservationUseCase', () => {
 
 	it('should create reservation successfully', () => {
 		return appContext.run(makeAppContext(), async () => {
-			const host = await makeHost()
-			const property = await makeProperty(host.id)
-			const listing = await makeListing(property.id)
-
-			when(propertyModule.findListing(anything())).thenResolve(listing)
-			when(reservationRepo.hasOverlapping(anything(), anything())).thenResolve(
-				false
-			)
+			when(propertyModule.placeHold(anything(), anything())).thenResolve({
+				success: true,
+				listing: {
+					id: 'listing-123',
+					publicId: 1,
+					pricePerNight: { valueInCents: 10000, currency: 'BRL' },
+					intervals: [],
+					deletedAt: null,
+				},
+			})
 			when(reservationRepo.save(anything())).thenResolve()
 
 			const result = await sut.execute({
-				listingId: listing.id,
+				listingId: 'listing-123',
 				guestId: 'guest-123',
 				period: {
 					from: new Date('2026-04-01'),
@@ -132,7 +155,7 @@ describe('CreateReservationUseCase', () => {
 			if (result.isSuccess()) {
 				const { reservation } = result.value
 				expect(reservation.status).toBe('PENDING')
-				expect(reservation.listingId).toBe(UniqueId(listing.id))
+				expect(reservation.listingId).toBe(UniqueId('listing-123'))
 				expect(reservation.totalPrice).toEqual({
 					valueInCents: 60000,
 					currency: 'BRL',
@@ -144,18 +167,20 @@ describe('CreateReservationUseCase', () => {
 
 	it('should emit ReservationCreatedEvent after creating reservation', () => {
 		return appContext.run(makeAppContext(), async () => {
-			const host = await makeHost()
-			const property = await makeProperty(host.id)
-			const listing = await makeListing(property.id)
-
-			when(propertyModule.findListing(anything())).thenResolve(listing)
-			when(reservationRepo.hasOverlapping(anything(), anything())).thenResolve(
-				false
-			)
+			when(propertyModule.placeHold(anything(), anything())).thenResolve({
+				success: true,
+				listing: {
+					id: 'listing-123',
+					publicId: 1,
+					pricePerNight: { valueInCents: 10000, currency: 'BRL' },
+					intervals: [],
+					deletedAt: null,
+				},
+			})
 			when(reservationRepo.save(anything())).thenResolve()
 
 			await sut.execute({
-				listingId: listing.id,
+				listingId: 'listing-123',
 				guestId: 'guest-123',
 				period: {
 					from: new Date('2026-04-01'),
@@ -169,7 +194,7 @@ describe('CreateReservationUseCase', () => {
 			const [emittedEvent] = capture(eventBusMock.emit).last()
 			expect(emittedEvent).toBeInstanceOf(ReservationCreatedEvent)
 			expect((emittedEvent as ReservationCreatedEvent).payload).toEqual({
-				listingId: UniqueId(listing.id),
+				listingId: UniqueId('listing-123'),
 				guestId: UniqueId('guest-123'),
 				period: {
 					from: new Date('2026-04-01'),

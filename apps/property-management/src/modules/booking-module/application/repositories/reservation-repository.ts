@@ -1,4 +1,4 @@
-import { ReservationPeriod, UniqueId } from '@repo/core'
+import { UniqueId } from '@repo/core'
 import { Reservation } from '@/modules/booking-module/domain/models/reservation'
 import { Pagination } from '@/modules/property-module/application/repositories/params'
 
@@ -14,8 +14,4 @@ export abstract class ReservationRepository {
 		filters?: ReservationFilters,
 		pagination?: Pagination
 	): Promise<Reservation[]>
-	abstract hasOverlapping(
-		listingId: UniqueId,
-		period: ReservationPeriod
-	): Promise<boolean>
 }

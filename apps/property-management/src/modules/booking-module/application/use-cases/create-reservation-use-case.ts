@@ -12,9 +12,10 @@ import { PropertyModuleInterface } from '@repo/modules-contracts'
 import { Reservation } from '../../domain/models/reservation'
 import { ReservationMinDurationRule } from '../../domain/rules/reservation-min-duration-rule'
 import {
-	DoubleBookingError,
 	InvalidReservationPeriodError,
 	ListingNotFoundError,
+	OutsideSlidingWindowError,
+	PeriodUnavailableError,
 } from '../@errors'
 import { ReservationCreatedEvent } from '../@events/reservation-created-event'
 import { ReservationRepository } from '../repositories/reservation-repository'
@@ -27,7 +28,10 @@ export type CreateReservationUseCaseRequest = {
 }
 
 export type CreateReservationUseCaseResponse = Result<
-	InvalidReservationPeriodError | ListingNotFoundError | DoubleBookingError,
+	| InvalidReservationPeriodError
+	| ListingNotFoundError
+	| OutsideSlidingWindowError
+	| PeriodUnavailableError,
 	{
 		reservation: Reservation
 	}
@@ -57,19 +61,19 @@ export class CreateReservationUseCase extends UseCase<
 			return failure(InvalidReservationPeriodError)
 		}
 
-		const listing = await this.props.propertyModule.findListing(input.listingId)
-
-		if (!listing) {
-			return failure(ListingNotFoundError)
-		}
-
-		const isOverlapping = await this.props.reservationRepository.hasOverlapping(
-			UniqueId(input.listingId),
+		const holdResult = await this.props.propertyModule.placeHold(
+			input.listingId,
 			input.period
 		)
 
-		if (isOverlapping) {
-			return failure(DoubleBookingError)
+		if (!holdResult.success) {
+			if (holdResult.reason === 'LISTING_NOT_FOUND') {
+				return failure(ListingNotFoundError)
+			}
+			if (holdResult.reason === 'OUTSIDE_SLIDING_WINDOW') {
+				return failure(OutsideSlidingWindowError)
+			}
+			return failure(PeriodUnavailableError)
 		}
 
 		const reservation = await Reservation.create({

@@ -6,6 +6,7 @@ import {
 	UniqueId,
 	UseCase,
 } from '@repo/core'
+import { PropertyModuleInterface } from '@repo/modules-contracts'
 import {
 	ReservationNotFoundError,
 	ReservationNotPendingError,
@@ -23,6 +24,7 @@ export type ConfirmReservationUseCaseResponse = Result<
 >
 
 type UseCaseProps = {
+	propertyModule: PropertyModuleInterface
 	reservationRepository: ReservationRepository
 	eventBus: EventBus
 }
@@ -54,6 +56,11 @@ export class ConfirmReservationUseCase extends UseCase<
 		const confirmedReservation = reservation.confirm()
 
 		await this.props.reservationRepository.save(confirmedReservation)
+
+		await this.props.propertyModule.confirmReservationOnListing(
+			reservation.listingId,
+			reservation.period
+		)
 
 		this.props.eventBus.emit(
 			ReservationConfirmedEvent.fromReservation(confirmedReservation)
