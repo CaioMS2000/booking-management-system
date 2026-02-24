@@ -1,4 +1,14 @@
-import { Class, DateInterval, Money, Optional, UniqueId } from '@repo/core'
+import {
+	Class,
+	DateInterval,
+	failure,
+	Money,
+	Optional,
+	ReservationPeriod,
+	Result,
+	success,
+	UniqueId,
+} from '@repo/core'
 import { appContext } from '@/application-context'
 
 export type ListingProps = {
@@ -59,6 +69,132 @@ export class Listing extends Class<ListingProps> {
 		return new Listing({
 			...this.props,
 			deletedAt: new Date(),
+		})
+	}
+
+	isAvailableFor(period: ReservationPeriod, now: Date = new Date()): boolean {
+		const activeIntervals = this.props.intervals.filter(
+			i => !(i.status === 'HOLD' && i.expiresAt && now >= i.expiresAt)
+		)
+
+		return !activeIntervals.some(
+			i =>
+				(i.status === 'HOLD' ||
+					i.status === 'RESERVED' ||
+					i.status === 'BLOCKED') &&
+				period.from < i.to &&
+				period.to > i.from
+		)
+	}
+
+	placeHold(
+		period: ReservationPeriod,
+		expiresAt: Date,
+		now: Date = new Date()
+	): Result<Error, Listing> {
+		if (!this.isAvailableFor(period, now)) {
+			return failure(new Error('Period is not available'))
+		}
+
+		const holdInterval: DateInterval = {
+			from: period.from,
+			to: period.to,
+			status: 'HOLD',
+			expiresAt,
+		}
+
+		return success(
+			new Listing({
+				...this.props,
+				intervals: [...this.props.intervals, holdInterval],
+			})
+		)
+	}
+
+	confirmReservation(period: ReservationPeriod): Result<Error, Listing> {
+		const holdIndex = this.props.intervals.findIndex(
+			i =>
+				i.status === 'HOLD' &&
+				i.from.getTime() === period.from.getTime() &&
+				i.to.getTime() === period.to.getTime()
+		)
+
+		if (holdIndex === -1) {
+			return failure(new Error('No matching HOLD found for the given period'))
+		}
+
+		const updatedIntervals = [...this.props.intervals]
+		updatedIntervals[holdIndex] = {
+			from: period.from,
+			to: period.to,
+			status: 'RESERVED',
+		}
+
+		return success(
+			new Listing({
+				...this.props,
+				intervals: updatedIntervals,
+			})
+		)
+	}
+
+	releaseInterval(period: ReservationPeriod): Result<Error, Listing> {
+		const index = this.props.intervals.findIndex(
+			i =>
+				(i.status === 'HOLD' || i.status === 'RESERVED') &&
+				i.from.getTime() === period.from.getTime() &&
+				i.to.getTime() === period.to.getTime()
+		)
+
+		if (index === -1) {
+			return failure(
+				new Error(
+					'No matching HOLD or RESERVED interval found for the given period'
+				)
+			)
+		}
+
+		const updatedIntervals = [...this.props.intervals]
+		updatedIntervals.splice(index, 1)
+
+		return success(
+			new Listing({
+				...this.props,
+				intervals: updatedIntervals,
+			})
+		)
+	}
+
+	blockPeriod(
+		period: ReservationPeriod,
+		now: Date = new Date()
+	): Result<Error, Listing> {
+		if (!this.isAvailableFor(period, now)) {
+			return failure(new Error('Period is not available'))
+		}
+
+		const blockedInterval: DateInterval = {
+			from: period.from,
+			to: period.to,
+			status: 'BLOCKED',
+		}
+
+		return success(
+			new Listing({
+				...this.props,
+				intervals: [...this.props.intervals, blockedInterval],
+			})
+		)
+	}
+
+	cleanupExpiredHolds(now: Date = new Date()): Listing {
+		const activeIntervals = this.props.intervals.filter(
+			i => !(i.status === 'HOLD' && i.expiresAt && now >= i.expiresAt)
+		)
+
+		return new Listing({
+			...this.props,
+			intervals: activeIntervals,
 		})
 	}
 
