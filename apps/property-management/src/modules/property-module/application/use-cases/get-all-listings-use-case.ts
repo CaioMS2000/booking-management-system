@@ -3,8 +3,8 @@ import { Listing } from '../../domain/models/listing'
 import {
 	ListingRepository,
 	ListingFilters,
-	Pagination,
 } from '../repositories/listing-repository'
+import { Pagination } from '../repositories/params'
 
 export type GetAllListingsUseCaseRequest = {
 	filters?: ListingFilters

@@ -1,10 +1,10 @@
 import { Result, success, UniqueId, UseCase } from '@repo/core'
 import { Reservation } from '../../domain/models/reservation'
 import {
-	Pagination,
 	ReservationFilters,
 	ReservationRepository,
 } from '../repositories/reservation-repository'
+import { Pagination } from '@/modules/property-module/application/repositories/params'
 
 export type ListReservationsUseCaseRequest = {
 	guestId?: string

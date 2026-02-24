@@ -1,14 +1,10 @@
 import { ReservationPeriod, UniqueId } from '@repo/core'
 import { Reservation } from '@/modules/booking-module/domain/models/reservation'
+import { Pagination } from '@/modules/property-module/application/repositories/params'
 
 export type ReservationFilters = {
 	guestId?: UniqueId
 	listingId?: UniqueId
-}
-
-export type Pagination = {
-	page?: number
-	limit?: number
 }
 
 export abstract class ReservationRepository {

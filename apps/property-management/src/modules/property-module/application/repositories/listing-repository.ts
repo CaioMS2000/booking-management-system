@@ -1,5 +1,13 @@
 import { UniqueId } from '@repo/core'
 import { Listing } from '@/modules/property-module/domain/models/listing'
+import { Pagination } from './params'
+
+export type ListingFilters = {
+	capacity?: number
+	minPrice?: number
+	maxPrice?: number
+	currency?: string
+}
 
 export abstract class ListingRepository {
 	abstract save(listing: Listing): Promise<void>
@@ -13,16 +21,4 @@ export abstract class ListingRepository {
 		filters?: ListingFilters,
 		pagination?: Pagination
 	): Promise<Listing[]>
-}
-
-export type ListingFilters = {
-	capacity?: number
-	minPrice?: number
-	maxPrice?: number
-	currency?: string
-}
-
-export type Pagination = {
-	page?: number
-	limit?: number
 }
