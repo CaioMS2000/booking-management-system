@@ -14,7 +14,7 @@ import {
 	ReservationNotConfirmedError,
 } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
-import { ReservationCompletedEvent } from '../@events/reservation-completed-event'
+import { ReservationCompletedEvent } from '@repo/shared'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'
 import { CompleteReservationUseCase } from './complete-reservation-use-case'

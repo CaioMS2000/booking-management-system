@@ -6,14 +6,16 @@ import {
 	UniqueId,
 	UseCase,
 } from '@repo/core'
-import { PropertyModuleInterface } from '@repo/modules-contracts'
+import {
+	PropertyModuleInterface,
+	ReservationCancelledEvent,
+} from '@repo/shared'
 import {
 	CancellationWindowExpiredError,
 	ReservationAlreadyCancelledError,
 	ReservationNotFoundError,
 } from '../@errors'
 import { CancellationWindowRule } from '../../domain/rules/cancellation-window-rule'
-import { ReservationCancelledEvent } from '../@events/reservation-cancelled-event'
 import { ReservationRepository } from '../repositories/reservation-repository'
 
 export type CancelReservationUseCaseRequest = {

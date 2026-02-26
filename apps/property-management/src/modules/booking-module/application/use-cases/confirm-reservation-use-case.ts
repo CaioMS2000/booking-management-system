@@ -6,12 +6,14 @@ import {
 	UniqueId,
 	UseCase,
 } from '@repo/core'
-import { PropertyModuleInterface } from '@repo/modules-contracts'
+import {
+	PropertyModuleInterface,
+	ReservationConfirmedEvent,
+} from '@repo/shared'
 import {
 	ReservationNotFoundError,
 	ReservationNotPendingError,
 } from '../@errors'
-import { ReservationConfirmedEvent } from '../@events/reservation-confirmed-event'
 import { ReservationRepository } from '../repositories/reservation-repository'
 
 export type ConfirmReservationUseCaseRequest = {

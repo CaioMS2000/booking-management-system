@@ -8,14 +8,16 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
-import { PropertyModuleInterface } from '@repo/modules-contracts'
+import {
+	PropertyModuleInterface,
+	ReservationConfirmedEvent,
+} from '@repo/shared'
 import { appContext } from '@/application-context'
 import {
 	ReservationNotFoundError,
 	ReservationNotPendingError,
 } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
-import { ReservationConfirmedEvent } from '../@events/reservation-confirmed-event'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'
 import { ConfirmReservationUseCase } from './confirm-reservation-use-case'

@@ -8,7 +8,10 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
-import { PropertyModuleInterface } from '@repo/modules-contracts'
+import {
+	PropertyModuleInterface,
+	ReservationCancelledEvent,
+} from '@repo/shared'
 import { appContext } from '@/application-context'
 import {
 	CancellationWindowExpiredError,
@@ -16,7 +19,6 @@ import {
 	ReservationNotFoundError,
 } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
-import { ReservationCancelledEvent } from '../@events/reservation-cancelled-event'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'
 import { CancelReservationUseCase } from './cancel-reservation-use-case'

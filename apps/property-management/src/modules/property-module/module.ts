@@ -6,7 +6,7 @@ import {
 	PropertyDTO,
 	PropertyModuleInterface,
 	ReleaseIntervalResult,
-} from '@repo/modules-contracts'
+} from '@repo/shared'
 import { ListingRepository } from './application/repositories/listing-repository'
 import { PropertyRepository } from './application/repositories/property-repository'
 import { Listing } from './domain/models/listing'

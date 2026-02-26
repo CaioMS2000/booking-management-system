@@ -8,7 +8,7 @@ import {
 	UniqueId,
 	UseCase,
 } from '@repo/core'
-import { PropertyModuleInterface } from '@repo/modules-contracts'
+import { PropertyModuleInterface, ReservationCreatedEvent } from '@repo/shared'
 import { Reservation } from '../../domain/models/reservation'
 import { ReservationMinDurationRule } from '../../domain/rules/reservation-min-duration-rule'
 import {
@@ -17,7 +17,6 @@ import {
 	OutsideSlidingWindowError,
 	PeriodUnavailableError,
 } from '../@errors'
-import { ReservationCreatedEvent } from '../@events/reservation-created-event'
 import { ReservationRepository } from '../repositories/reservation-repository'
 
 export type CreateReservationUseCaseRequest = {

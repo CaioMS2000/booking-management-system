@@ -10,7 +10,7 @@ import {
 	ReservationNotFoundError,
 	ReservationNotConfirmedError,
 } from '../@errors'
-import { ReservationCompletedEvent } from '../@events/reservation-completed-event'
+import { ReservationCompletedEvent } from '@repo/shared'
 import { ReservationRepository } from '../repositories/reservation-repository'
 
 export type CompleteReservationUseCaseRequest = {

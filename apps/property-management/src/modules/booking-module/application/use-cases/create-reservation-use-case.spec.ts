@@ -8,7 +8,7 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
-import { PropertyModuleInterface } from '@repo/modules-contracts'
+import { PropertyModuleInterface, ReservationCreatedEvent } from '@repo/shared'
 import { appContext } from '@/application-context'
 import {
 	InvalidReservationPeriodError,
@@ -17,7 +17,6 @@ import {
 	PeriodUnavailableError,
 } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
-import { ReservationCreatedEvent } from '../@events/reservation-created-event'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { CreateReservationUseCase } from './create-reservation-use-case'
 
