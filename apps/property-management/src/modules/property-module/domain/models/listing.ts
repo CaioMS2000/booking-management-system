@@ -10,6 +10,8 @@ import {
 	UniqueId,
 } from '@repo/core'
 import { appContext } from '@/application-context'
+import { PeriodNotAvailableError } from '../../application/@errors/perio-not-available-error'
+import { NoMatchingPeriodError } from '../../application/@errors/no-matching-period-error'
 
 export type ListingProps = {
 	id: UniqueId
@@ -91,9 +93,9 @@ export class Listing extends Class<ListingProps> {
 		period: ReservationPeriod,
 		expiresAt: Date,
 		now: Date = new Date()
-	): Result<Error, Listing> {
+	): Result<PeriodNotAvailableError, Listing> {
 		if (!this.isAvailableFor(period, now)) {
-			return failure(new Error('Period is not available'))
+			return failure(new PeriodNotAvailableError('Period is not available'))
 		}
 
 		const holdInterval: DateInterval = {
@@ -111,7 +113,9 @@ export class Listing extends Class<ListingProps> {
 		)
 	}
 
-	confirmReservation(period: ReservationPeriod): Result<Error, Listing> {
+	confirmReservation(
+		period: ReservationPeriod
+	): Result<NoMatchingPeriodError, Listing> {
 		const holdIndex = this.props.intervals.findIndex(
 			i =>
 				i.status === 'HOLD' &&
@@ -120,7 +124,9 @@ export class Listing extends Class<ListingProps> {
 		)
 
 		if (holdIndex === -1) {
-			return failure(new Error('No matching HOLD found for the given period'))
+			return failure(
+				new NoMatchingPeriodError('No matching HOLD found for the given period')
+			)
 		}
 
 		const updatedIntervals = [...this.props.intervals]
@@ -138,7 +144,9 @@ export class Listing extends Class<ListingProps> {
 		)
 	}
 
-	releaseInterval(period: ReservationPeriod): Result<Error, Listing> {
+	releaseInterval(
+		period: ReservationPeriod
+	): Result<NoMatchingPeriodError, Listing> {
 		const index = this.props.intervals.findIndex(
 			i =>
 				(i.status === 'HOLD' || i.status === 'RESERVED') &&
@@ -148,7 +156,7 @@ export class Listing extends Class<ListingProps> {
 
 		if (index === -1) {
 			return failure(
-				new Error(
+				new NoMatchingPeriodError(
 					'No matching HOLD or RESERVED interval found for the given period'
 				)
 			)
@@ -168,9 +176,9 @@ export class Listing extends Class<ListingProps> {
 	blockPeriod(
 		period: ReservationPeriod,
 		now: Date = new Date()
-	): Result<Error, Listing> {
+	): Result<PeriodNotAvailableError, Listing> {
 		if (!this.isAvailableFor(period, now)) {
-			return failure(new Error('Period is not available'))
+			return failure(new PeriodNotAvailableError('Period is not available'))
 		}
 
 		const blockedInterval: DateInterval = {
