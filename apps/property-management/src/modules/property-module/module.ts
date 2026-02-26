@@ -1,3 +1,4 @@
+import { ReservationPeriod, UniqueId } from '@repo/core'
 import {
 	ConfirmReservationOnListingResult,
 	ListingDTO,
@@ -8,9 +9,8 @@ import {
 } from '@repo/modules-contracts'
 import { ListingRepository } from './application/repositories/listing-repository'
 import { PropertyRepository } from './application/repositories/property-repository'
-import { ReservationPeriod, UniqueId } from '@repo/core'
 import { Listing } from './domain/models/listing'
-import { IntervalWithinSlidingWindowRule } from './domain/value-object/rules/interval-within-sliding-window-rule'
+import { IntervalWithinSlidingWindowRule } from './domain/rules/interval-within-sliding-window-rule'
 
 const DEFAULT_HOLD_DURATION_MINUTES = 15
 
