@@ -1,10 +1,11 @@
 import { IdGenerator, IncrementalIdGenerator, Currency } from '@repo/core'
 import { ContextManager } from './context/context-manager'
+import { AuthenticatedUser } from './infrastructure/http/@types/user'
 
 export type ApplicationContext = {
 	currentCurrency: Currency
 	requestId: string
-	userId?: string
+	user: AuthenticatedUser
 	timestamp: Date
 	idGenerator: {
 		V4: IdGenerator
