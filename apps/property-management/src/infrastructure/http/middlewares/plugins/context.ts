@@ -1,9 +1,9 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import { AppError } from '../../errors'
 import { verifyJwt } from '../../jwt/verify-jwt'
-import { authenticatedUserSchema } from '../../@types/user'
+import { authenticatedUserSchema } from '@/context/user'
 import { Currency } from '@repo/core'
 import { APP_TOKENS } from '@/tokens'
 
@@ -29,8 +29,12 @@ function extractCurrency(req: FastifyRequest): Currency {
 	return 'BRL'
 }
 
+const PUBLIC_PREFIXES = ['/docs', '/health', '/openapi.json']
+
 export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 	app.addHook('onRequest', async req => {
+		if (PUBLIC_PREFIXES.some(p => req.url.startsWith(p))) return
+
 		const token = extractToken(req)
 		const payload = token ? await verifyJwt(token) : null
 
