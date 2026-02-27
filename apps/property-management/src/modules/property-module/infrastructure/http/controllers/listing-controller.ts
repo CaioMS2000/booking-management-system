@@ -4,7 +4,6 @@ import { fastifyPlugin } from 'fastify-plugin'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { appContext } from '@/application-context'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
-import { AppError } from '@/infrastructure/http/errors'
 import type { CreateListingUseCase } from '@/modules/property-module/application/use-cases/create-listing-use-case'
 import type { DeleteListingUseCase } from '@/modules/property-module/application/use-cases/delete-listing-use-case'
 import type { GetAllListingsUseCase } from '@/modules/property-module/application/use-cases/get-all-listings-use-case'
@@ -230,9 +229,7 @@ export class ListingController extends Class<ListingControllerProps> {
 	}
 
 	private getHostId(): string {
-		const ctx = appContext.get()
-		if (!ctx.userId) throw AppError.unauthenticated()
-		return ctx.userId
+		return appContext.get().user.id
 	}
 
 	private parseIntervals(

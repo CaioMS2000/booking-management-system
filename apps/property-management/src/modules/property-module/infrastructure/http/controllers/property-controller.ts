@@ -5,7 +5,6 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 
 import { appContext } from '@/application-context'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
-import { AppError } from '@/infrastructure/http/errors'
 import type { CreatePropertyUseCase } from '@/modules/property-module/application/use-cases/create-property-use-case'
 import type { DeletePropertyUseCase } from '@/modules/property-module/application/use-cases/delete-property-use-case'
 import type { GetAllPropertiesUseCase } from '@/modules/property-module/application/use-cases/get-all-properties-use-case'
@@ -229,9 +228,7 @@ export class PropertyController extends Class<PropertyControllerProps> {
 	}
 
 	private getHostId(): string {
-		const ctx = appContext.get()
-		if (!ctx.userId) throw AppError.unauthenticated()
-		return ctx.userId
+		return appContext.get().user.id
 	}
 
 	private serialize(property: Property) {
