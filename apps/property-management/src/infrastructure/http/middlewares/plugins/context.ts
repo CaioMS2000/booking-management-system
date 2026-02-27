@@ -3,6 +3,7 @@ import { fastifyPlugin } from 'fastify-plugin'
 import { appContext } from '@/application-context'
 import { AppError } from '../../errors'
 import { verifyJwt } from '../../jwt/verify-jwt'
+import { authenticatedUserSchema } from '../../@types/user'
 import { Currency } from '@repo/core'
 import { APP_TOKENS } from '@/tokens'
 
@@ -40,6 +41,20 @@ export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 			)
 		}
 
+		const parsed = authenticatedUserSchema.safeParse({
+			id: payload.sub,
+			name: payload.name,
+			email: payload.email,
+			role: payload.role,
+		})
+
+		if (!parsed.success) {
+			throw AppError.unauthenticated(
+				'Token com claims inválidos.',
+				'O JWT deve conter sub, name, email e role.'
+			)
+		}
+
 		const IdGeneratorV4 = container.resolve(APP_TOKENS.IdGeneratorV4)
 		const IdGeneratorV7 = container.resolve(APP_TOKENS.IdGeneratorV7)
 		const IncrementalIdGenerator = container.resolve(
@@ -48,7 +63,7 @@ export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 		appContext.enterWith({
 			currentCurrency: extractCurrency(req),
 			requestId: req.id,
-			userId: payload.sub,
+			user: parsed.data,
 			timestamp: new Date(),
 			idGenerator: {
 				V4: IdGeneratorV4,
