@@ -11,6 +11,7 @@ import {
 import { Property } from '../../domain'
 import { HostNotFoundError } from '../@errors'
 import { HostRepository } from '../repositories/host-repository'
+import { PropertyRepository } from '../repositories/property-repository'
 
 export type CreatePropertyUseCaseRequest = {
 	hostId: string
@@ -31,6 +32,7 @@ export type CreatePropertyUseCaseResponse = Result<
 
 type UseCaseProps = {
 	hostRepository: HostRepository
+	propertyRepository: PropertyRepository
 }
 
 export class CreatePropertyUseCase extends UseCase<
@@ -69,6 +71,8 @@ export class CreatePropertyUseCase extends UseCase<
 			address,
 			imagesUrls,
 		})
+
+		await this.props.propertyRepository.save(property)
 
 		return success({ property })
 	}

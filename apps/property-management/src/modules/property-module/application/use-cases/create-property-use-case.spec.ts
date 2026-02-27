@@ -4,6 +4,7 @@ import { Name } from '@repo/core'
 import { appContext } from '@/application-context'
 import { HostNotFoundError } from '../@errors'
 import { HostRepository } from '../repositories/host-repository'
+import { PropertyRepository } from '../repositories/property-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeAddress } from '@/modules/property-module/test/factories/make-address'
@@ -11,12 +12,15 @@ import { CreatePropertyUseCase } from './create-property-use-case'
 
 describe('CreatePropertyUseCase', () => {
 	let hostRepo: HostRepository
+	let propertyRepo: PropertyRepository
 	let sut: CreatePropertyUseCase
 
 	beforeEach(() => {
 		hostRepo = mock(HostRepository)
+		propertyRepo = mock(PropertyRepository)
 		sut = new CreatePropertyUseCase({
 			hostRepository: instance(hostRepo),
+			propertyRepository: instance(propertyRepo),
 		})
 	})
 
@@ -43,6 +47,7 @@ describe('CreatePropertyUseCase', () => {
 		return appContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			when(hostRepo.findById(anything())).thenResolve(host)
+			when(propertyRepo.save(anything())).thenResolve()
 
 			const address = makeAddress()
 			const result = await sut.execute({
