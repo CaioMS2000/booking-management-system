@@ -1,4 +1,4 @@
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import { Class, Email, Optional, Phone, UniqueId } from '@repo/core'
 
 export type HostProps = {

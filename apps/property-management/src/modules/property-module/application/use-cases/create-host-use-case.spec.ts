@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import { InvalidEmailError, InvalidPhoneError } from '../@errors'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { CreateHostUseCase } from './create-host-use-case'

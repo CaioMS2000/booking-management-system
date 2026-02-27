@@ -1,4 +1,4 @@
-import { ApplicationContext } from '@/application-context'
+import { ApplicationContext } from '@/context/application-context'
 import { FakeIdGenerator } from '../fake-id-generator'
 import { FakeIncrementalIdGenerator } from '../fake-incremental-id-generator'
 

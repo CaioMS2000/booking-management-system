@@ -1,5 +1,5 @@
 import { UniqueId } from '@repo/core'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 
 export async function resolveId(id?: UniqueId) {
 	let resolvedId: UniqueId

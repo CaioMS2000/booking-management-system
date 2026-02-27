@@ -1,5 +1,5 @@
 import { Class, Email, Name, Phone, UniqueId } from '@repo/core'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 
 export type GuestProps = {
 	id: UniqueId

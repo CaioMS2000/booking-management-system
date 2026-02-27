@@ -6,7 +6,7 @@ import {
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import {
 	HostNotFoundError,
 	InvalidEmailError,

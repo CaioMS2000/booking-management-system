@@ -9,7 +9,7 @@ import {
 	success,
 	UniqueId,
 } from '@repo/core'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import { PeriodNotAvailableError } from '../../application/@errors/perio-not-available-error'
 import { NoMatchingPeriodError } from '../../application/@errors/no-matching-period-error'
 

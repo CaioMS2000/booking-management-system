@@ -1,7 +1,7 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { UniqueId } from '@repo/core'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import { ReservationRepository } from '../repositories/reservation-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'

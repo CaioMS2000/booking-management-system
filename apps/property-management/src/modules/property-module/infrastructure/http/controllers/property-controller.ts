@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
 import type { CreatePropertyUseCase } from '@/modules/property-module/application/use-cases/create-property-use-case'
 import type { DeletePropertyUseCase } from '@/modules/property-module/application/use-cases/delete-property-use-case'

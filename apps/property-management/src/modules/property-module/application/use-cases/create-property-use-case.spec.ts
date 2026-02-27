@@ -1,7 +1,7 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { Name } from '@repo/core'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import { HostNotFoundError } from '../@errors'
 import { HostRepository } from '../repositories/host-repository'
 import { PropertyRepository } from '../repositories/property-repository'

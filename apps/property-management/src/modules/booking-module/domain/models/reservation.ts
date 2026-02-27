@@ -6,7 +6,7 @@ import {
 	ReservationStatus,
 	UniqueId,
 } from '@repo/core'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 
 export type ReservationProps = {
 	id: UniqueId

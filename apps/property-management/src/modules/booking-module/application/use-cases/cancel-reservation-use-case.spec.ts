@@ -12,7 +12,7 @@ import {
 	PropertyModuleInterface,
 	ReservationCancelledEvent,
 } from '@repo/shared'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import {
 	CancellationWindowExpiredError,
 	ReservationAlreadyCancelledError,

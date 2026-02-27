@@ -9,7 +9,7 @@ import {
 import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
 import { PropertyModuleInterface, ReservationCreatedEvent } from '@repo/shared'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import {
 	InvalidReservationPeriodError,
 	ListingNotFoundError,

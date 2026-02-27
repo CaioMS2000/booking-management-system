@@ -12,7 +12,7 @@ import {
 	PropertyModuleInterface,
 	ReservationConfirmedEvent,
 } from '@repo/shared'
-import { appContext } from '@/application-context'
+import { appContext } from '@/context/application-context'
 import {
 	ReservationNotFoundError,
 	ReservationNotPendingError,
