@@ -13,6 +13,22 @@ import {
 } from '@repo/system-settings-manager'
 import { createLogger } from '@repo/core'
 import { APP_TOKENS } from '@/tokens'
+import { PROPERTY_MODULE_TOKENS } from '@/modules/property-module/tokens'
+import { HostRepository } from '@/modules/property-module/application/repositories/host-repository'
+import { PropertyRepository } from '@/modules/property-module/application/repositories/property-repository'
+import { ListingRepository } from '@/modules/property-module/application/repositories/listing-repository'
+import { CreatePropertyUseCase } from '@/modules/property-module/application/use-cases/create-property-use-case'
+import { GetPropertyUseCase } from '@/modules/property-module/application/use-cases/get-property-use-case'
+import { GetAllPropertiesUseCase } from '@/modules/property-module/application/use-cases/get-all-properties-use-case'
+import { UpdatePropertyUseCase } from '@/modules/property-module/application/use-cases/update-property-use-case'
+import { DeletePropertyUseCase } from '@/modules/property-module/application/use-cases/delete-property-use-case'
+import { CreateListingUseCase } from '@/modules/property-module/application/use-cases/create-listing-use-case'
+import { GetListingUseCase } from '@/modules/property-module/application/use-cases/get-listing-use-case'
+import { GetAllListingsUseCase } from '@/modules/property-module/application/use-cases/get-all-listings-use-case'
+import { UpdateListingUseCase } from '@/modules/property-module/application/use-cases/update-listing-use-case'
+import { DeleteListingUseCase } from '@/modules/property-module/application/use-cases/delete-listing-use-case'
+import { PropertyController } from '@/modules/property-module/infrastructure/http/controllers/property-controller'
+import { ListingController } from '@/modules/property-module/infrastructure/http/controllers/listing-controller'
 
 const logger = createLogger({ component: 'HTTP Server' })
 async function logHealthRequest(
@@ -84,6 +100,66 @@ async function bootstrap() {
 
 		return { message: 'yes' }
 	})
+
+	// --- Property Module Controllers ---
+	const hostRepository = container.resolve<HostRepository>(
+		PROPERTY_MODULE_TOKENS.HostRepository
+	)
+	const propertyRepository = container.resolve<PropertyRepository>(
+		PROPERTY_MODULE_TOKENS.PropertyRepository
+	)
+	const listingRepository = container.resolve<ListingRepository>(
+		PROPERTY_MODULE_TOKENS.ListingRepository
+	)
+
+	const propertyController = new PropertyController({
+		app,
+		createPropertyUseCase: new CreatePropertyUseCase({
+			hostRepository,
+			propertyRepository,
+		}),
+		getPropertyUseCase: new GetPropertyUseCase({
+			hostRepository,
+			propertyRepository,
+		}),
+		getAllPropertiesUseCase: new GetAllPropertiesUseCase({
+			hostRepository,
+			propertyRepository,
+		}),
+		updatePropertyUseCase: new UpdatePropertyUseCase({
+			hostRepository,
+			propertyRepository,
+		}),
+		deletePropertyUseCase: new DeletePropertyUseCase({
+			hostRepository,
+			propertyRepository,
+			listingRepository,
+		}),
+	})
+
+	const listingController = new ListingController({
+		app,
+		createListingUseCase: new CreateListingUseCase({
+			hostRepository,
+			propertyRepository,
+			listingRepository,
+		}),
+		getListingUseCase: new GetListingUseCase({ listingRepository }),
+		getAllListingsUseCase: new GetAllListingsUseCase({ listingRepository }),
+		updateListingUseCase: new UpdateListingUseCase({
+			hostRepository,
+			propertyRepository,
+			listingRepository,
+		}),
+		deleteListingUseCase: new DeleteListingUseCase({
+			hostRepository,
+			propertyRepository,
+			listingRepository,
+		}),
+	})
+
+	propertyController.registerRoutes()
+	listingController.registerRoutes()
 
 	const config: FastifyListenOptions = {
 		port: env.PORT,
