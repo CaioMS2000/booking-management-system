@@ -1,11 +1,11 @@
+import { Currency } from '@repo/core'
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
+import { container } from '@/container'
 import { appContext } from '@/context/application-context'
+import { authenticatedUserSchema } from '@/context/user'
 import { AppError } from '../../errors'
 import { verifyJwt } from '../../jwt/verify-jwt'
-import { authenticatedUserSchema } from '@/context/user'
-import { Currency } from '@repo/core'
-import { APP_TOKENS } from '@/tokens'
 
 function extractToken(req: FastifyRequest): string | null {
 	const auth = req.headers.authorization
@@ -59,11 +59,9 @@ export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 			)
 		}
 
-		const IdGeneratorV4 = container.resolve(APP_TOKENS.IdGeneratorV4)
-		const IdGeneratorV7 = container.resolve(APP_TOKENS.IdGeneratorV7)
-		const IncrementalIdGenerator = container.resolve(
-			APP_TOKENS.IncrementalIdGenerator
-		)
+		const IdGeneratorV4 = container.resolve('idGeneratorV4')
+		const IdGeneratorV7 = container.resolve('idGeneratorV7')
+		const IncrementalIdGenerator = container.resolve('incrementalIdGenerator')
 		appContext.enterWith({
 			currentCurrency: extractCurrency(req),
 			requestId: req.id,
