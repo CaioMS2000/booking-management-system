@@ -1,16 +1,17 @@
-import 'reflect-metadata'
-import { SystemConfigService } from '@repo/system-settings-manager'
 import {
+	DefaultIncrementalIdGenerator,
 	UUIDV4Generator,
 	UUIDV7Generator,
-	DefaultIncrementalIdGenerator,
 } from '@repo/core'
-import { APP_TOKENS } from './tokens'
+import { SystemConfigService } from '@repo/system-settings-manager'
+import { asFunction } from 'awilix'
+import { container } from './container'
 
-container.registerSingleton(APP_TOKENS.SystemConfigService, SystemConfigService)
-container.registerSingleton(APP_TOKENS.IdGeneratorV4, UUIDV4Generator)
-container.registerSingleton(APP_TOKENS.IdGeneratorV7, UUIDV7Generator)
-container.registerSingleton(
-	APP_TOKENS.IncrementalIdGenerator,
-	DefaultIncrementalIdGenerator
-)
+container.register({
+	systemConfigService: asFunction(() => new SystemConfigService()).singleton(),
+	idGeneratorV4: asFunction(() => new UUIDV4Generator()).singleton(),
+	idGeneratorV7: asFunction(() => new UUIDV7Generator()).singleton(),
+	incrementalIdGenerator: asFunction(
+		() => new DefaultIncrementalIdGenerator()
+	).singleton(),
+})
