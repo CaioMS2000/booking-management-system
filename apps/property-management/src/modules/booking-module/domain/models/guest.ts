@@ -10,6 +10,10 @@ export type GuestProps = {
 
 export type GuestCreateInput = Omit<GuestProps, 'id'>
 
+export type GuestUpdateInput = Partial<
+	Pick<GuestProps, 'name' | 'email' | 'phone'>
+>
+
 export class Guest extends Class<GuestProps> {
 	constructor(protected readonly props: GuestProps) {
 		super()
@@ -17,6 +21,25 @@ export class Guest extends Class<GuestProps> {
 
 	get id() {
 		return this.props.id
+	}
+
+	get name() {
+		return this.props.name
+	}
+
+	get email() {
+		return this.props.email
+	}
+
+	get phone() {
+		return this.props.phone
+	}
+
+	update(input: GuestUpdateInput): Guest {
+		return new Guest({
+			...this.props,
+			...input,
+		})
 	}
 
 	static async create(input: GuestCreateInput, id?: UniqueId) {
