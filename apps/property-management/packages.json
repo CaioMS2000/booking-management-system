@@ -11,12 +11,11 @@
         "fastify-type-provider-zod",
         "swagger-themes",
         "dayjs",
+        "awilix",
         "jose",
-        "tsyringe",
         "winston",
         "winston-daily-rotate-file",
-        "winston-loki",
-        "reflect-metadata"
+        "winston-loki"
     ],
     "dev":["@types/node", "typescript", "vite-tsconfig-paths", "vitest", "@johanblumenberg/ts-mockito", "@faker-js/faker", "vite-node"]
 }
