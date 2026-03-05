@@ -20,6 +20,7 @@ import {
 	propertyResponseSchema,
 	updatePropertyBodySchema,
 } from '@repo/shared/dto/http/property-module/property'
+import { roleGuard } from '@/infrastructure/http/middlewares/role-guard'
 
 type PropertyControllerProps = {
 	app: FastifyInstance
@@ -64,6 +65,7 @@ export class PropertyController extends Class<PropertyControllerProps> {
 					summary: 'Create a new property',
 					...config,
 				},
+				onRequest: [roleGuard('HOST')],
 				handler: async (req, reply) => {
 					const hostId = this.getHostId()
 					const body = req.body
@@ -104,6 +106,7 @@ export class PropertyController extends Class<PropertyControllerProps> {
 					summary: 'Get a property by ID',
 					...config,
 				},
+				onRequest: [roleGuard('HOST')],
 				handler: async (req, reply) => {
 					const hostId = this.getHostId()
 
@@ -136,6 +139,7 @@ export class PropertyController extends Class<PropertyControllerProps> {
 					summary: 'List all properties for the authenticated host',
 					...config,
 				},
+				onRequest: [roleGuard('HOST')],
 				handler: async (req, reply) => {
 					const hostId = this.getHostId()
 
@@ -172,6 +176,7 @@ export class PropertyController extends Class<PropertyControllerProps> {
 					summary: 'Update a property',
 					...config,
 				},
+				onRequest: [roleGuard('HOST')],
 				handler: async (req, reply) => {
 					const hostId = this.getHostId()
 
@@ -209,6 +214,7 @@ export class PropertyController extends Class<PropertyControllerProps> {
 					summary: 'Delete a property',
 					...config,
 				},
+				onRequest: [roleGuard('HOST')],
 				handler: async (req, reply) => {
 					const hostId = this.getHostId()
 
