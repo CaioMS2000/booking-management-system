@@ -234,7 +234,7 @@ export class PropertyController extends Class<PropertyControllerProps> {
 	}
 
 	private getHostId(): string {
-		return appContext.get().user.id
+		return appContext.get().user!.id
 	}
 
 	private serialize(property: Property) {

@@ -233,7 +233,7 @@ export class ListingController extends Class<ListingControllerProps> {
 	}
 
 	private getHostId(): string {
-		return appContext.get().user.id
+		return appContext.get().user!.id
 	}
 
 	private parseIntervals(
