@@ -19,6 +19,7 @@ import {
 	listingResponseSchema,
 	updateListingBodySchema,
 } from '@repo/shared/dto/http/property-module/listing'
+import { roleGuard } from '@/infrastructure/http/middlewares/role-guard'
 
 type ListingControllerProps = {
 	app: FastifyInstance
@@ -63,6 +64,7 @@ export class ListingController extends Class<ListingControllerProps> {
 					summary: 'Create a new listing',
 					...config,
 				},
+				onRequest: [roleGuard('HOST')],
 				handler: async (req, reply) => {
 					const hostId = this.getHostId()
 					const body = req.body
@@ -170,6 +172,7 @@ export class ListingController extends Class<ListingControllerProps> {
 					summary: 'Update a listing',
 					...config,
 				},
+				onRequest: [roleGuard('HOST')],
 				handler: async (req, reply) => {
 					const hostId = this.getHostId()
 					const body = req.body
@@ -210,6 +213,7 @@ export class ListingController extends Class<ListingControllerProps> {
 					summary: 'Delete a listing',
 					...config,
 				},
+				onRequest: [roleGuard('HOST')],
 				handler: async (req, reply) => {
 					const hostId = this.getHostId()
 
