@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 
-import { appContext } from '@/context/application-context'
+import { getAuthenticatedUser } from '@/context/get-authenticated-user'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
 import type { CreatePropertyUseCase } from '@/modules/property-module/application/use-cases/create-property-use-case'
 import type { DeletePropertyUseCase } from '@/modules/property-module/application/use-cases/delete-property-use-case'
@@ -234,7 +234,7 @@ export class PropertyController extends Class<PropertyControllerProps> {
 	}
 
 	private getHostId(): string {
-		return appContext.get().user!.id
+		return getAuthenticatedUser().id
 	}
 
 	private serialize(property: Property) {

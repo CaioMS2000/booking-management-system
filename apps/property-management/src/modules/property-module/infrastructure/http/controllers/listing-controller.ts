@@ -2,7 +2,7 @@ import { Class, DateInterval, UniqueId } from '@repo/core'
 import { FastifyInstance } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import { appContext } from '@/context/application-context'
+import { getAuthenticatedUser } from '@/context/get-authenticated-user'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
 import type { CreateListingUseCase } from '@/modules/property-module/application/use-cases/create-listing-use-case'
 import type { DeleteListingUseCase } from '@/modules/property-module/application/use-cases/delete-listing-use-case'
@@ -233,7 +233,7 @@ export class ListingController extends Class<ListingControllerProps> {
 	}
 
 	private getHostId(): string {
-		return appContext.get().user!.id
+		return getAuthenticatedUser().id
 	}
 
 	private parseIntervals(
