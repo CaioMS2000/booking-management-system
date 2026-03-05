@@ -5,7 +5,7 @@ import { AuthenticatedUser } from './user'
 export type ApplicationContext = {
 	currentCurrency: Currency
 	requestId: string
-	user: AuthenticatedUser
+	user: AuthenticatedUser | null
 	timestamp: Date
 	idGenerator: {
 		V4: IdGenerator

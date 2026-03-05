@@ -29,34 +29,36 @@ function extractCurrency(req: FastifyRequest): Currency {
 	return 'BRL'
 }
 
-const PUBLIC_PREFIXES = ['/docs', '/health', '/openapi.json']
-
 export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 	app.addHook('onRequest', async req => {
-		if (PUBLIC_PREFIXES.some(p => req.url.startsWith(p))) return
-
 		const token = extractToken(req)
-		const payload = token ? await verifyJwt(token) : null
+		let user = null
 
-		if (!payload) {
-			throw AppError.unauthenticated(
-				'Token inválido ou ausente.',
-				'Envie um JWT válido no header Authorization.'
-			)
-		}
+		if (token) {
+			const payload = await verifyJwt(token)
 
-		const parsed = authenticatedUserSchema.safeParse({
-			id: payload.sub,
-			name: payload.name,
-			email: payload.email,
-			role: payload.role,
-		})
+			if (!payload) {
+				throw AppError.unauthenticated(
+					'Token inválido.',
+					'Envie um JWT válido no header Authorization.'
+				)
+			}
 
-		if (!parsed.success) {
-			throw AppError.unauthenticated(
-				'Token com claims inválidos.',
-				'O JWT deve conter sub, name, email e role.'
-			)
+			const parsed = authenticatedUserSchema.safeParse({
+				id: payload.sub,
+				name: payload.name,
+				email: payload.email,
+				role: payload.role,
+			})
+
+			if (!parsed.success) {
+				throw AppError.unauthenticated(
+					'Token com claims inválidos.',
+					'O JWT deve conter sub, name, email e role.'
+				)
+			}
+
+			user = parsed.data
 		}
 
 		const IdGeneratorV4 = container.resolve('idGeneratorV4')
@@ -65,7 +67,7 @@ export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 		appContext.enterWith({
 			currentCurrency: extractCurrency(req),
 			requestId: req.id,
-			user: parsed.data,
+			user,
 			timestamp: new Date(),
 			idGenerator: {
 				V4: IdGeneratorV4,
