@@ -1,5 +1,8 @@
 import { asFunction } from 'awilix'
 import { container } from '@/container'
+import { DrizzleHostRepository } from './infrastructure/database/repositories/drizzle/drizzle-host-repository'
+import { DrizzleListingRepository } from './infrastructure/database/repositories/drizzle/drizzle-listing-repository'
+import { DrizzlePropertyRepository } from './infrastructure/database/repositories/drizzle/drizzle-property-repository'
 import { CreateListingUseCase } from './application/use-cases/create-listing-use-case'
 import { CreatePropertyUseCase } from './application/use-cases/create-property-use-case'
 import { DeleteListingUseCase } from './application/use-cases/delete-listing-use-case'
@@ -14,6 +17,15 @@ import { ListingController } from './infrastructure/http/controllers/listing-con
 import { PropertyController } from './infrastructure/http/controllers/property-controller'
 
 container.register({
+	// Repositories
+	hostRepository: asFunction(() => new DrizzleHostRepository()).singleton(),
+	propertyRepository: asFunction(
+		() => new DrizzlePropertyRepository()
+	).singleton(),
+	listingRepository: asFunction(
+		() => new DrizzleListingRepository()
+	).singleton(),
+
 	// Property use cases
 	createPropertyUseCase: asFunction(
 		({ hostRepository, propertyRepository }) =>
