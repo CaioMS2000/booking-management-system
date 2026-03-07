@@ -6,6 +6,8 @@ export default defineConfig({
 		globals: true,
 		root: './',
 		fileParallelism: false,
+		globalSetup: ['./test/global-setup.ts'],
+		env: { NODE_ENV: 'test' },
 	},
 	plugins: [tsConfigPaths({})],
 })

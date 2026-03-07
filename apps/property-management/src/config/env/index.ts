@@ -1,10 +1,11 @@
 import { config } from 'dotenv'
 import { z } from 'zod'
 
+const isTest = process.env.NODE_ENV === 'test'
+
 config({
-	path: '.env',
-	// override: process.env.NODE_ENV !== 'production',
-	override: true,
+	path: isTest ? '.env.test' : '.env',
+	override: !isTest,
 })
 
 export const envSchema = z.object({
