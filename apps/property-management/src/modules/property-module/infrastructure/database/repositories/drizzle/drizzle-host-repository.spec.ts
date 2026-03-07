@@ -4,14 +4,13 @@ import {
 	UUIDV7Generator,
 	DefaultIncrementalIdGenerator,
 } from '@repo/core'
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
+import { describe, it, expect, afterAll, afterEach } from 'vitest'
 import { appContext } from '@/context/application-context'
 import { HostNotFoundError } from '@/modules/property-module/application/@errors/host-not-found-error'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import {
-	setupDatabase,
 	cleanDatabase,
 	closeDatabase,
 } from '@/modules/property-module/test/setup-database'
@@ -29,10 +28,6 @@ const repository = new DrizzleHostRepository()
 const propertyRepository = new DrizzlePropertyRepository()
 
 describe('DrizzleHostRepository', () => {
-	beforeAll(async () => {
-		await setupDatabase()
-	})
-
 	afterEach(async () => {
 		await cleanDatabase()
 	})
