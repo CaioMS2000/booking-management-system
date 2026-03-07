@@ -8,13 +8,17 @@ config({
 })
 
 export const envSchema = z.object({
+	// Environment machine
 	NODE_ENV: z
 		.enum(['development', 'production', 'test'])
 		.default('development'),
-	// DATABASE_URL: z.string(),
-	PORT: z.coerce.number().catch(8000),
 
+	// HTTP Server
+	PORT: z.coerce.number().catch(8000),
 	AUTH_JWKS_URL: z.string(),
+
+	// Database
+	DATABASE_URL: z.string(),
 })
 
 const env = envSchema.parse(process.env)

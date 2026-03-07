@@ -5,6 +5,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		root: './',
+		fileParallelism: false,
 	},
 	plugins: [tsConfigPaths({})],
 })
