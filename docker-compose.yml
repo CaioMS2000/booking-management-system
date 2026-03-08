@@ -2,6 +2,7 @@ services:
   postgres-property-management:
     image: postgres:16-alpine
     container_name: booking-postgres-property-management
+    restart: always
     environment:
       POSTGRES_DB: property_db
       POSTGRES_USER: property_user
