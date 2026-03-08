@@ -6,6 +6,9 @@ import {
 } from '@/modules/property-module/domain/models/listing'
 
 export async function makeListing(propertyId: UniqueId): Promise<Listing> {
+	const from = faker.date.future()
+	const to = faker.date.future({ refDate: from })
+
 	const props: ListingCreateInput = {
 		propertyId,
 		pricePerNight: {
@@ -14,8 +17,8 @@ export async function makeListing(propertyId: UniqueId): Promise<Listing> {
 		},
 		intervals: [
 			{
-				from: faker.date.future(),
-				to: faker.date.future({ years: 1 }),
+				from,
+				to,
 				status: 'AVAILABLE',
 			},
 		],
