@@ -8,6 +8,7 @@ import {
 } from '@/modules/property-module/application/repositories/listing-repository'
 import type { Pagination } from '@/modules/property-module/application/repositories/params'
 import { ListingNotFoundError } from '@/modules/property-module/application/@errors/listing-not-found-error'
+import { PeriodNotAvailableError } from '@/modules/property-module/application/@errors/perio-not-available-error'
 import type { Listing } from '@/modules/property-module/domain/models/listing'
 import { listings } from '../../schemas/drizzle/listings'
 import { listingIntervals } from '../../schemas/drizzle/listing-intervals'
@@ -37,27 +38,38 @@ export class DrizzleListingRepository extends ListingRepository {
 	async update(listing: Listing): Promise<void> {
 		const data = ListingMapper.toPersistence(listing)
 
-		await database.transaction(async tx => {
-			await tx
-				.update(listings)
-				.set(data.listing)
-				.where(eq(listings.id, listing.id))
+		try {
+			await database.transaction(async tx => {
+				await tx
+					.update(listings)
+					.set(data.listing)
+					.where(eq(listings.id, listing.id))
 
-			await tx
-				.delete(listingIntervals)
-				.where(eq(listingIntervals.listingId, listing.id))
+				await tx
+					.delete(listingIntervals)
+					.where(eq(listingIntervals.listingId, listing.id))
 
-			if (data.intervals.length > 0) {
-				const idGenerator = appContext.get().idGenerator.V4
-				const intervalValues = await Promise.all(
-					data.intervals.map(async i => ({
-						...i,
-						id: await idGenerator.generate(),
-					}))
-				)
-				await tx.insert(listingIntervals).values(intervalValues)
+				if (data.intervals.length > 0) {
+					const idGenerator = appContext.get().idGenerator.V4
+					const intervalValues = await Promise.all(
+						data.intervals.map(async i => ({
+							...i,
+							id: await idGenerator.generate(),
+						}))
+					)
+					await tx.insert(listingIntervals).values(intervalValues)
+				}
+			})
+		} catch (error: unknown) {
+			if (
+				error instanceof Error &&
+				'code' in error &&
+				(error as any).code === '23P01'
+			) {
+				throw new PeriodNotAvailableError()
 			}
-		})
+			throw error
+		}
 	}
 
 	async delete(listing: Listing): Promise<void> {
