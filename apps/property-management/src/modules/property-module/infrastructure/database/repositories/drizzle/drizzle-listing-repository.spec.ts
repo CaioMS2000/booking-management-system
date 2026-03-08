@@ -6,6 +6,7 @@ import {
 } from '@repo/core'
 import { describe, it, expect, afterAll, afterEach } from 'vitest'
 import { appContext } from '@/context/application-context'
+import { database } from '@/lib/drizzle'
 import { ListingNotFoundError } from '@/modules/property-module/application/@errors/listing-not-found-error'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
@@ -16,6 +17,7 @@ import {
 	closeDatabase,
 } from '@/modules/property-module/test/setup-database'
 import { Listing } from '@/modules/property-module/domain/models/listing'
+import { listingIntervals } from '../../schemas/drizzle/listing-intervals'
 import { DrizzleHostRepository } from './drizzle-host-repository'
 import { DrizzlePropertyRepository } from './drizzle-property-repository'
 import { DrizzleListingRepository } from './drizzle-listing-repository'
@@ -234,6 +236,66 @@ describe('DrizzleListingRepository', () => {
 				limit: 2,
 			})
 			expect(found).toHaveLength(2)
+		})
+	})
+
+	it('should reject overlapping intervals via exclusion constraint', async () => {
+		await appContext.run(ctx, async () => {
+			const { property } = await createHostAndProperty()
+			const listing = await Listing.create({
+				propertyId: property.id,
+				pricePerNight: { valueInCents: 10000, currency: 'BRL' },
+				intervals: [
+					{
+						from: new Date('2027-01-01'),
+						to: new Date('2027-01-10'),
+						status: 'HOLD',
+						expiresAt: new Date('2027-02-01'),
+					},
+				],
+			})
+			await repository.save(listing)
+
+			await expect(
+				database.insert(listingIntervals).values({
+					id: 'overlapping-interval',
+					listingId: listing.id,
+					from: new Date('2027-01-05'),
+					to: new Date('2027-01-15'),
+					status: 'HOLD',
+					expiresAt: new Date('2027-02-01'),
+				})
+			).rejects.toThrow()
+		})
+	})
+
+	it('should allow non-overlapping intervals on the same listing', async () => {
+		await appContext.run(ctx, async () => {
+			const { property } = await createHostAndProperty()
+			const listing = await Listing.create({
+				propertyId: property.id,
+				pricePerNight: { valueInCents: 10000, currency: 'BRL' },
+				intervals: [
+					{
+						from: new Date('2027-01-01'),
+						to: new Date('2027-01-10'),
+						status: 'HOLD',
+						expiresAt: new Date('2027-02-01'),
+					},
+				],
+			})
+			await repository.save(listing)
+
+			await expect(
+				database.insert(listingIntervals).values({
+					id: 'adjacent-interval',
+					listingId: listing.id,
+					from: new Date('2027-01-10'),
+					to: new Date('2027-01-20'),
+					status: 'HOLD',
+					expiresAt: new Date('2027-02-01'),
+				})
+			).resolves.not.toThrow()
 		})
 	})
 })
