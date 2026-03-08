@@ -7,6 +7,7 @@ import {
 	PropertyModuleInterface,
 	ReleaseIntervalResult,
 } from '@repo/shared'
+import { PeriodNotAvailableError } from './application/@errors/perio-not-available-error'
 import { ListingRepository } from './application/repositories/listing-repository'
 import { PropertyRepository } from './application/repositories/property-repository'
 import { Listing } from './domain/models/listing'
@@ -93,7 +94,14 @@ export class PropertyModule extends PropertyModuleInterface {
 			return { success: false, reason: 'PERIOD_UNAVAILABLE' }
 		}
 
-		await this.props.listingRepository.update(result.value)
+		try {
+			await this.props.listingRepository.update(result.value)
+		} catch (error) {
+			if (error instanceof PeriodNotAvailableError) {
+				return { success: false, reason: 'PERIOD_UNAVAILABLE' }
+			}
+			throw error
+		}
 
 		return { success: true, listing: this.toListingDTO(result.value) }
 	}
