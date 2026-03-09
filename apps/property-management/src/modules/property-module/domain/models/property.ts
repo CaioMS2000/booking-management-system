@@ -1,5 +1,12 @@
-import { Address, Class, Optional, PropertyType, UniqueId } from '@repo/core'
-import { appContext } from '@/context/application-context'
+import {
+	Address,
+	Class,
+	IdGenerator,
+	IncrementalIdGenerator,
+	Optional,
+	PropertyType,
+	UniqueId,
+} from '@repo/core'
 
 export type PropertyProps = {
 	id: UniqueId
@@ -30,6 +37,13 @@ export type PropertyUpdateInput = Partial<
 		| 'imagesUrls'
 	>
 >
+
+type CreateParams = {
+	idGenerator: IdGenerator
+	incrementalIdGenerator: IncrementalIdGenerator
+	input: PropertyCreateInput
+	id?: UniqueId
+}
 
 export class Property extends Class<PropertyProps> {
 	constructor(protected readonly props: PropertyProps) {
@@ -94,7 +108,12 @@ export class Property extends Class<PropertyProps> {
 		})
 	}
 
-	static async create(input: PropertyCreateInput, id?: UniqueId) {
+	static async create({
+		input,
+		idGenerator,
+		incrementalIdGenerator,
+		id,
+	}: CreateParams) {
 		const {
 			hostId,
 			name,
@@ -106,11 +125,10 @@ export class Property extends Class<PropertyProps> {
 			deletedAt = null,
 		} = input
 
-		const context = appContext.get()
-		const publicId = await context.idGenerator.Incremental.generate()
+		const publicId = await incrementalIdGenerator.generate()
 
 		if (!id) {
-			id = await context.idGenerator.V7.generate()
+			id = await idGenerator.generate()
 		}
 
 		return new Property({

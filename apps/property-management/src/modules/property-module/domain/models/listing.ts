@@ -2,6 +2,8 @@ import {
 	Class,
 	DateInterval,
 	failure,
+	IdGenerator,
+	IncrementalIdGenerator,
 	Money,
 	Optional,
 	ReservationPeriod,
@@ -9,7 +11,6 @@ import {
 	success,
 	UniqueId,
 } from '@repo/core'
-import { appContext } from '@/context/application-context'
 import { PeriodNotAvailableError } from '../../application/@errors/perio-not-available-error'
 import { NoMatchingPeriodError } from '../../application/@errors/no-matching-period-error'
 
@@ -31,23 +32,34 @@ export type ListingUpdateInput = Partial<
 	Pick<ListingProps, 'pricePerNight' | 'intervals'>
 >
 
+type CreateParams = {
+	idGenerator: IdGenerator
+	incrementalIdGenerator: IncrementalIdGenerator
+	input: ListingCreateInput
+	id?: UniqueId
+}
+
 export class Listing extends Class<ListingProps> {
 	constructor(protected readonly props: ListingProps) {
 		super()
 	}
 
-	static async create(input: ListingCreateInput, id?: UniqueId) {
+	static async create({
+		input,
+		idGenerator,
+		incrementalIdGenerator,
+		id,
+	}: CreateParams) {
 		const {
 			pricePerNight,
 			propertyId,
 			intervals = [],
 			deletedAt = null,
 		} = input
-		const context = appContext.get()
-		const publicId = await context.idGenerator.Incremental.generate()
+		const publicId = await incrementalIdGenerator.generate()
 
 		if (!id) {
-			id = await context.idGenerator.V7.generate()
+			id = await idGenerator.generate()
 		}
 
 		return new Listing({

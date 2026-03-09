@@ -1,5 +1,4 @@
-import { Class, Email, Name, Phone, UniqueId } from '@repo/core'
-import { appContext } from '@/context/application-context'
+import { Class, Email, IdGenerator, Name, Phone, UniqueId } from '@repo/core'
 
 export type GuestProps = {
 	id: UniqueId
@@ -13,6 +12,12 @@ export type GuestCreateInput = Omit<GuestProps, 'id'>
 export type GuestUpdateInput = Partial<
 	Pick<GuestProps, 'name' | 'email' | 'phone'>
 >
+
+type CreateParams = {
+	idGenerator: IdGenerator
+	input: GuestCreateInput
+	id?: UniqueId
+}
 
 export class Guest extends Class<GuestProps> {
 	constructor(protected readonly props: GuestProps) {
@@ -42,12 +47,11 @@ export class Guest extends Class<GuestProps> {
 		})
 	}
 
-	static async create(input: GuestCreateInput, id?: UniqueId) {
+	static async create({ input, idGenerator, id }: CreateParams) {
 		const { name, email, phone } = input
 
 		if (!id) {
-			const context = appContext.get()
-			id = await context.idGenerator.V7.generate()
+			id = await idGenerator.generate()
 		}
 
 		return new Guest({

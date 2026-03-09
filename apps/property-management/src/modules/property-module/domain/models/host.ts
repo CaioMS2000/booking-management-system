@@ -1,5 +1,11 @@
-import { appContext } from '@/context/application-context'
-import { Class, Email, Optional, Phone, UniqueId } from '@repo/core'
+import {
+	Class,
+	Email,
+	IdGenerator,
+	Optional,
+	Phone,
+	UniqueId,
+} from '@repo/core'
 
 export type HostProps = {
 	id: UniqueId
@@ -14,6 +20,12 @@ export type HostCreateInput = Omit<Optional<HostProps, 'propertiesIds'>, 'id'>
 export type HostUpdateInput = Partial<
 	Pick<HostProps, 'name' | 'email' | 'phone'>
 >
+
+type CreateParams = {
+	idGenerator: IdGenerator
+	input: HostCreateInput
+	id?: UniqueId
+}
 
 export class Host extends Class<HostProps> {
 	constructor(protected readonly props: HostProps) {
@@ -47,12 +59,11 @@ export class Host extends Class<HostProps> {
 		})
 	}
 
-	static async create(input: HostCreateInput, id?: UniqueId) {
+	static async create({ input, idGenerator, id }: CreateParams) {
 		const { name, email, phone, propertiesIds = [] } = input
 
 		if (!id) {
-			const context = appContext.get()
-			id = await context.idGenerator.V7.generate()
+			id = await idGenerator.generate()
 		}
 
 		return new Host({

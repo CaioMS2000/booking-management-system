@@ -1,12 +1,12 @@
 import {
 	Class,
+	IdGenerator,
 	Money,
 	Optional,
 	ReservationPeriod,
 	ReservationStatus,
 	UniqueId,
 } from '@repo/core'
-import { appContext } from '@/context/application-context'
 
 export type ReservationProps = {
 	id: UniqueId
@@ -21,6 +21,12 @@ export type ReservationCreateInput = Omit<
 	Optional<ReservationProps, 'status'>,
 	'id'
 >
+
+type CreateParams = {
+	idGenerator: IdGenerator
+	input: ReservationCreateInput
+	id?: UniqueId
+}
 
 export class Reservation extends Class<ReservationProps> {
 	constructor(protected readonly props: ReservationProps) {
@@ -72,12 +78,11 @@ export class Reservation extends Class<ReservationProps> {
 		})
 	}
 
-	static async create(input: ReservationCreateInput, id?: UniqueId) {
+	static async create({ input, idGenerator, id }: CreateParams) {
 		const { guestId, period, listingId, totalPrice, status = 'PENDING' } = input
 
 		if (!id) {
-			const context = appContext.get()
-			id = await context.idGenerator.V7.generate()
+			id = await idGenerator.generate()
 		}
 
 		return new Reservation({
