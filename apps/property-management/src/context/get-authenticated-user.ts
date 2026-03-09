@@ -1,9 +1,9 @@
 import type { AuthenticatedUser } from './user'
-import { appContext } from './application-context'
+import { requestContext } from './request-context'
 import { AppError } from '@/infrastructure/http/errors'
 
 export function getAuthenticatedUser(): AuthenticatedUser {
-	const user = appContext.get().user
+	const user = requestContext.get().user
 	if (!user) {
 		throw AppError.unauthenticated(
 			'Token ausente.',

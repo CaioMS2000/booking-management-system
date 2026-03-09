@@ -1,8 +1,7 @@
 import { Currency } from '@repo/core'
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
-import { container } from '@/container'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { authenticatedUserSchema } from '@/context/user'
 import { AppError } from '../../errors'
 import { verifyJwt } from '../../jwt/verify-jwt'
@@ -61,19 +60,11 @@ export const contextPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 			user = parsed.data
 		}
 
-		const IdGeneratorV4 = container.resolve('idGeneratorV4')
-		const IdGeneratorV7 = container.resolve('idGeneratorV7')
-		const IncrementalIdGenerator = container.resolve('incrementalIdGenerator')
-		appContext.enterWith({
+		requestContext.enterWith({
 			currentCurrency: extractCurrency(req),
 			requestId: req.id,
 			user,
 			timestamp: new Date(),
-			idGenerator: {
-				V4: IdGeneratorV4,
-				V7: IdGeneratorV7,
-				Incremental: IncrementalIdGenerator,
-			},
 		})
 	})
 })

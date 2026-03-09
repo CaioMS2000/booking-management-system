@@ -1,12 +1,12 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { AppError } from '../errors'
 
 export async function authGuard(
 	_request: FastifyRequest,
 	_reply: FastifyReply
 ) {
-	const user = appContext.get().user
+	const user = requestContext.get().user
 	if (!user) {
 		throw AppError.unauthenticated(
 			'Token ausente.',
