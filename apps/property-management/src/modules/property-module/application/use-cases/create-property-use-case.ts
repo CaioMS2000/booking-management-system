@@ -1,6 +1,8 @@
 import {
 	Result,
 	failure,
+	IdGenerator,
+	IncrementalIdGenerator,
 	Name,
 	UseCase,
 	UniqueId,
@@ -33,6 +35,8 @@ export type CreatePropertyUseCaseResponse = Result<
 type UseCaseProps = {
 	hostRepository: HostRepository
 	propertyRepository: PropertyRepository
+	idGeneratorV7: IdGenerator
+	incrementalIdGenerator: IncrementalIdGenerator
 }
 
 export class CreatePropertyUseCase extends UseCase<
@@ -63,13 +67,17 @@ export class CreatePropertyUseCase extends UseCase<
 		}
 
 		const property = await Property.create({
-			hostId: UniqueId(hostId),
-			name,
-			description,
-			capacity,
-			propertyType,
-			address,
-			imagesUrls,
+			input: {
+				hostId: UniqueId(hostId),
+				name,
+				description,
+				capacity,
+				propertyType,
+				address,
+				imagesUrls,
+			},
+			idGenerator: this.props.idGeneratorV7,
+			incrementalIdGenerator: this.props.incrementalIdGenerator,
 		})
 
 		await this.props.propertyRepository.save(property)

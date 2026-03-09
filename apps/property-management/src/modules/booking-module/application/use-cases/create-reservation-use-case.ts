@@ -1,6 +1,7 @@
 import {
 	EventBus,
 	failure,
+	IdGenerator,
 	Money,
 	ReservationPeriod,
 	Result,
@@ -40,6 +41,7 @@ type UseCaseProps = {
 	propertyModule: PropertyModuleInterface
 	reservationRepository: ReservationRepository
 	eventBus: EventBus
+	idGeneratorV7: IdGenerator
 }
 
 export class CreateReservationUseCase extends UseCase<
@@ -76,10 +78,13 @@ export class CreateReservationUseCase extends UseCase<
 		}
 
 		const reservation = await Reservation.create({
-			listingId: UniqueId(input.listingId),
-			guestId: UniqueId(input.guestId),
-			period: input.period,
-			totalPrice: input.totalPrice,
+			input: {
+				listingId: UniqueId(input.listingId),
+				guestId: UniqueId(input.guestId),
+				period: input.period,
+				totalPrice: input.totalPrice,
+			},
+			idGenerator: this.props.idGeneratorV7,
 		})
 
 		await this.props.reservationRepository.save(reservation)

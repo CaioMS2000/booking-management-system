@@ -2,6 +2,7 @@ import {
 	Result,
 	Email,
 	failure,
+	IdGenerator,
 	Name,
 	UseCase,
 	Phone,
@@ -26,6 +27,7 @@ export type CreateGuestUseCaseResponse = Result<
 
 type UseCaseProps = {
 	guestRepository: GuestRepository
+	idGeneratorV7: IdGenerator
 }
 
 export class CreateGuestUseCase extends UseCase<
@@ -53,9 +55,12 @@ export class CreateGuestUseCase extends UseCase<
 		}
 
 		const guest = await Guest.create({
-			name,
-			email: emailResult.value,
-			phone: phoneResult.value,
+			input: {
+				name,
+				email: emailResult.value,
+				phone: phoneResult.value,
+			},
+			idGenerator: this.props.idGeneratorV7,
 		})
 
 		await this.props.guestRepository.save(guest)

@@ -2,12 +2,13 @@ import {
 	Result,
 	Email,
 	failure,
+	IdGenerator,
 	Name,
 	UseCase,
 	Phone,
 	success,
 } from '@repo/core'
-import { Host } from '../../domain' // OR import { Host } from "@property-module/domain"
+import { Host } from '../../domain'
 import { InvalidEmailError, InvalidPhoneError } from '../@errors'
 
 export type CreateHostUseCaseRequest = {
@@ -23,10 +24,19 @@ export type CreateHostUseCaseResponse = Result<
 	}
 >
 
+type UseCaseProps = {
+	idGeneratorV7: IdGenerator
+}
+
 export class CreateHostUseCase extends UseCase<
 	CreateHostUseCaseRequest,
-	CreateHostUseCaseResponse
+	CreateHostUseCaseResponse,
+	UseCaseProps
 > {
+	constructor(protected props: UseCaseProps) {
+		super()
+	}
+
 	async execute(
 		input: CreateHostUseCaseRequest
 	): Promise<CreateHostUseCaseResponse> {
@@ -44,9 +54,12 @@ export class CreateHostUseCase extends UseCase<
 		}
 
 		const host = await Host.create({
-			name,
-			email: createEmailResult.value,
-			phone: createPhoneResult.value,
+			input: {
+				name,
+				email: createEmailResult.value,
+				phone: createPhoneResult.value,
+			},
+			idGenerator: this.props.idGeneratorV7,
 		})
 
 		return success({ host })

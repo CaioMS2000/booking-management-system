@@ -1,6 +1,8 @@
 import {
 	DateInterval,
 	failure,
+	IdGenerator,
+	IncrementalIdGenerator,
 	Money,
 	Result,
 	success,
@@ -31,6 +33,8 @@ type UseCaseProps = {
 	hostRepository: HostRepository
 	propertyRepository: PropertyRepository
 	listingRepository: ListingRepository
+	idGeneratorV7: IdGenerator
+	incrementalIdGenerator: IncrementalIdGenerator
 }
 
 export class CreateListingUseCase extends UseCase<
@@ -60,9 +64,13 @@ export class CreateListingUseCase extends UseCase<
 		}
 
 		const listing = await Listing.create({
-			pricePerNight: input.pricePerNight,
-			propertyId: property.id,
-			intervals: input.intervals,
+			input: {
+				pricePerNight: input.pricePerNight,
+				propertyId: property.id,
+				intervals: input.intervals,
+			},
+			idGenerator: this.props.idGeneratorV7,
+			incrementalIdGenerator: this.props.incrementalIdGenerator,
 		})
 
 		await this.props.listingRepository.save(listing)
