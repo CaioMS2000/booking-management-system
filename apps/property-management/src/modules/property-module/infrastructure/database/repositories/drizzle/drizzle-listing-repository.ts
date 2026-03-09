@@ -1,6 +1,5 @@
 import { and, eq, gte, isNull, lte, sql } from 'drizzle-orm'
-import type { UniqueId } from '@repo/core'
-import { appContext } from '@/context/application-context'
+import { type UniqueId, IdGenerator } from '@repo/core'
 import { database } from '@/lib/drizzle'
 import {
 	ListingRepository,
@@ -16,6 +15,10 @@ import { properties } from '../../schemas/drizzle/properties'
 import { ListingMapper } from '../../mappers/listing-mapper'
 
 export class DrizzleListingRepository extends ListingRepository {
+	constructor(private readonly idGeneratorV4: IdGenerator) {
+		super()
+	}
+
 	async save(listing: Listing): Promise<void> {
 		const data = ListingMapper.toPersistence(listing)
 
@@ -23,11 +26,10 @@ export class DrizzleListingRepository extends ListingRepository {
 			await tx.insert(listings).values(data.listing)
 
 			if (data.intervals.length > 0) {
-				const idGenerator = appContext.get().idGenerator.V4
 				const intervalValues = await Promise.all(
 					data.intervals.map(async i => ({
 						...i,
-						id: await idGenerator.generate(),
+						id: await this.idGeneratorV4.generate(),
 					}))
 				)
 				await tx.insert(listingIntervals).values(intervalValues)
@@ -50,11 +52,10 @@ export class DrizzleListingRepository extends ListingRepository {
 					.where(eq(listingIntervals.listingId, listing.id))
 
 				if (data.intervals.length > 0) {
-					const idGenerator = appContext.get().idGenerator.V4
 					const intervalValues = await Promise.all(
 						data.intervals.map(async i => ({
 							...i,
-							id: await idGenerator.generate(),
+							id: await this.idGeneratorV4.generate(),
 						}))
 					)
 					await tx.insert(listingIntervals).values(intervalValues)

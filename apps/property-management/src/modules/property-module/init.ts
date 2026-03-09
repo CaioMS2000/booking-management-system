@@ -3,6 +3,7 @@ import { container } from '@/container'
 import { DrizzleHostRepository } from './infrastructure/database/repositories/drizzle/drizzle-host-repository'
 import { DrizzleListingRepository } from './infrastructure/database/repositories/drizzle/drizzle-listing-repository'
 import { DrizzlePropertyRepository } from './infrastructure/database/repositories/drizzle/drizzle-property-repository'
+import { CreateHostUseCase } from './application/use-cases/create-host-use-case'
 import { CreateListingUseCase } from './application/use-cases/create-listing-use-case'
 import { CreatePropertyUseCase } from './application/use-cases/create-property-use-case'
 import { DeleteListingUseCase } from './application/use-cases/delete-listing-use-case'
@@ -23,13 +24,28 @@ container.register({
 		() => new DrizzlePropertyRepository()
 	).singleton(),
 	listingRepository: asFunction(
-		() => new DrizzleListingRepository()
+		({ idGeneratorV4 }) => new DrizzleListingRepository(idGeneratorV4)
+	).singleton(),
+
+	// Host use cases
+	createHostUseCase: asFunction(
+		({ idGeneratorV7 }) => new CreateHostUseCase({ idGeneratorV7 })
 	).singleton(),
 
 	// Property use cases
 	createPropertyUseCase: asFunction(
-		({ hostRepository, propertyRepository }) =>
-			new CreatePropertyUseCase({ hostRepository, propertyRepository })
+		({
+			hostRepository,
+			propertyRepository,
+			idGeneratorV7,
+			incrementalIdGenerator,
+		}) =>
+			new CreatePropertyUseCase({
+				hostRepository,
+				propertyRepository,
+				idGeneratorV7,
+				incrementalIdGenerator,
+			})
 	).singleton(),
 
 	getPropertyUseCase: asFunction(
@@ -58,11 +74,19 @@ container.register({
 
 	// Listing use cases
 	createListingUseCase: asFunction(
-		({ hostRepository, propertyRepository, listingRepository }) =>
+		({
+			hostRepository,
+			propertyRepository,
+			listingRepository,
+			idGeneratorV7,
+			incrementalIdGenerator,
+		}) =>
 			new CreateListingUseCase({
 				hostRepository,
 				propertyRepository,
 				listingRepository,
+				idGeneratorV7,
+				incrementalIdGenerator,
 			})
 	).singleton(),
 
