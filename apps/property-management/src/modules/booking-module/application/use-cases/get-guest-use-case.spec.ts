@@ -1,6 +1,6 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { GuestNotFoundError } from '../@errors'
 import { GuestRepository } from '../repositories/guest-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
@@ -19,7 +19,7 @@ describe('GetGuestUseCase', () => {
 	})
 
 	it('should return failure when guest is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(guestRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -32,7 +32,7 @@ describe('GetGuestUseCase', () => {
 	})
 
 	it('should return success with the guest', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const guest = await makeGuest()
 			when(guestRepo.findById(anything())).thenResolve(guest)
 

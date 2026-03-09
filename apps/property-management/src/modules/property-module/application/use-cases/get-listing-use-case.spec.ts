@@ -1,6 +1,6 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { ListingNotFoundError } from '../@errors'
 import { ListingRepository } from '../repositories/listing-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
@@ -21,7 +21,7 @@ describe('GetListingUseCase', () => {
 	})
 
 	it('should return failure when listing is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(listingRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -34,10 +34,10 @@ describe('GetListingUseCase', () => {
 	})
 
 	it('should return success with listing', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const property = await makeProperty(host.id)
-			const listing = await makeListing(property.id)
+			const property = await makeProperty({ hostId: host.id })
+			const listing = await makeListing({ propertyId: property.id })
 
 			when(listingRepo.findById(anything())).thenResolve(listing)
 

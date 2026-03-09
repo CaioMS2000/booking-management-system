@@ -1,18 +1,19 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { InvalidEmailError, InvalidPhoneError } from '../@errors'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
+import { FakeIdGenerator } from '@/modules/property-module/test/fake-id-generator'
 import { CreateHostUseCase } from './create-host-use-case'
 
 describe('CreateHostUseCase', () => {
 	let sut: CreateHostUseCase
 
 	beforeEach(() => {
-		sut = new CreateHostUseCase()
+		sut = new CreateHostUseCase({ idGeneratorV7: new FakeIdGenerator() })
 	})
 
 	it('should return failure when email is invalid', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const result = await sut.execute({
 				name: 'John Doe',
 				email: 'invalid-email',
@@ -25,7 +26,7 @@ describe('CreateHostUseCase', () => {
 	})
 
 	it('should return failure when phone is invalid', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const result = await sut.execute({
 				name: 'John Doe',
 				email: 'john@example.com',
@@ -38,7 +39,7 @@ describe('CreateHostUseCase', () => {
 	})
 
 	it('should return success with created host', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const result = await sut.execute({
 				name: 'John Doe',
 				email: 'john@example.com',

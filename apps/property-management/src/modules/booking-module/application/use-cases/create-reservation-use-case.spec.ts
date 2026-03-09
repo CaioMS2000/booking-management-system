@@ -9,7 +9,7 @@ import {
 import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
 import { PropertyModuleInterface, ReservationCreatedEvent } from '@repo/shared'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import {
 	InvalidReservationPeriodError,
 	ListingNotFoundError,
@@ -18,6 +18,7 @@ import {
 } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
+import { FakeIdGenerator } from '@/modules/property-module/test/fake-id-generator'
 import { CreateReservationUseCase } from './create-reservation-use-case'
 
 describe('CreateReservationUseCase', () => {
@@ -34,11 +35,12 @@ describe('CreateReservationUseCase', () => {
 			propertyModule: instance(propertyModule),
 			reservationRepository: instance(reservationRepo),
 			eventBus: instance(eventBusMock),
+			idGeneratorV7: new FakeIdGenerator(),
 		})
 	})
 
 	it('should return failure when period is less than 24 hours', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const result = await sut.execute({
 				listingId: 'some-listing-id',
 				guestId: 'some-guest-id',
@@ -56,7 +58,7 @@ describe('CreateReservationUseCase', () => {
 	})
 
 	it('should return failure when listing is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(propertyModule.placeHold(anything(), anything())).thenResolve({
 				success: false,
 				reason: 'LISTING_NOT_FOUND',
@@ -79,7 +81,7 @@ describe('CreateReservationUseCase', () => {
 	})
 
 	it('should return failure when period is unavailable', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(propertyModule.placeHold(anything(), anything())).thenResolve({
 				success: false,
 				reason: 'PERIOD_UNAVAILABLE',
@@ -103,7 +105,7 @@ describe('CreateReservationUseCase', () => {
 	})
 
 	it('should return failure when period is outside sliding window', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(propertyModule.placeHold(anything(), anything())).thenResolve({
 				success: false,
 				reason: 'OUTSIDE_SLIDING_WINDOW',
@@ -127,7 +129,7 @@ describe('CreateReservationUseCase', () => {
 	})
 
 	it('should create reservation successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(propertyModule.placeHold(anything(), anything())).thenResolve({
 				success: true,
 				listing: {
@@ -165,7 +167,7 @@ describe('CreateReservationUseCase', () => {
 	})
 
 	it('should emit ReservationCreatedEvent after creating reservation', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(propertyModule.placeHold(anything(), anything())).thenResolve({
 				success: true,
 				listing: {

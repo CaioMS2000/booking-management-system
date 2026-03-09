@@ -8,7 +8,7 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { EventBus, UniqueId } from '@repo/core'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import {
 	ReservationNotFoundError,
 	ReservationNotConfirmedError,
@@ -34,7 +34,7 @@ describe('CompleteReservationUseCase', () => {
 	})
 
 	it('should return failure when reservation is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(reservationRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -48,9 +48,10 @@ describe('CompleteReservationUseCase', () => {
 	})
 
 	it('should return failure when reservation is not confirmed', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'), {
-				status: 'PENDING',
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+				overrides: { status: 'PENDING' },
 			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 
@@ -65,9 +66,10 @@ describe('CompleteReservationUseCase', () => {
 	})
 
 	it('should complete reservation successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'), {
-				status: 'CONFIRMED',
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+				overrides: { status: 'CONFIRMED' },
 			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()
@@ -82,9 +84,10 @@ describe('CompleteReservationUseCase', () => {
 	})
 
 	it('should emit ReservationCompletedEvent after completing', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'), {
-				status: 'CONFIRMED',
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+				overrides: { status: 'CONFIRMED' },
 			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()

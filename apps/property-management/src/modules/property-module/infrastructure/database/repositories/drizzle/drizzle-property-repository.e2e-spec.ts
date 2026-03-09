@@ -1,11 +1,6 @@
-import {
-	UniqueId,
-	UUIDV4Generator,
-	UUIDV7Generator,
-	DefaultIncrementalIdGenerator,
-} from '@repo/core'
+import { UniqueId } from '@repo/core'
 import { describe, it, expect, afterAll, afterEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { PropertyNotFoundError } from '@/modules/property-module/application/@errors/property-not-found-error'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
@@ -17,13 +12,7 @@ import {
 import { DrizzleHostRepository } from './drizzle-host-repository'
 import { DrizzlePropertyRepository } from './drizzle-property-repository'
 
-const ctx = makeAppContext({
-	idGenerator: {
-		V4: new UUIDV4Generator(),
-		V7: new UUIDV7Generator(),
-		Incremental: new DefaultIncrementalIdGenerator(),
-	},
-})
+const ctx = makeAppContext()
 const hostRepository = new DrizzleHostRepository()
 const repository = new DrizzlePropertyRepository()
 
@@ -43,9 +32,9 @@ describe('DrizzlePropertyRepository', () => {
 	})
 
 	it('should save and find a property by id', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host = await createHost()
-			const property = await makeProperty(host.id)
+			const property = await makeProperty({ hostId: host.id })
 
 			await repository.save(property)
 			const found = await repository.findById(property.id)
@@ -63,9 +52,9 @@ describe('DrizzlePropertyRepository', () => {
 	})
 
 	it('should update a property', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host = await createHost()
-			const property = await makeProperty(host.id)
+			const property = await makeProperty({ hostId: host.id })
 			await repository.save(property)
 
 			const updated = property.update({ name: 'Updated Property' })
@@ -77,9 +66,9 @@ describe('DrizzlePropertyRepository', () => {
 	})
 
 	it('should soft delete a property', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host = await createHost()
-			const property = await makeProperty(host.id)
+			const property = await makeProperty({ hostId: host.id })
 			await repository.save(property)
 
 			const deleted = property.delete()
@@ -91,14 +80,14 @@ describe('DrizzlePropertyRepository', () => {
 	})
 
 	it('should return null when property is not found', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const found = await repository.findById(UniqueId('non-existent-id'))
 			expect(found).toBeNull()
 		})
 	})
 
 	it('should throw PropertyNotFoundError on getById for non-existent property', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			await expect(
 				repository.getById(UniqueId('non-existent-id'))
 			).rejects.toThrow(PropertyNotFoundError)
@@ -106,13 +95,13 @@ describe('DrizzlePropertyRepository', () => {
 	})
 
 	it('should find many properties by host id', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host1 = await createHost()
 			const host2 = await createHost()
 
-			const property1 = await makeProperty(host1.id)
-			const property2 = await makeProperty(host1.id)
-			const property3 = await makeProperty(host2.id)
+			const property1 = await makeProperty({ hostId: host1.id })
+			const property2 = await makeProperty({ hostId: host1.id })
+			const property3 = await makeProperty({ hostId: host2.id })
 
 			await repository.save(property1)
 			await repository.save(property2)
@@ -127,9 +116,9 @@ describe('DrizzlePropertyRepository', () => {
 	})
 
 	it('should exclude soft-deleted properties from findManyByHostId', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host = await createHost()
-			const property = await makeProperty(host.id)
+			const property = await makeProperty({ hostId: host.id })
 			await repository.save(property)
 
 			const deleted = property.delete()

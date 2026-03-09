@@ -12,7 +12,7 @@ import {
 	PropertyModuleInterface,
 	ReservationCancelledEvent,
 } from '@repo/shared'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import {
 	CancellationWindowExpiredError,
 	ReservationAlreadyCancelledError,
@@ -41,7 +41,7 @@ describe('CancelReservationUseCase', () => {
 	})
 
 	it('should return failure when reservation is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(reservationRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -55,9 +55,10 @@ describe('CancelReservationUseCase', () => {
 	})
 
 	it('should return failure when reservation is already cancelled', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'), {
-				status: 'CANCELLED',
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+				overrides: { status: 'CANCELLED' },
 			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 
@@ -72,10 +73,13 @@ describe('CancelReservationUseCase', () => {
 	})
 
 	it('should return failure when cancellation window has expired', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const checkIn = new Date('2026-04-01T10:00:00Z')
-			const reservation = await makeReservation(UniqueId('listing-123'), {
-				period: { from: checkIn, to: new Date('2026-04-05T10:00:00Z') },
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+				overrides: {
+					period: { from: checkIn, to: new Date('2026-04-05T10:00:00Z') },
+				},
 			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 
@@ -92,8 +96,10 @@ describe('CancelReservationUseCase', () => {
 	})
 
 	it('should cancel reservation successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'))
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()
 			when(propertyModule.releaseInterval(anything(), anything())).thenResolve({
@@ -112,8 +118,10 @@ describe('CancelReservationUseCase', () => {
 	})
 
 	it('should call releaseInterval on property module', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'))
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()
 			when(propertyModule.releaseInterval(anything(), anything())).thenResolve({
@@ -135,8 +143,10 @@ describe('CancelReservationUseCase', () => {
 	})
 
 	it('should emit ReservationCancelledEvent after cancelling', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'))
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 			when(reservationRepo.save(anything())).thenResolve()
 			when(propertyModule.releaseInterval(anything(), anything())).thenResolve({

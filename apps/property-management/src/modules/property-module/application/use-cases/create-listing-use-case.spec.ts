@@ -6,7 +6,7 @@ import {
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { HostNotFoundError, PropertyNotFoundError } from '../@errors'
 import { HostRepository } from '../repositories/host-repository'
 import { PropertyRepository } from '../repositories/property-repository'
@@ -14,6 +14,8 @@ import { ListingRepository } from '../repositories/listing-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
+import { FakeIdGenerator } from '@/modules/property-module/test/fake-id-generator'
+import { FakeIncrementalIdGenerator } from '@/modules/property-module/test/fake-incremental-id-generator'
 import { CreateListingUseCase } from './create-listing-use-case'
 import { UniqueId } from '@repo/core'
 
@@ -31,11 +33,13 @@ describe('CreateListingUseCase', () => {
 			hostRepository: instance(hostRepo),
 			propertyRepository: instance(propertyRepo),
 			listingRepository: instance(listingRepo),
+			idGeneratorV7: new FakeIdGenerator(),
+			incrementalIdGenerator: new FakeIncrementalIdGenerator(),
 		})
 	})
 
 	it('should return failure when host is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -50,7 +54,7 @@ describe('CreateListingUseCase', () => {
 	})
 
 	it('should return failure when property is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 
 			when(hostRepo.findById(anything())).thenResolve(host)
@@ -68,9 +72,9 @@ describe('CreateListingUseCase', () => {
 	})
 
 	it('should return success with created listing', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const property = await makeProperty(host.id)
+			const property = await makeProperty({ hostId: host.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(property)
@@ -109,9 +113,9 @@ describe('CreateListingUseCase', () => {
 	})
 
 	it('should save listing to repository', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const property = await makeProperty(host.id)
+			const property = await makeProperty({ hostId: host.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(property)

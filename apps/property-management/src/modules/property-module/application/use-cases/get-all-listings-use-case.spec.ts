@@ -1,6 +1,6 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { ListingRepository } from '../repositories/listing-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
@@ -20,10 +20,10 @@ describe('GetAllListingsUseCase', () => {
 	})
 
 	it('should return listings with default pagination', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const property = await makeProperty(host.id)
-			const listing = await makeListing(property.id)
+			const property = await makeProperty({ hostId: host.id })
+			const listing = await makeListing({ propertyId: property.id })
 
 			when(listingRepo.findMany(anything(), anything())).thenResolve([listing])
 
@@ -38,7 +38,7 @@ describe('GetAllListingsUseCase', () => {
 	})
 
 	it('should return empty list when no listings match', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(listingRepo.findMany(anything(), anything())).thenResolve([])
 
 			const result = await sut.execute({
@@ -53,7 +53,7 @@ describe('GetAllListingsUseCase', () => {
 	})
 
 	it('should pass pagination parameters', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(listingRepo.findMany(anything(), anything())).thenResolve([])
 
 			const result = await sut.execute({

@@ -6,7 +6,7 @@ import {
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import {
 	HostNotFoundError,
 	ListingNotFoundError,
@@ -40,7 +40,7 @@ describe('DeleteListingUseCase', () => {
 	})
 
 	it('should return failure when host is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -54,7 +54,7 @@ describe('DeleteListingUseCase', () => {
 	})
 
 	it('should return failure when listing is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(listingRepo.findById(anything())).thenResolve(null)
@@ -70,11 +70,11 @@ describe('DeleteListingUseCase', () => {
 	})
 
 	it('should return failure when property is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			const otherHost = await makeHost()
-			const property = await makeProperty(otherHost.id)
-			const listing = await makeListing(property.id)
+			const property = await makeProperty({ hostId: otherHost.id })
+			const listing = await makeListing({ propertyId: property.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(listingRepo.findById(anything())).thenResolve(listing)
@@ -91,11 +91,11 @@ describe('DeleteListingUseCase', () => {
 	})
 
 	it('should return failure when listing does not belong to host', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			const otherHost = await makeHost()
-			const property = await makeProperty(otherHost.id)
-			const listing = await makeListing(property.id)
+			const property = await makeProperty({ hostId: otherHost.id })
+			const listing = await makeListing({ propertyId: property.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(listingRepo.findById(anything())).thenResolve(listing)
@@ -112,10 +112,10 @@ describe('DeleteListingUseCase', () => {
 	})
 
 	it('should delete listing successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const property = await makeProperty(host.id)
-			const listing = await makeListing(property.id)
+			const property = await makeProperty({ hostId: host.id })
+			const listing = await makeListing({ propertyId: property.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(listingRepo.findById(anything())).thenResolve(listing)

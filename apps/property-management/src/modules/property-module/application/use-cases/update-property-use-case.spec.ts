@@ -6,7 +6,7 @@ import {
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import {
 	HostNotFoundError,
 	PropertyNotFoundError,
@@ -35,7 +35,7 @@ describe('UpdatePropertyUseCase', () => {
 	})
 
 	it('should return failure when host is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -50,7 +50,7 @@ describe('UpdatePropertyUseCase', () => {
 	})
 
 	it('should return failure when property is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(null)
@@ -67,10 +67,10 @@ describe('UpdatePropertyUseCase', () => {
 	})
 
 	it('should return failure when property does not belong to host', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			const otherHost = await makeHost()
-			const property = await makeProperty(otherHost.id)
+			const property = await makeProperty({ hostId: otherHost.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(property)
@@ -87,9 +87,9 @@ describe('UpdatePropertyUseCase', () => {
 	})
 
 	it('should update property successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const property = await makeProperty(host.id)
+			const property = await makeProperty({ hostId: host.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(property)

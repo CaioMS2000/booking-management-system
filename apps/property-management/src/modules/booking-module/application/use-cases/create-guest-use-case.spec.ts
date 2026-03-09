@@ -6,10 +6,11 @@ import {
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { InvalidEmailError, InvalidPhoneError } from '../@errors'
 import { GuestRepository } from '../repositories/guest-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
+import { FakeIdGenerator } from '@/modules/property-module/test/fake-id-generator'
 import { CreateGuestUseCase } from './create-guest-use-case'
 
 describe('CreateGuestUseCase', () => {
@@ -20,11 +21,12 @@ describe('CreateGuestUseCase', () => {
 		guestRepo = mock(GuestRepository)
 		sut = new CreateGuestUseCase({
 			guestRepository: instance(guestRepo),
+			idGeneratorV7: new FakeIdGenerator(),
 		})
 	})
 
 	it('should return failure when email is invalid', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const result = await sut.execute({
 				name: 'John Doe',
 				email: 'invalid-email',
@@ -38,7 +40,7 @@ describe('CreateGuestUseCase', () => {
 	})
 
 	it('should return failure when phone is invalid', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const result = await sut.execute({
 				name: 'John Doe',
 				email: 'john@example.com',
@@ -52,7 +54,7 @@ describe('CreateGuestUseCase', () => {
 	})
 
 	it('should create guest successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(guestRepo.save(anything())).thenResolve()
 
 			const result = await sut.execute({

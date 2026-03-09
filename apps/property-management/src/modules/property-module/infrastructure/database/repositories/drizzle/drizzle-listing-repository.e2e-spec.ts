@@ -5,7 +5,7 @@ import {
 	DefaultIncrementalIdGenerator,
 } from '@repo/core'
 import { describe, it, expect, afterAll, afterEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { database } from '@/lib/drizzle'
 import { ListingNotFoundError } from '@/modules/property-module/application/@errors/listing-not-found-error'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
@@ -22,21 +22,15 @@ import { DrizzleHostRepository } from './drizzle-host-repository'
 import { DrizzlePropertyRepository } from './drizzle-property-repository'
 import { DrizzleListingRepository } from './drizzle-listing-repository'
 
-const ctx = makeAppContext({
-	idGenerator: {
-		V4: new UUIDV4Generator(),
-		V7: new UUIDV7Generator(),
-		Incremental: new DefaultIncrementalIdGenerator(),
-	},
-})
+const ctx = makeAppContext()
 const hostRepository = new DrizzleHostRepository()
 const propertyRepository = new DrizzlePropertyRepository()
-const repository = new DrizzleListingRepository()
+const repository = new DrizzleListingRepository(new UUIDV4Generator())
 
 async function createHostAndProperty() {
 	const host = await makeHost()
 	await hostRepository.save(host)
-	const property = await makeProperty(host.id)
+	const property = await makeProperty({ hostId: host.id })
 	await propertyRepository.save(property)
 	return { host, property }
 }
@@ -51,9 +45,9 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should save and find a listing by id', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
-			const listing = await makeListing(property.id)
+			const listing = await makeListing({ propertyId: property.id })
 
 			await repository.save(listing)
 			const found = await repository.findById(listing.id)
@@ -72,12 +66,16 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should save a listing without intervals', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
 			const listing = await Listing.create({
-				propertyId: property.id,
-				pricePerNight: { valueInCents: 10000, currency: 'BRL' },
-				intervals: [],
+				input: {
+					propertyId: property.id,
+					pricePerNight: { valueInCents: 10000, currency: 'BRL' },
+					intervals: [],
+				},
+				idGenerator: new UUIDV7Generator(),
+				incrementalIdGenerator: new DefaultIncrementalIdGenerator(),
 			})
 
 			await repository.save(listing)
@@ -89,9 +87,9 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should update listing price', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
-			const listing = await makeListing(property.id)
+			const listing = await makeListing({ propertyId: property.id })
 			await repository.save(listing)
 
 			const updated = listing.update({
@@ -106,9 +104,9 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should update listing intervals', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
-			const listing = await makeListing(property.id)
+			const listing = await makeListing({ propertyId: property.id })
 			await repository.save(listing)
 
 			const newInterval = {
@@ -127,9 +125,9 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should soft delete a listing', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
-			const listing = await makeListing(property.id)
+			const listing = await makeListing({ propertyId: property.id })
 			await repository.save(listing)
 
 			const deleted = listing.delete()
@@ -141,14 +139,14 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should return null when listing is not found', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const found = await repository.findById(UniqueId('non-existent-id'))
 			expect(found).toBeNull()
 		})
 	})
 
 	it('should throw ListingNotFoundError on getById for non-existent listing', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			await expect(
 				repository.getById(UniqueId('non-existent-id'))
 			).rejects.toThrow(ListingNotFoundError)
@@ -156,10 +154,10 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should find many listings by host id', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { host, property } = await createHostAndProperty()
-			const listing1 = await makeListing(property.id)
-			const listing2 = await makeListing(property.id)
+			const listing1 = await makeListing({ propertyId: property.id })
+			const listing2 = await makeListing({ propertyId: property.id })
 			await repository.save(listing1)
 			await repository.save(listing2)
 
@@ -169,10 +167,10 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should find many listings by property id', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
-			const listing1 = await makeListing(property.id)
-			const listing2 = await makeListing(property.id)
+			const listing1 = await makeListing({ propertyId: property.id })
+			const listing2 = await makeListing({ propertyId: property.id })
 			await repository.save(listing1)
 			await repository.save(listing2)
 
@@ -182,10 +180,10 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should find many listings without filters', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
-			const listing1 = await makeListing(property.id)
-			const listing2 = await makeListing(property.id)
+			const listing1 = await makeListing({ propertyId: property.id })
+			const listing2 = await makeListing({ propertyId: property.id })
 			await repository.save(listing1)
 			await repository.save(listing2)
 
@@ -195,18 +193,26 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should filter listings by price range', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
 
 			const cheap = await Listing.create({
-				propertyId: property.id,
-				pricePerNight: { valueInCents: 5000, currency: 'BRL' },
-				intervals: [],
+				input: {
+					propertyId: property.id,
+					pricePerNight: { valueInCents: 5000, currency: 'BRL' },
+					intervals: [],
+				},
+				idGenerator: new UUIDV7Generator(),
+				incrementalIdGenerator: new DefaultIncrementalIdGenerator(),
 			})
 			const expensive = await Listing.create({
-				propertyId: property.id,
-				pricePerNight: { valueInCents: 50000, currency: 'BRL' },
-				intervals: [],
+				input: {
+					propertyId: property.id,
+					pricePerNight: { valueInCents: 50000, currency: 'BRL' },
+					intervals: [],
+				},
+				idGenerator: new UUIDV7Generator(),
+				incrementalIdGenerator: new DefaultIncrementalIdGenerator(),
 			})
 			await repository.save(cheap)
 			await repository.save(expensive)
@@ -221,12 +227,12 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should paginate listings', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
 
-			const listing1 = await makeListing(property.id)
-			const listing2 = await makeListing(property.id)
-			const listing3 = await makeListing(property.id)
+			const listing1 = await makeListing({ propertyId: property.id })
+			const listing2 = await makeListing({ propertyId: property.id })
+			const listing3 = await makeListing({ propertyId: property.id })
 			await repository.save(listing1)
 			await repository.save(listing2)
 			await repository.save(listing3)
@@ -240,19 +246,23 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should reject overlapping intervals via exclusion constraint', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
 			const listing = await Listing.create({
-				propertyId: property.id,
-				pricePerNight: { valueInCents: 10000, currency: 'BRL' },
-				intervals: [
-					{
-						from: new Date('2027-01-01'),
-						to: new Date('2027-01-10'),
-						status: 'HOLD',
-						expiresAt: new Date('2027-02-01'),
-					},
-				],
+				input: {
+					propertyId: property.id,
+					pricePerNight: { valueInCents: 10000, currency: 'BRL' },
+					intervals: [
+						{
+							from: new Date('2027-01-01'),
+							to: new Date('2027-01-10'),
+							status: 'HOLD',
+							expiresAt: new Date('2027-02-01'),
+						},
+					],
+				},
+				idGenerator: new UUIDV7Generator(),
+				incrementalIdGenerator: new DefaultIncrementalIdGenerator(),
 			})
 			await repository.save(listing)
 
@@ -270,19 +280,23 @@ describe('DrizzleListingRepository', () => {
 	})
 
 	it('should allow non-overlapping intervals on the same listing', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
 			const listing = await Listing.create({
-				propertyId: property.id,
-				pricePerNight: { valueInCents: 10000, currency: 'BRL' },
-				intervals: [
-					{
-						from: new Date('2027-01-01'),
-						to: new Date('2027-01-10'),
-						status: 'HOLD',
-						expiresAt: new Date('2027-02-01'),
-					},
-				],
+				input: {
+					propertyId: property.id,
+					pricePerNight: { valueInCents: 10000, currency: 'BRL' },
+					intervals: [
+						{
+							from: new Date('2027-01-01'),
+							to: new Date('2027-01-10'),
+							status: 'HOLD',
+							expiresAt: new Date('2027-02-01'),
+						},
+					],
+				},
+				idGenerator: new UUIDV7Generator(),
+				incrementalIdGenerator: new DefaultIncrementalIdGenerator(),
 			})
 			await repository.save(listing)
 

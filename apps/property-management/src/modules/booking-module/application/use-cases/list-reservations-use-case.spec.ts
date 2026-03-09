@@ -1,7 +1,7 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { UniqueId } from '@repo/core'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { ReservationRepository } from '../repositories/reservation-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'
@@ -19,8 +19,10 @@ describe('ListReservationsUseCase', () => {
 	})
 
 	it('should return reservations filtered by guest', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'))
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+			})
 			when(reservationRepo.findMany(anything(), anything())).thenResolve([
 				reservation,
 			])
@@ -36,8 +38,10 @@ describe('ListReservationsUseCase', () => {
 	})
 
 	it('should return reservations filtered by listing', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-456'))
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-456'),
+			})
 			when(reservationRepo.findMany(anything(), anything())).thenResolve([
 				reservation,
 			])
@@ -52,7 +56,7 @@ describe('ListReservationsUseCase', () => {
 	})
 
 	it('should return empty list when no reservations match', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(reservationRepo.findMany(anything(), anything())).thenResolve([])
 
 			const result = await sut.execute({ guestId: 'unknown-guest' })
@@ -65,7 +69,7 @@ describe('ListReservationsUseCase', () => {
 	})
 
 	it('should apply default pagination when not provided', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(reservationRepo.findMany(anything(), anything())).thenResolve([])
 
 			const result = await sut.execute({})

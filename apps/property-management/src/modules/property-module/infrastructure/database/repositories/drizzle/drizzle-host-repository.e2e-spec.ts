@@ -1,11 +1,6 @@
-import {
-	UniqueId,
-	UUIDV4Generator,
-	UUIDV7Generator,
-	DefaultIncrementalIdGenerator,
-} from '@repo/core'
+import { UniqueId } from '@repo/core'
 import { describe, it, expect, afterAll, afterEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { HostNotFoundError } from '@/modules/property-module/application/@errors/host-not-found-error'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
@@ -17,13 +12,7 @@ import {
 import { DrizzleHostRepository } from './drizzle-host-repository'
 import { DrizzlePropertyRepository } from './drizzle-property-repository'
 
-const ctx = makeAppContext({
-	idGenerator: {
-		V4: new UUIDV4Generator(),
-		V7: new UUIDV7Generator(),
-		Incremental: new DefaultIncrementalIdGenerator(),
-	},
-})
+const ctx = makeAppContext()
 const repository = new DrizzleHostRepository()
 const propertyRepository = new DrizzlePropertyRepository()
 
@@ -37,7 +26,7 @@ describe('DrizzleHostRepository', () => {
 	})
 
 	it('should save and find a host by id', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host = await makeHost()
 
 			await repository.save(host)
@@ -53,7 +42,7 @@ describe('DrizzleHostRepository', () => {
 	})
 
 	it('should update a host', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host = await makeHost()
 			await repository.save(host)
 
@@ -66,14 +55,14 @@ describe('DrizzleHostRepository', () => {
 	})
 
 	it('should return null when host is not found', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const found = await repository.findById(UniqueId('non-existent-id'))
 			expect(found).toBeNull()
 		})
 	})
 
 	it('should return host via getById', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host = await makeHost()
 			await repository.save(host)
 
@@ -83,7 +72,7 @@ describe('DrizzleHostRepository', () => {
 	})
 
 	it('should throw HostNotFoundError on getById for non-existent host', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			await expect(
 				repository.getById(UniqueId('non-existent-id'))
 			).rejects.toThrow(HostNotFoundError)
@@ -91,11 +80,11 @@ describe('DrizzleHostRepository', () => {
 	})
 
 	it('should return propertiesIds when host has properties', async () => {
-		await appContext.run(ctx, async () => {
+		await requestContext.run(ctx, async () => {
 			const host = await makeHost()
 			await repository.save(host)
 
-			const property = await makeProperty(host.id)
+			const property = await makeProperty({ hostId: host.id })
 			await propertyRepository.save(property)
 
 			const found = await repository.findById(host.id)

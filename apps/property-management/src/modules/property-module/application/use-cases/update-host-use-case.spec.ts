@@ -6,7 +6,7 @@ import {
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import {
 	HostNotFoundError,
 	InvalidEmailError,
@@ -29,7 +29,7 @@ describe('UpdateHostUseCase', () => {
 	})
 
 	it('should return failure when host is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -43,7 +43,7 @@ describe('UpdateHostUseCase', () => {
 	})
 
 	it('should return failure when email is invalid', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			when(hostRepo.findById(anything())).thenResolve(host)
 
@@ -58,7 +58,7 @@ describe('UpdateHostUseCase', () => {
 	})
 
 	it('should return failure when phone is invalid', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			when(hostRepo.findById(anything())).thenResolve(host)
 
@@ -73,7 +73,7 @@ describe('UpdateHostUseCase', () => {
 	})
 
 	it('should update host name successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(hostRepo.update(anything())).thenResolve()
@@ -94,7 +94,7 @@ describe('UpdateHostUseCase', () => {
 	})
 
 	it('should update host email successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(hostRepo.update(anything())).thenResolve()

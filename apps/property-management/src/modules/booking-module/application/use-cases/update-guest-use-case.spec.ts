@@ -6,7 +6,7 @@ import {
 	when,
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import {
 	GuestNotFoundError,
 	InvalidEmailError,
@@ -29,7 +29,7 @@ describe('UpdateGuestUseCase', () => {
 	})
 
 	it('should return failure when guest is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(guestRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -44,7 +44,7 @@ describe('UpdateGuestUseCase', () => {
 	})
 
 	it('should return failure when email is invalid', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const guest = await makeGuest()
 			when(guestRepo.findById(anything())).thenResolve(guest)
 
@@ -60,7 +60,7 @@ describe('UpdateGuestUseCase', () => {
 	})
 
 	it('should return failure when phone is invalid', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const guest = await makeGuest()
 			when(guestRepo.findById(anything())).thenResolve(guest)
 
@@ -76,7 +76,7 @@ describe('UpdateGuestUseCase', () => {
 	})
 
 	it('should update guest name successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const guest = await makeGuest()
 			when(guestRepo.findById(anything())).thenResolve(guest)
 			when(guestRepo.update(anything())).thenResolve()
@@ -95,7 +95,7 @@ describe('UpdateGuestUseCase', () => {
 	})
 
 	it('should update guest email successfully', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const guest = await makeGuest()
 			when(guestRepo.findById(anything())).thenResolve(guest)
 			when(guestRepo.update(anything())).thenResolve()

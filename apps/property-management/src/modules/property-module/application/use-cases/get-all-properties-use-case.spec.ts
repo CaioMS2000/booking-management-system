@@ -1,6 +1,6 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { HostNotFoundError } from '../@errors'
 import { HostRepository } from '../repositories/host-repository'
 import { PropertyRepository } from '../repositories/property-repository'
@@ -24,7 +24,7 @@ describe('GetAllPropertiesUseCase', () => {
 	})
 
 	it('should return failure when host is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -37,10 +37,10 @@ describe('GetAllPropertiesUseCase', () => {
 	})
 
 	it('should return success with properties list', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const property1 = await makeProperty(host.id)
-			const property2 = await makeProperty(host.id)
+			const property1 = await makeProperty({ hostId: host.id })
+			const property2 = await makeProperty({ hostId: host.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findManyByHostId(anything())).thenResolve([
@@ -61,7 +61,7 @@ describe('GetAllPropertiesUseCase', () => {
 	})
 
 	it('should return success with empty list when host has no properties', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 
 			when(hostRepo.findById(anything())).thenResolve(host)

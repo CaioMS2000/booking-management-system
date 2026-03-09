@@ -1,7 +1,7 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { UniqueId } from '@repo/core'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { ReservationNotFoundError } from '../@errors'
 import { ReservationRepository } from '../repositories/reservation-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
@@ -20,7 +20,7 @@ describe('GetReservationUseCase', () => {
 	})
 
 	it('should return failure when reservation is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(reservationRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -33,8 +33,10 @@ describe('GetReservationUseCase', () => {
 	})
 
 	it('should return success with the reservation', () => {
-		return appContext.run(makeAppContext(), async () => {
-			const reservation = await makeReservation(UniqueId('listing-123'))
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
 
 			const result = await sut.execute({

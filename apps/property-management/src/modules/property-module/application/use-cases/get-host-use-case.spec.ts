@@ -1,6 +1,6 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { HostNotFoundError } from '../@errors'
 import { HostRepository } from '../repositories/host-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
@@ -19,7 +19,7 @@ describe('GetHostUseCase', () => {
 	})
 
 	it('should return failure when host is not found', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
@@ -32,7 +32,7 @@ describe('GetHostUseCase', () => {
 	})
 
 	it('should return success with host', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 
 			when(hostRepo.findById(anything())).thenResolve(host)

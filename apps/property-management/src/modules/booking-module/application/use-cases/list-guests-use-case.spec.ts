@@ -1,6 +1,6 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
-import { appContext } from '@/context/application-context'
+import { requestContext } from '@/context/request-context'
 import { GuestRepository } from '../repositories/guest-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeGuest } from '@/modules/booking-module/test/factories/make-guest'
@@ -18,7 +18,7 @@ describe('ListGuestsUseCase', () => {
 	})
 
 	it('should return guests filtered by name', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const guest = await makeGuest()
 			when(guestRepo.findMany(anything(), anything())).thenResolve([guest])
 
@@ -33,7 +33,7 @@ describe('ListGuestsUseCase', () => {
 	})
 
 	it('should return guests filtered by email', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			const guest = await makeGuest()
 			when(guestRepo.findMany(anything(), anything())).thenResolve([guest])
 
@@ -47,7 +47,7 @@ describe('ListGuestsUseCase', () => {
 	})
 
 	it('should return empty list when no guests match', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(guestRepo.findMany(anything(), anything())).thenResolve([])
 
 			const result = await sut.execute({ name: 'Unknown' })
@@ -60,7 +60,7 @@ describe('ListGuestsUseCase', () => {
 	})
 
 	it('should apply default pagination when not provided', () => {
-		return appContext.run(makeAppContext(), async () => {
+		return requestContext.run(makeAppContext(), async () => {
 			when(guestRepo.findMany(anything(), anything())).thenResolve([])
 
 			const result = await sut.execute({})
