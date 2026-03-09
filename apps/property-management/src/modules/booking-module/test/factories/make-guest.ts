@@ -1,12 +1,19 @@
-import { Email, Name, Phone } from '@repo/core'
+import { Email, IdGenerator, Name, Phone } from '@repo/core'
 import {
 	Guest,
 	GuestCreateInput,
 } from '@/modules/booking-module/domain/models/guest'
+import { FakeIdGenerator } from '@/modules/property-module/test/fake-id-generator'
 
-export async function makeGuest(
+type MakeGuestParams = {
 	overrides?: Partial<GuestCreateInput>
-): Promise<Guest> {
+	idGenerator?: IdGenerator
+}
+
+export async function makeGuest({
+	overrides,
+	idGenerator,
+}: MakeGuestParams = {}): Promise<Guest> {
 	const props: GuestCreateInput = {
 		name: Name('John Doe'),
 		email: Email.create('john@example.com').value as Email,
@@ -14,5 +21,8 @@ export async function makeGuest(
 		...overrides,
 	}
 
-	return Guest.create(props)
+	return Guest.create({
+		input: props,
+		idGenerator: idGenerator ?? new FakeIdGenerator(),
+	})
 }

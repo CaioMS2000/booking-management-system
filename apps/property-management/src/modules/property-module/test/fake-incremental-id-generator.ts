@@ -1,17 +1,17 @@
 import { IncrementalIdGenerator } from '@repo/core'
 
 export class FakeIncrementalIdGenerator extends IncrementalIdGenerator {
-	private counter = 0
+	private static globalCounter = 0
 
 	async generate(): Promise<number> {
-		return ++this.counter
+		return ++FakeIncrementalIdGenerator.globalCounter
 	}
 
 	async generateBatch(count: number): Promise<number[]> {
 		return Promise.all(Array.from({ length: count }, () => this.generate()))
 	}
 
-	reset() {
-		this.counter = 0
+	static reset() {
+		FakeIncrementalIdGenerator.globalCounter = 0
 	}
 }

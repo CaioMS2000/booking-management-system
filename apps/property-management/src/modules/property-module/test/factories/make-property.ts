@@ -1,9 +1,26 @@
 import { faker } from '@faker-js/faker'
-import { PropertyType, UniqueId } from '@repo/core'
+import {
+	IdGenerator,
+	IncrementalIdGenerator,
+	PropertyType,
+	UniqueId,
+} from '@repo/core'
 import { Property, PropertyCreateInput } from '@/modules/property-module/domain'
 import { makeAddress } from './make-address'
+import { FakeIdGenerator } from '../fake-id-generator'
+import { FakeIncrementalIdGenerator } from '../fake-incremental-id-generator'
 
-export async function makeProperty(hostId: UniqueId): Promise<Property> {
+type MakePropertyParams = {
+	hostId: UniqueId
+	idGenerator?: IdGenerator
+	incrementalIdGenerator?: IncrementalIdGenerator
+}
+
+export async function makeProperty({
+	hostId,
+	idGenerator,
+	incrementalIdGenerator,
+}: MakePropertyParams): Promise<Property> {
 	const propertyType: PropertyType = 'Apartment'
 	const numberArray = new Array({
 		length: faker.number.int({ min: 1, max: 10 }),
@@ -21,5 +38,10 @@ export async function makeProperty(hostId: UniqueId): Promise<Property> {
 		imagesUrls,
 	}
 
-	return Property.create(props)
+	return Property.create({
+		input: props,
+		idGenerator: idGenerator ?? new FakeIdGenerator(),
+		incrementalIdGenerator:
+			incrementalIdGenerator ?? new FakeIncrementalIdGenerator(),
+	})
 }

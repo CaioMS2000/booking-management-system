@@ -1,11 +1,23 @@
 import { faker } from '@faker-js/faker'
-import { UniqueId } from '@repo/core'
+import { IdGenerator, IncrementalIdGenerator, UniqueId } from '@repo/core'
 import {
 	Listing,
 	ListingCreateInput,
 } from '@/modules/property-module/domain/models/listing'
+import { FakeIdGenerator } from '../fake-id-generator'
+import { FakeIncrementalIdGenerator } from '../fake-incremental-id-generator'
 
-export async function makeListing(propertyId: UniqueId): Promise<Listing> {
+type MakeListingParams = {
+	propertyId: UniqueId
+	idGenerator?: IdGenerator
+	incrementalIdGenerator?: IncrementalIdGenerator
+}
+
+export async function makeListing({
+	propertyId,
+	idGenerator,
+	incrementalIdGenerator,
+}: MakeListingParams): Promise<Listing> {
 	const from = faker.date.future()
 	const to = faker.date.future({ refDate: from })
 
@@ -24,5 +36,10 @@ export async function makeListing(propertyId: UniqueId): Promise<Listing> {
 		],
 	}
 
-	return Listing.create(props)
+	return Listing.create({
+		input: props,
+		idGenerator: idGenerator ?? new FakeIdGenerator(),
+		incrementalIdGenerator:
+			incrementalIdGenerator ?? new FakeIncrementalIdGenerator(),
+	})
 }
