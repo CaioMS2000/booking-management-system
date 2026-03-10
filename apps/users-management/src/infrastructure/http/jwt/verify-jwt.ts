@@ -1,11 +1,10 @@
-import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose'
-import { env } from '@/config/env'
-
-const JWKS = createRemoteJWKSet(new URL(env.AUTH_JWKS_URL))
+import { type JWTPayload, jwtVerify } from 'jose'
+import { getPublicKey } from '@/infrastructure/auth/keys'
 
 export async function verifyJwt(token: string): Promise<JWTPayload | null> {
 	try {
-		const { payload } = await jwtVerify(token, JWKS)
+		const publicKey = await getPublicKey()
+		const { payload } = await jwtVerify(token, publicKey)
 		return payload
 	} catch {
 		return null

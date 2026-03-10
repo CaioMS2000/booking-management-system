@@ -1,3 +1,4 @@
+import fastifyCookie from '@fastify/cookie'
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
 import ScalarApiReference from '@scalar/fastify-api-reference'
@@ -68,6 +69,7 @@ app.register(ScalarApiReference, {
 })
 
 // custom resources
+app.register(fastifyCookie)
 app.register(requestLogger)
 app.register(contextPlugin)
 app.setErrorHandler(errorHandler)

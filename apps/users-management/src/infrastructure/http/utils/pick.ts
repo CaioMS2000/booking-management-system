@@ -4,7 +4,7 @@ export function pickPresent<T extends object>(
 ): Partial<T> {
 	const result: Partial<T> = {}
 	for (const key of keys) {
-		if (Object.prototype.hasOwnProperty.call(source, key)) {
+		if (Object.hasOwn(source, key)) {
 			result[key] = source[key]
 		}
 	}

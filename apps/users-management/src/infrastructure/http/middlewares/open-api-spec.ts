@@ -1,6 +1,6 @@
-import type { OpenAPIV3 } from 'openapi-types'
 import type { FastifyInstance } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
+import type { OpenAPIV3 } from 'openapi-types'
 
 export const openApiSpecPlugin = fastifyPlugin(async (app: FastifyInstance) => {
 	app.get('/openapi.json', {

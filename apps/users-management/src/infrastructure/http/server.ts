@@ -1,6 +1,4 @@
 import '@/init'
-import '@/modules/property-module/init'
-import '@/modules/booking-module/init'
 import fastifyCors from '@fastify/cors'
 import fastifyMultipart from '@fastify/multipart'
 import { createLogger, dayjs } from '@repo/core'
@@ -91,11 +89,15 @@ async function bootstrap() {
 		return { message: 'yes' }
 	})
 
-	const propertyController = container.resolve('propertyController')
-	const listingController = container.resolve('listingController')
+	const authController = container.resolve('authController')
+	const hostController = container.resolve('hostController')
+	const guestController = container.resolve('guestController')
+	const adminController = container.resolve('adminController')
 
-	propertyController.registerRoutes()
-	listingController.registerRoutes()
+	authController.registerRoutes()
+	hostController.registerRoutes()
+	guestController.registerRoutes()
+	adminController.registerRoutes()
 
 	const config: FastifyListenOptions = {
 		port: env.PORT,

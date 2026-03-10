@@ -1,7 +1,7 @@
-import { AppError, toErrorEnvelope } from '@/infrastructure/http/errors'
 import { logger } from '@repo/core'
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
 import { ZodError } from 'zod'
+import { AppError, toErrorEnvelope } from '@/infrastructure/http/errors'
 
 function serializeError(err: any): Record<string, unknown> {
 	if (!err || typeof err !== 'object') return { message: String(err) }
