@@ -5,12 +5,12 @@ import {
 	verify,
 	when,
 } from '@johanblumenberg/ts-mockito'
-import { describe, expect, it, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { requestContext } from '@/context/request-context'
+import { makeAdmin } from '@/test/factories/make-admin'
+import { makeAppContext } from '@/test/factories/make-app-context'
 import { AdminNotFoundError } from '../@errors'
 import { AdminRepository } from '../repositories/admin-repository'
-import { makeAppContext } from '@/test/factories/make-app-context'
-import { makeAdmin } from '@/test/factories/make-admin'
 import { DeleteAdminUseCase } from './delete-admin-use-case'
 
 describe('DeleteAdminUseCase', () => {

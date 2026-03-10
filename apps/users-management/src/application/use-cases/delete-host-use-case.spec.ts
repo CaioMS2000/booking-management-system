@@ -5,12 +5,12 @@ import {
 	verify,
 	when,
 } from '@johanblumenberg/ts-mockito'
-import { describe, expect, it, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import { HostNotFoundError } from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
 import { makeAppContext } from '@/test/factories/make-app-context'
 import { makeHost } from '@/test/factories/make-host'
+import { HostNotFoundError } from '../@errors'
+import { HostRepository } from '../repositories/host-repository'
 import { DeleteHostUseCase } from './delete-host-use-case'
 
 describe('DeleteHostUseCase', () => {

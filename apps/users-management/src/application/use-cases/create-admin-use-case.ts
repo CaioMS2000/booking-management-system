@@ -1,12 +1,12 @@
 import {
-	Result,
 	Email,
 	failure,
 	IdGenerator,
 	Name,
-	UseCase,
 	Phone,
+	Result,
 	success,
+	UseCase,
 } from '@repo/core'
 import { Admin } from '@/domain/models/admin'
 import { InvalidEmailError, InvalidPhoneError } from '../@errors'

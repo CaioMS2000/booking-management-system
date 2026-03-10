@@ -1,4 +1,4 @@
-import { Result, failure, UseCase, UniqueId, success } from '@repo/core'
+import { failure, Result, success, UniqueId, UseCase } from '@repo/core'
 import { Admin } from '@/domain/models/admin'
 import { AdminNotFoundError } from '../@errors'
 import { AdminRepository } from '../repositories/admin-repository'

@@ -1,11 +1,11 @@
 import {
-	Result,
-	failure,
-	UseCase,
-	UniqueId,
-	success,
 	Email,
+	failure,
 	Phone,
+	Result,
+	success,
+	UniqueId,
+	UseCase,
 } from '@repo/core'
 import { Admin } from '@/domain/models/admin'
 import {

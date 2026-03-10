@@ -1,11 +1,11 @@
 import {
-	Result,
-	failure,
-	UseCase,
-	UniqueId,
-	success,
 	Email,
+	failure,
 	Phone,
+	Result,
+	success,
+	UniqueId,
+	UseCase,
 } from '@repo/core'
 import { Guest } from '@/domain/models/guest'
 import {

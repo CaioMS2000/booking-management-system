@@ -1,10 +1,10 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
-import { describe, expect, it, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import { GuestNotFoundError } from '../@errors'
-import { GuestRepository } from '../repositories/guest-repository'
 import { makeAppContext } from '@/test/factories/make-app-context'
 import { makeGuest } from '@/test/factories/make-guest'
+import { GuestNotFoundError } from '../@errors'
+import { GuestRepository } from '../repositories/guest-repository'
 import { GetGuestUseCase } from './get-guest-use-case'
 
 describe('GetGuestUseCase', () => {

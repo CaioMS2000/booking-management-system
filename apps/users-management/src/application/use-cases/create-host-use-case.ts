@@ -1,12 +1,12 @@
 import {
-	Result,
 	Email,
 	failure,
 	IdGenerator,
 	Name,
-	UseCase,
 	Phone,
+	Result,
 	success,
+	UseCase,
 } from '@repo/core'
 import { Host } from '@/domain/models/host'
 import { BankAccount } from '@/domain/value-object'

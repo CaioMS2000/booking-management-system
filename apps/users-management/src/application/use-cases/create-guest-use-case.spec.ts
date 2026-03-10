@@ -5,12 +5,12 @@ import {
 	verify,
 	when,
 } from '@johanblumenberg/ts-mockito'
-import { describe, expect, it, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import { InvalidEmailError, InvalidPhoneError } from '../@errors'
-import { GuestRepository } from '../repositories/guest-repository'
 import { makeAppContext } from '@/test/factories/make-app-context'
 import { FakeIdGenerator } from '@/test/fake-id-generator'
+import { InvalidEmailError, InvalidPhoneError } from '../@errors'
+import { GuestRepository } from '../repositories/guest-repository'
 import { CreateGuestUseCase } from './create-guest-use-case'
 
 describe('CreateGuestUseCase', () => {

@@ -1,6 +1,6 @@
-import type { AuthenticatedUser } from './user'
-import { requestContext } from './request-context'
 import { AppError } from '@/infrastructure/http/errors'
+import { requestContext } from './request-context'
+import type { AuthenticatedUser } from './user'
 
 export function getAuthenticatedUser(): AuthenticatedUser {
 	const user = requestContext.get().user
