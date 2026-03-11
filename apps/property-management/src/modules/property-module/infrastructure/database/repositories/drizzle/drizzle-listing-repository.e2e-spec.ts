@@ -106,7 +106,21 @@ describe('DrizzleListingRepository', () => {
 	it('should update listing intervals', async () => {
 		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
-			const listing = await makeListing({ propertyId: property.id })
+			const listing = await Listing.create({
+				input: {
+					propertyId: property.id,
+					pricePerNight: { valueInCents: 10000, currency: 'BRL' },
+					intervals: [
+						{
+							from: new Date('2027-01-01'),
+							to: new Date('2027-01-31'),
+							status: 'AVAILABLE' as const,
+						},
+					],
+				},
+				idGenerator: new UUIDV7Generator(),
+				incrementalIdGenerator: new DefaultIncrementalIdGenerator(),
+			})
 			await repository.save(listing)
 
 			const newInterval = {
@@ -195,6 +209,7 @@ describe('DrizzleListingRepository', () => {
 	it('should filter listings by price range', async () => {
 		await requestContext.run(ctx, async () => {
 			const { property } = await createHostAndProperty()
+			const incrementalIdGenerator = new DefaultIncrementalIdGenerator()
 
 			const cheap = await Listing.create({
 				input: {
@@ -203,7 +218,7 @@ describe('DrizzleListingRepository', () => {
 					intervals: [],
 				},
 				idGenerator: new UUIDV7Generator(),
-				incrementalIdGenerator: new DefaultIncrementalIdGenerator(),
+				incrementalIdGenerator,
 			})
 			const expensive = await Listing.create({
 				input: {
@@ -212,7 +227,7 @@ describe('DrizzleListingRepository', () => {
 					intervals: [],
 				},
 				idGenerator: new UUIDV7Generator(),
-				incrementalIdGenerator: new DefaultIncrementalIdGenerator(),
+				incrementalIdGenerator,
 			})
 			await repository.save(cheap)
 			await repository.save(expensive)
