@@ -68,6 +68,7 @@ keys/public.pem
 Thumbs.db
 
 # others
+**/.drizzle
 *.sh
 *.md
 !Arquitetura de microserviços para plataforma de reservas.md

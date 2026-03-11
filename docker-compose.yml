@@ -19,9 +19,48 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres-users-management:
+    image: postgres:16-alpine
+    container_name: booking-postgres-users-management
+    restart: always
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: users_user
+      POSTGRES_PASSWORD: users_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-users-management-data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U users_user -d users_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-1
+    command: redis-server --appendonly yes --requirepass redis123
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   booking-network:
     driver: bridge
 
 volumes:
   postgres-property-management-data:
+  postgres-users-management-data:
+  redis-data:
