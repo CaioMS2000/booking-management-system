@@ -6,6 +6,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "test:e2e:watch": "turbo run test:e2e:watch",
     "test:cov": "turbo run test:cov",
     "test:debug": "turbo run test:debug",
     "test:watch": "turbo run test:watch",

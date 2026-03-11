@@ -31,6 +31,10 @@
       "cache": false,
       "persistent": true
     },
+    "test:e2e:watch": {
+      "cache": false,
+      "persistent": true
+    },
     "test:cov": {
       "dependsOn": ["^build"],
       "cache": false,
