@@ -25,9 +25,10 @@ import { UpdateHostUseCase } from '@/application/use-cases/update-host-use-case'
 // Infrastructure - Auth
 import { PasswordService } from '@/infrastructure/auth/password-service'
 import { TokenService } from '@/infrastructure/auth/token-service'
+import { redisClient } from '@/infrastructure/database/redis/redis-client'
 import { DrizzleUserRepository } from '@/infrastructure/database/repositories/drizzle-user-repository'
 // Infrastructure - Repositories
-import { InMemoryRefreshTokenRepository } from '@/infrastructure/database/repositories/in-memory-refresh-token-repository'
+import { RedisRefreshTokenRepository } from '@/infrastructure/database/repositories/redis-refresh-token-repository'
 import { AdminController } from '@/infrastructure/http/controllers/admin-controller'
 
 // HTTP - Controllers
@@ -51,7 +52,7 @@ container.register({
 
 	// Repositories
 	refreshTokenRepository: asFunction(
-		() => new InMemoryRefreshTokenRepository()
+		() => new RedisRefreshTokenRepository(redisClient)
 	).singleton(),
 	userRepository: asFunction(() => new DrizzleUserRepository()).singleton(),
 

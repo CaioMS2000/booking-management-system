@@ -23,6 +23,9 @@ export const envSchema = z.object({
 
 	// Database
 	DATABASE_URL: z.string(),
+
+	// Redis
+	REDIS_URL: z.string().default('redis://:redis123@localhost:6379'),
 })
 
 const env = envSchema.parse(process.env)
