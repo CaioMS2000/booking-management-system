@@ -66,10 +66,14 @@ export class AuthController extends Class<AuthControllerProps> {
 					201: authResponseSchema,
 					409: errorEnvelopeSchema,
 					422: errorEnvelopeSchema,
+					429: errorEnvelopeSchema,
 				},
 			} satisfies RouteConfig
 
 			app.withTypeProvider<ZodTypeProvider>().post('/api/v1/auth/register', {
+				config: {
+					rateLimit: { max: 3, timeWindow: '1 minute' },
+				},
 				schema: {
 					tags: ['Auth'],
 					summary: 'Register a new user',
@@ -100,10 +104,14 @@ export class AuthController extends Class<AuthControllerProps> {
 				response: {
 					200: authResponseSchema,
 					401: errorEnvelopeSchema,
+					429: errorEnvelopeSchema,
 				},
 			} satisfies RouteConfig
 
 			app.withTypeProvider<ZodTypeProvider>().post('/api/v1/auth/login', {
+				config: {
+					rateLimit: { max: 5, timeWindow: '1 minute' },
+				},
 				schema: {
 					tags: ['Auth'],
 					summary: 'Login with email and password',
@@ -133,10 +141,14 @@ export class AuthController extends Class<AuthControllerProps> {
 				response: {
 					200: refreshResponseSchema,
 					401: errorEnvelopeSchema,
+					429: errorEnvelopeSchema,
 				},
 			} satisfies RouteConfig
 
 			app.withTypeProvider<ZodTypeProvider>().post('/api/v1/auth/refresh', {
+				config: {
+					rateLimit: { max: 10, timeWindow: '1 minute' },
+				},
 				schema: {
 					tags: ['Auth'],
 					summary: 'Refresh access token using refresh token cookie',

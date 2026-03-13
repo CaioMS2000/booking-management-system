@@ -11,6 +11,7 @@ import {
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes'
 import { errorHandler } from './middlewares/error-handler'
 import { contextPlugin } from './middlewares/plugins/context'
+import { rateLimitPlugin } from './middlewares/plugins/rate-limit'
 import { requestLogger } from './middlewares/plugins/request-logger'
 
 const app = fastify({ trustProxy: true })
@@ -70,6 +71,7 @@ app.register(ScalarApiReference, {
 
 // custom resources
 app.register(fastifyCookie)
+app.register(rateLimitPlugin)
 app.register(requestLogger)
 app.register(contextPlugin)
 app.setErrorHandler(errorHandler)
