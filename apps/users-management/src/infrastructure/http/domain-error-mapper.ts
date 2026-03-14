@@ -5,8 +5,10 @@ import {
 	HostNotFoundError,
 	InvalidCredentialsError,
 	InvalidEmailError,
+	InvalidOAuthStateError,
 	InvalidPhoneError,
 	InvalidRefreshTokenError,
+	OAuthProviderError,
 	TokenReplayDetectedError,
 	UsersModuleApplicationError,
 } from '@/application/@errors'
@@ -47,6 +49,18 @@ export function mapDomainErrorToAppError(
 
 	if (error instanceof InvalidPhoneError)
 		return AppError.badRequest('BAD_REQUEST', 'Telefone inválido.')
+
+	if (error instanceof InvalidOAuthStateError)
+		return AppError.badRequest(
+			'BAD_REQUEST',
+			'Estado OAuth inválido ou expirado.'
+		)
+
+	if (error instanceof OAuthProviderError)
+		return AppError.badRequest(
+			'BAD_REQUEST',
+			'Falha na autenticação com o provedor OAuth.'
+		)
 
 	return AppError.internal()
 }
