@@ -48,9 +48,9 @@ export class DrizzleUserRepository extends UserRepository {
 	async save(user: {
 		name: string
 		email: string
-		phone: string
+		phone: string | null
 		role: string
-		passwordHash: string
+		passwordHash: string | null
 	}): Promise<{ id: string }> {
 		const [row] = await database
 			.insert(users)
