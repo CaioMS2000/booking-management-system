@@ -11,10 +11,10 @@ export const users = pgTable(
 	'users',
 	{
 		id: uuid('id').defaultRandom().primaryKey(),
-		phone: text('phone').notNull(),
+		phone: text('phone'),
 		name: text('name').notNull(),
 		email: text('email').notNull(),
-		passwordHash: text('password_hash').notNull(),
+		passwordHash: text('password_hash'),
 		role: text('role').notNull().default('GUEST'),
 		profession: text('profession'),
 		createdAt: timestamp('created_at', { withTimezone: true })
