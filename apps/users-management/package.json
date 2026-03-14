@@ -40,6 +40,7 @@
     "@repo/shared": "*",
     "@repo/system-settings-manager": "*",
     "@scalar/fastify-api-reference": "^1.44.15",
+    "arctic": "^3.7.0",
     "awilix": "^12.1.1",
     "dayjs": "^1.11.19",
     "dotenv": "^17.3.1",

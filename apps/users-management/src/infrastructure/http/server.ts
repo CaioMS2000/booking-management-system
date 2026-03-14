@@ -90,11 +90,13 @@ async function bootstrap() {
 	})
 
 	const authController = container.resolve('authController')
+	const oauthController = container.resolve('oauthController')
 	const hostController = container.resolve('hostController')
 	const guestController = container.resolve('guestController')
 	const adminController = container.resolve('adminController')
 
 	authController.registerRoutes()
+	oauthController.registerRoutes()
 	hostController.registerRoutes()
 	guestController.registerRoutes()
 	adminController.registerRoutes()

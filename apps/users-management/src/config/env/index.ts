@@ -26,6 +26,19 @@ export const envSchema = z.object({
 
 	// Redis
 	REDIS_URL: z.string().default('redis://:redis123@localhost:6379'),
+
+	// OAuth - Google
+	GOOGLE_CLIENT_ID: z.string().default(''),
+	GOOGLE_CLIENT_SECRET: z.string().default(''),
+	GOOGLE_REDIRECT_URI: z.string().default(''),
+
+	// OAuth - Facebook
+	FACEBOOK_CLIENT_ID: z.string().default(''),
+	FACEBOOK_CLIENT_SECRET: z.string().default(''),
+	FACEBOOK_REDIRECT_URI: z.string().default(''),
+
+	// OAuth - Frontend callback URL
+	OAUTH_FRONTEND_CALLBACK_URL: z.string().default(''),
 })
 
 const env = envSchema.parse(process.env)

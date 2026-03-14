@@ -22,11 +22,16 @@ import { RegisterUseCase } from '@/application/use-cases/register-use-case'
 import { UpdateAdminUseCase } from '@/application/use-cases/update-admin-use-case'
 import { UpdateGuestUseCase } from '@/application/use-cases/update-guest-use-case'
 import { UpdateHostUseCase } from '@/application/use-cases/update-host-use-case'
+import { SocialLoginUseCase } from '@/application/use-cases/social-login-use-case'
+import { env } from '@/config/env'
 // Infrastructure - Auth
+import { OAuthProviderService } from '@/infrastructure/auth/oauth-provider-service'
 import { PasswordService } from '@/infrastructure/auth/password-service'
 import { TokenService } from '@/infrastructure/auth/token-service'
 import { redisClient } from '@/infrastructure/database/redis/redis-client'
+import { DrizzleOAuthAccountRepository } from '@/infrastructure/database/repositories/drizzle-oauth-account-repository'
 import { DrizzleUserRepository } from '@/infrastructure/database/repositories/drizzle-user-repository'
+import { RedisOAuthStateRepository } from '@/infrastructure/database/repositories/redis-oauth-state-repository'
 // Infrastructure - Repositories
 import { RedisRefreshTokenRepository } from '@/infrastructure/database/repositories/redis-refresh-token-repository'
 import { AdminController } from '@/infrastructure/http/controllers/admin-controller'
@@ -35,6 +40,7 @@ import { AdminController } from '@/infrastructure/http/controllers/admin-control
 import { AuthController } from '@/infrastructure/http/controllers/auth-controller'
 import { GuestController } from '@/infrastructure/http/controllers/guest-controller'
 import { HostController } from '@/infrastructure/http/controllers/host-controller'
+import { OAuthController } from '@/infrastructure/http/controllers/oauth-controller'
 import { container } from './container'
 
 container.register({
@@ -99,6 +105,43 @@ container.register({
 	logoutUseCase: asFunction(
 		({ tokenService, refreshTokenRepository }) =>
 			new LogoutUseCase({ tokenService, refreshTokenRepository })
+	).singleton(),
+
+	// OAuth repositories
+	oauthAccountRepository: asFunction(
+		() => new DrizzleOAuthAccountRepository()
+	).singleton(),
+	oauthStateRepository: asFunction(
+		() => new RedisOAuthStateRepository(redisClient)
+	).singleton(),
+
+	// OAuth services
+	oauthProviderService: asFunction(
+		() =>
+			new OAuthProviderService({
+				googleClientId: env.GOOGLE_CLIENT_ID,
+				googleClientSecret: env.GOOGLE_CLIENT_SECRET,
+				googleRedirectUri: env.GOOGLE_REDIRECT_URI,
+				facebookClientId: env.FACEBOOK_CLIENT_ID,
+				facebookClientSecret: env.FACEBOOK_CLIENT_SECRET,
+				facebookRedirectUri: env.FACEBOOK_REDIRECT_URI,
+			})
+	).singleton(),
+
+	// OAuth use cases
+	socialLoginUseCase: asFunction(
+		({
+			userRepository,
+			oauthAccountRepository,
+			tokenService,
+			refreshTokenRepository,
+		}) =>
+			new SocialLoginUseCase({
+				userRepository,
+				oauthAccountRepository,
+				tokenService,
+				refreshTokenRepository,
+			})
 	).singleton(),
 
 	// Host use cases
@@ -185,6 +228,16 @@ container.register({
 				getAdminUseCase,
 				updateAdminUseCase,
 				deleteAdminUseCase,
+			})
+	).singleton(),
+
+	oauthController: asFunction(
+		({ app, oauthProviderService, oauthStateRepository, socialLoginUseCase }) =>
+			new OAuthController({
+				app,
+				oauthProviderService,
+				oauthStateRepository,
+				socialLoginUseCase,
 			})
 	).singleton(),
 })
