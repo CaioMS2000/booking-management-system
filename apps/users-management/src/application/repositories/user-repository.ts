@@ -18,4 +18,8 @@ export abstract class UserRepository {
 		passwordHash: string | null
 	}): Promise<{ id: string }>
 	abstract existsByEmail(email: string): Promise<boolean>
+	abstract updatePasswordHash(
+		userId: string,
+		passwordHash: string
+	): Promise<void>
 }
