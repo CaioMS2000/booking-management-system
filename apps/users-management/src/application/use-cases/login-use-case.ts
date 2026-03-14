@@ -40,7 +40,7 @@ export class LoginUseCase extends UseCase<
 	async execute(input: LoginUseCaseRequest): Promise<LoginUseCaseResponse> {
 		const user = await this.props.userRepository.findByEmail(input.email)
 
-		if (!user) {
+		if (!user || !user.passwordHash) {
 			return failure(InvalidCredentialsError)
 		}
 

@@ -2,9 +2,9 @@ export type UserRecord = {
 	id: string
 	name: string
 	email: string
-	phone: string
+	phone: string | null
 	role: string
-	passwordHash: string
+	passwordHash: string | null
 }
 
 export abstract class UserRepository {
@@ -13,9 +13,9 @@ export abstract class UserRepository {
 	abstract save(user: {
 		name: string
 		email: string
-		phone: string
+		phone: string | null
 		role: string
-		passwordHash: string
+		passwordHash: string | null
 	}): Promise<{ id: string }>
 	abstract existsByEmail(email: string): Promise<boolean>
 }
