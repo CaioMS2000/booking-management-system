@@ -66,6 +66,16 @@ export class DrizzleUserRepository extends UserRepository {
 		return { id: row.id }
 	}
 
+	async updatePasswordHash(
+		userId: string,
+		passwordHash: string
+	): Promise<void> {
+		await database
+			.update(users)
+			.set({ passwordHash })
+			.where(eq(users.id, userId))
+	}
+
 	async existsByEmail(email: string): Promise<boolean> {
 		const [row] = await database
 			.select({ id: users.id })

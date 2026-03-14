@@ -8,6 +8,10 @@ export const registerBodySchema = z.object({
 	role: z.enum(['HOST', 'GUEST', 'ADMIN']),
 })
 
+export const setPasswordBodySchema = z.object({
+	password: z.string().min(8),
+})
+
 export const loginBodySchema = z.object({
 	email: z.string().email(),
 	password: z.string().min(1),

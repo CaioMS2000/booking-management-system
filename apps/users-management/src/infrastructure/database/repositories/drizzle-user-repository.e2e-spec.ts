@@ -90,4 +90,21 @@ describe('DrizzleUserRepository', () => {
 		const exists = await repository.existsByEmail('nonexistent@example.com')
 		expect(exists).toBe(false)
 	})
+
+	it('should update password hash for an existing user', async () => {
+		const { id } = await repository.save({
+			name: 'Social User',
+			email: 'social@example.com',
+			phone: null,
+			role: 'GUEST',
+			passwordHash: null,
+		})
+
+		await repository.updatePasswordHash(id, 'new-hashed-password')
+
+		const found = await repository.findById(id)
+
+		expect(found).not.toBeNull()
+		expect(found!.passwordHash).toBe('new-hashed-password')
+	})
 })

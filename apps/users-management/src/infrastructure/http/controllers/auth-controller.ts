@@ -6,6 +6,9 @@ import type { LoginUseCase } from '@/application/use-cases/login-use-case'
 import type { LogoutUseCase } from '@/application/use-cases/logout-use-case'
 import type { RefreshTokenUseCase } from '@/application/use-cases/refresh-token-use-case'
 import type { RegisterUseCase } from '@/application/use-cases/register-use-case'
+import type { SetPasswordUseCase } from '@/application/use-cases/set-password-use-case'
+import { getAuthenticatedUser } from '@/context/get-authenticated-user'
+import { authGuard } from '@/infrastructure/http/middlewares/auth-guard'
 import { getJWKS } from '@/infrastructure/auth/keys'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
 import { mapDomainErrorToAppError } from '@/infrastructure/http/domain-error-mapper'
@@ -15,6 +18,7 @@ import {
 	loginBodySchema,
 	refreshResponseSchema,
 	registerBodySchema,
+	setPasswordBodySchema,
 } from '@/infrastructure/http/schemas/auth-schemas'
 
 type AuthControllerProps = {
@@ -23,6 +27,7 @@ type AuthControllerProps = {
 	loginUseCase: LoginUseCase
 	refreshTokenUseCase: RefreshTokenUseCase
 	logoutUseCase: LogoutUseCase
+	setPasswordUseCase: SetPasswordUseCase
 }
 
 export class AuthController extends Class<AuthControllerProps> {
@@ -40,6 +45,7 @@ export class AuthController extends Class<AuthControllerProps> {
 		this.app.register(this.refreshRoute())
 		this.app.register(this.logoutRoute())
 		this.app.register(this.jwksRoute())
+		this.app.register(this.setPasswordRoute())
 	}
 
 	private setRefreshCookie(reply: FastifyReply, token: string) {
@@ -209,6 +215,46 @@ export class AuthController extends Class<AuthControllerProps> {
 					return reply.status(204).send()
 				},
 			})
+		})
+	}
+
+	private setPasswordRoute() {
+		return fastifyPlugin(async (app: FastifyInstance) => {
+			const config = {
+				body: setPasswordBodySchema,
+				response: {
+					204: {},
+					409: errorEnvelopeSchema,
+					429: errorEnvelopeSchema,
+				},
+			} satisfies RouteConfig
+
+			app
+				.withTypeProvider<ZodTypeProvider>()
+				.post('/api/v1/auth/set-password', {
+					onRequest: [authGuard],
+					config: {
+						rateLimit: { max: 3, timeWindow: '1 minute' },
+					},
+					schema: {
+						tags: ['Auth'],
+						summary: 'Set password for social-login users',
+						...config,
+					},
+					handler: async (req, reply) => {
+						const user = getAuthenticatedUser()
+						const result = await this.props.setPasswordUseCase.execute({
+							userId: user.id,
+							password: req.body.password,
+						})
+
+						if (result.isFailure()) {
+							throw mapDomainErrorToAppError(result.value)
+						}
+
+						return reply.status(204).send()
+					},
+				})
 		})
 	}
 

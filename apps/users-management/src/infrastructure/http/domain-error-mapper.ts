@@ -9,6 +9,7 @@ import {
 	InvalidPhoneError,
 	InvalidRefreshTokenError,
 	OAuthProviderError,
+	PasswordAlreadySetError,
 	TokenReplayDetectedError,
 	UsersModuleApplicationError,
 } from '@/application/@errors'
@@ -61,6 +62,9 @@ export function mapDomainErrorToAppError(
 			'BAD_REQUEST',
 			'Falha na autenticação com o provedor OAuth.'
 		)
+
+	if (error instanceof PasswordAlreadySetError)
+		return AppError.conflict('PASSWORD_ALREADY_SET', 'Senha já definida.')
 
 	return AppError.internal()
 }

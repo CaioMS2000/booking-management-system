@@ -22,6 +22,7 @@ import { RegisterUseCase } from '@/application/use-cases/register-use-case'
 import { UpdateAdminUseCase } from '@/application/use-cases/update-admin-use-case'
 import { UpdateGuestUseCase } from '@/application/use-cases/update-guest-use-case'
 import { UpdateHostUseCase } from '@/application/use-cases/update-host-use-case'
+import { SetPasswordUseCase } from '@/application/use-cases/set-password-use-case'
 import { SocialLoginUseCase } from '@/application/use-cases/social-login-use-case'
 import { env } from '@/config/env'
 // Infrastructure - Auth
@@ -105,6 +106,11 @@ container.register({
 	logoutUseCase: asFunction(
 		({ tokenService, refreshTokenRepository }) =>
 			new LogoutUseCase({ tokenService, refreshTokenRepository })
+	).singleton(),
+
+	setPasswordUseCase: asFunction(
+		({ userRepository, passwordService }) =>
+			new SetPasswordUseCase({ userRepository, passwordService })
 	).singleton(),
 
 	// OAuth repositories
@@ -191,6 +197,7 @@ container.register({
 			loginUseCase,
 			refreshTokenUseCase,
 			logoutUseCase,
+			setPasswordUseCase,
 		}) =>
 			new AuthController({
 				app,
@@ -198,6 +205,7 @@ container.register({
 				loginUseCase,
 				refreshTokenUseCase,
 				logoutUseCase,
+				setPasswordUseCase,
 			})
 	).singleton(),
 
