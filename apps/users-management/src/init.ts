@@ -31,6 +31,9 @@ import { PasswordService } from '@/infrastructure/auth/password-service'
 import { TokenService } from '@/infrastructure/auth/token-service'
 import { redisClient } from '@/infrastructure/database/redis/redis-client'
 import { DrizzleOAuthAccountRepository } from '@/infrastructure/database/repositories/drizzle-oauth-account-repository'
+import { DrizzleAdminRepository } from '@/infrastructure/database/repositories/drizzle-admin-repository'
+import { DrizzleGuestRepository } from '@/infrastructure/database/repositories/drizzle-guest-repository'
+import { DrizzleHostRepository } from '@/infrastructure/database/repositories/drizzle-host-repository'
 import { DrizzleUserRepository } from '@/infrastructure/database/repositories/drizzle-user-repository'
 import { RedisOAuthStateRepository } from '@/infrastructure/database/repositories/redis-oauth-state-repository'
 // Infrastructure - Repositories
@@ -62,6 +65,9 @@ container.register({
 		() => new RedisRefreshTokenRepository(redisClient)
 	).singleton(),
 	userRepository: asFunction(() => new DrizzleUserRepository()).singleton(),
+	hostRepository: asFunction(() => new DrizzleHostRepository()).singleton(),
+	guestRepository: asFunction(() => new DrizzleGuestRepository()).singleton(),
+	adminRepository: asFunction(() => new DrizzleAdminRepository()).singleton(),
 
 	// Auth use cases
 	registerUseCase: asFunction(
