@@ -53,6 +53,10 @@ export class Guest extends Class<GuestProps> {
 		return this.props.phone
 	}
 
+	get bankCards() {
+		return this.props.bankCards
+	}
+
 	get isDeleted() {
 		return this.props.deletedAt !== null
 	}

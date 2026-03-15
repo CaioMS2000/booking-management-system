@@ -54,6 +54,14 @@ export class Host extends Class<HostProps> {
 		return this.props.phone
 	}
 
+	get bankAccount() {
+		return this.props.bankAccount
+	}
+
+	get bankCards() {
+		return this.props.bankCards
+	}
+
 	get isDeleted() {
 		return this.props.deletedAt !== null
 	}
