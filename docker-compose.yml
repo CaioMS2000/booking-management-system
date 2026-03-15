@@ -56,6 +56,23 @@ services:
       timeout: 5s
       retries: 5
 
+  nginx:
+    image: nginx:alpine
+    networks:
+      - booking-network
+    container_name: booking-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./apps/barrier-wall/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/ssl:ro          # certificados SSL
+    depends_on:
+      - postgres-property-management
+      - postgres-users-management
+
+
 networks:
   booking-network:
     driver: bridge
