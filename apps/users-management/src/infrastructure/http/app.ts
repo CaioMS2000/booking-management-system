@@ -66,7 +66,7 @@ app.register(swaggerUI, {
 app.register(ScalarApiReference, {
 	routePrefix: '/docs',
 	configuration: {
-		url: '/openapi.json',
+		url: '/docs/swagger/json',
 	},
 })
 
