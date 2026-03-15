@@ -11,8 +11,9 @@ import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes'
 import { errorHandler } from './middlewares/error-handler'
 import { contextPlugin } from './middlewares/plugins/context'
 import { requestLogger } from './middlewares/plugins/request-logger'
+import { createFastifyLogger } from '@repo/core'
 
-const app = fastify({ trustProxy: true })
+const app = fastify({ trustProxy: true, loggerInstance: createFastifyLogger() })
 
 // third-party resources
 app.setValidatorCompiler(validatorCompiler)

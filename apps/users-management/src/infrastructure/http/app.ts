@@ -9,12 +9,13 @@ import {
 	validatorCompiler,
 } from 'fastify-type-provider-zod'
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes'
+import { createFastifyLogger } from '@repo/core'
 import { errorHandler } from './middlewares/error-handler'
 import { contextPlugin } from './middlewares/plugins/context'
 import { rateLimitPlugin } from './middlewares/plugins/rate-limit'
 import { requestLogger } from './middlewares/plugins/request-logger'
 
-const app = fastify({ trustProxy: true })
+const app = fastify({ trustProxy: true, loggerInstance: createFastifyLogger() })
 
 // third-party resources
 app.setValidatorCompiler(validatorCompiler)
