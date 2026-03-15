@@ -23,6 +23,7 @@ export const users = pgTable(
 		updatedAt: timestamp('updated_at', { withTimezone: true })
 			.default(sql`now()`)
 			.notNull(),
+		deletedAt: timestamp('deleted_at', { withTimezone: true }),
 	},
 	table => [uniqueIndex('users_email_idx').on(table.email)]
 )
