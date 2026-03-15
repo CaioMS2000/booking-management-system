@@ -3,6 +3,29 @@ import type { FastifyBaseLogger } from 'fastify'
 
 type BaseFields = Record<string, unknown>
 
+function sanitizeFastifyObj(obj: BaseFields): BaseFields {
+	const clean: BaseFields = {}
+	for (const [key, value] of Object.entries(obj)) {
+		if (key === 'req' && value && typeof value === 'object') {
+			const req = value as Record<string, unknown>
+			clean.req = {
+				method: req.method,
+				url: req.url,
+				hostname: req.hostname,
+				remoteAddress: req.ip,
+			}
+		} else if (key === 'res' && value && typeof value === 'object') {
+			const res = value as Record<string, unknown>
+			clean.res = {
+				statusCode: res.statusCode,
+			}
+		} else {
+			clean[key] = value
+		}
+	}
+	return clean
+}
+
 function adaptMethod(
 	logFn: (msg: string, extra?: BaseFields) => void
 ): (objOrMsg?: unknown, msg?: string) => void {
@@ -10,14 +33,14 @@ function adaptMethod(
 		if (typeof objOrMsg === 'string') {
 			logFn(objOrMsg)
 		} else if (msg) {
-			logFn(msg, objOrMsg as BaseFields)
+			logFn(msg, sanitizeFastifyObj(objOrMsg as BaseFields))
 		} else if (objOrMsg && typeof objOrMsg === 'object') {
 			const { msg: embeddedMsg, ...rest } = objOrMsg as BaseFields & {
 				msg?: string
 			}
 			logFn(
 				(embeddedMsg as string) ?? JSON.stringify(rest),
-				embeddedMsg ? rest : undefined
+				embeddedMsg ? sanitizeFastifyObj(rest) : undefined
 			)
 		}
 	}

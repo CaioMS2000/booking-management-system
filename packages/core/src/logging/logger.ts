@@ -121,13 +121,29 @@ const customFormat = winston.format(info => {
 	return info
 })()
 
+function safeStringify(obj: unknown, indent?: number): string {
+	const seen = new WeakSet()
+	return JSON.stringify(
+		obj,
+		(_key, value) => {
+			if (typeof value === 'bigint') return value.toString()
+			if (typeof value === 'object' && value !== null) {
+				if (seen.has(value)) return '[Circular]'
+				seen.add(value)
+			}
+			return value
+		},
+		indent
+	)
+}
+
 // Console format for development (colorized and readable)
 const devConsoleFormat = winston.format.combine(
 	winston.format.colorize(),
 	winston.format.printf(({ level, message, timestamp, caller, ...meta }) => {
 		const callerStr = caller ? ` 📑 ${caller}` : ''
 		const metaStr =
-			Object.keys(meta).length > 0 ? `\n${JSON.stringify(meta, null, 2)}` : ''
+			Object.keys(meta).length > 0 ? `\n${safeStringify(meta, 2)}` : ''
 		return `[${level} - ${timestamp}]${callerStr}\n${message}${metaStr}`
 	})
 )
