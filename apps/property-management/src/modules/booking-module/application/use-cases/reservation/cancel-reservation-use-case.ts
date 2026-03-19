@@ -14,9 +14,9 @@ import {
 	CancellationWindowExpiredError,
 	ReservationAlreadyCancelledError,
 	ReservationNotFoundError,
-} from '../@errors'
-import { CancellationWindowRule } from '../../domain/rules/cancellation-window-rule'
-import { ReservationRepository } from '../repositories/reservation-repository'
+} from '../../@errors'
+import { CancellationWindowRule } from '../../../domain/rules/cancellation-window-rule'
+import { ReservationRepository } from '../../repositories/reservation-repository'
 
 export type CancelReservationUseCaseRequest = {
 	reservationId: string

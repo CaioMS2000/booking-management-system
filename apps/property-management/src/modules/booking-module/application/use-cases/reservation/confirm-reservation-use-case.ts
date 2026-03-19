@@ -13,8 +13,8 @@ import {
 import {
 	ReservationNotFoundError,
 	ReservationNotPendingError,
-} from '../@errors'
-import { ReservationRepository } from '../repositories/reservation-repository'
+} from '../../@errors'
+import { ReservationRepository } from '../../repositories/reservation-repository'
 
 export type ConfirmReservationUseCaseRequest = {
 	reservationId: string

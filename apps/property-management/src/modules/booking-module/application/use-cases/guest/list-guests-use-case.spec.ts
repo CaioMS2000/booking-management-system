@@ -1,7 +1,7 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import { GuestRepository } from '../repositories/guest-repository'
+import { GuestRepository } from '../../repositories/guest-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeGuest } from '@/modules/booking-module/test/factories/make-guest'
 import { ListGuestsUseCase } from './list-guests-use-case'

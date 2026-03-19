@@ -1,6 +1,9 @@
 import { Email, Name, Result, success, UseCase } from '@repo/core'
-import { Guest } from '../../domain/models/guest'
-import { GuestFilters, GuestRepository } from '../repositories/guest-repository'
+import { Guest } from '../../../domain/models/guest'
+import {
+	GuestFilters,
+	GuestRepository,
+} from '../../repositories/guest-repository'
 import { Pagination } from '@/modules/property-module/application/repositories/params'
 
 export type ListGuestsUseCaseRequest = {

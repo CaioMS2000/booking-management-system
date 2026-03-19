@@ -5,6 +5,7 @@ import { Pagination } from '@/modules/property-module/application/repositories/p
 export type ReservationFilters = {
 	guestId?: UniqueId
 	listingId?: UniqueId
+	hostId?: UniqueId
 }
 
 export abstract class ReservationRepository {

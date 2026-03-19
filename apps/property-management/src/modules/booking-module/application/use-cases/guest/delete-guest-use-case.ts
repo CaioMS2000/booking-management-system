@@ -1,6 +1,6 @@
 import { Result, failure, success, UniqueId, UseCase } from '@repo/core'
-import { GuestNotFoundError } from '../@errors'
-import { GuestRepository } from '../repositories/guest-repository'
+import { GuestNotFoundError } from '../../@errors'
+import { GuestRepository } from '../../repositories/guest-repository'
 
 export type DeleteGuestUseCaseRequest = {
 	guestId: string

@@ -17,8 +17,8 @@ import {
 	CancellationWindowExpiredError,
 	ReservationAlreadyCancelledError,
 	ReservationNotFoundError,
-} from '../@errors'
-import { ReservationRepository } from '../repositories/reservation-repository'
+} from '../../@errors'
+import { ReservationRepository } from '../../repositories/reservation-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'
 import { CancelReservationUseCase } from './cancel-reservation-use-case'

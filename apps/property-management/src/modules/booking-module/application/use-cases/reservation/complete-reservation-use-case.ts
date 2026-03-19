@@ -9,9 +9,9 @@ import {
 import {
 	ReservationNotFoundError,
 	ReservationNotConfirmedError,
-} from '../@errors'
+} from '../../@errors'
 import { ReservationCompletedEvent } from '@repo/shared'
-import { ReservationRepository } from '../repositories/reservation-repository'
+import { ReservationRepository } from '../../repositories/reservation-repository'
 
 export type CompleteReservationUseCaseRequest = {
 	reservationId: string

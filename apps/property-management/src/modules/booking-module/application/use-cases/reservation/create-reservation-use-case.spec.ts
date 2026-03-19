@@ -15,8 +15,8 @@ import {
 	ListingNotFoundError,
 	OutsideSlidingWindowError,
 	PeriodUnavailableError,
-} from '../@errors'
-import { ReservationRepository } from '../repositories/reservation-repository'
+} from '../../@errors'
+import { ReservationRepository } from '../../repositories/reservation-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { FakeIdGenerator } from '@/modules/property-module/test/fake-id-generator'
 import { CreateReservationUseCase } from './create-reservation-use-case'

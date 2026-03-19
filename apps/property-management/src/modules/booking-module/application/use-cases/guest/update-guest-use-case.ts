@@ -8,13 +8,13 @@ import {
 	Phone,
 	Name,
 } from '@repo/core'
-import { Guest } from '../../domain/models/guest'
+import { Guest } from '../../../domain/models/guest'
 import {
 	GuestNotFoundError,
 	InvalidEmailError,
 	InvalidPhoneError,
-} from '../@errors'
-import { GuestRepository } from '../repositories/guest-repository'
+} from '../../@errors'
+import { GuestRepository } from '../../repositories/guest-repository'
 
 export type UpdateGuestUseCaseRequest = {
 	guestId: string

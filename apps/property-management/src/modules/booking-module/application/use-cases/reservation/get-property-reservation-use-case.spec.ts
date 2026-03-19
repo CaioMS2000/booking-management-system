@@ -1,21 +1,25 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { UniqueId } from '@repo/core'
+import { PropertyModuleInterface } from '@repo/shared'
 import { requestContext } from '@/context/request-context'
-import { ReservationNotFoundError } from '../@errors'
-import { ReservationRepository } from '../repositories/reservation-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'
-import { GetReservationUseCase } from './get-reservation-use-case'
+import { ReservationNotFoundError, UnauthorizedError } from '../../@errors'
+import { ReservationRepository } from '../../repositories/reservation-repository'
+import { GetPropertyReservationUseCase } from './get-property-reservation-use-case'
 
-describe('GetReservationUseCase', () => {
+describe('GetPropertyReservationUseCase', () => {
 	let reservationRepo: ReservationRepository
-	let sut: GetReservationUseCase
+	let propertyModule: PropertyModuleInterface
+	let sut: GetPropertyReservationUseCase
 
 	beforeEach(() => {
 		reservationRepo = mock(ReservationRepository)
-		sut = new GetReservationUseCase({
+		propertyModule = mock(PropertyModuleInterface)
+		sut = new GetPropertyReservationUseCase({
 			reservationRepository: instance(reservationRepo),
+			propertyModule: instance(propertyModule),
 		})
 	})
 
@@ -24,6 +28,7 @@ describe('GetReservationUseCase', () => {
 			when(reservationRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
+				hostId: 'host-123',
 				reservationId: 'non-existent-id',
 			})
 
@@ -32,14 +37,38 @@ describe('GetReservationUseCase', () => {
 		})
 	})
 
-	it('should return success with the reservation', () => {
+	it('should return failure when reservation belongs to another host', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const reservation = await makeReservation({
 				listingId: UniqueId('listing-123'),
 			})
 			when(reservationRepo.findById(anything())).thenResolve(reservation)
+			when(
+				propertyModule.isListingOwnedByHost(anything(), anything())
+			).thenResolve(false)
 
 			const result = await sut.execute({
+				hostId: 'other-host-id',
+				reservationId: reservation.id,
+			})
+
+			expect(result.isFailure()).toBe(true)
+			expect(result.value).toBeInstanceOf(UnauthorizedError)
+		})
+	})
+
+	it('should return success when host accesses a reservation on their property', () => {
+		return requestContext.run(makeAppContext(), async () => {
+			const reservation = await makeReservation({
+				listingId: UniqueId('listing-123'),
+			})
+			when(reservationRepo.findById(anything())).thenResolve(reservation)
+			when(
+				propertyModule.isListingOwnedByHost(anything(), anything())
+			).thenResolve(true)
+
+			const result = await sut.execute({
+				hostId: 'host-123',
 				reservationId: reservation.id,
 			})
 

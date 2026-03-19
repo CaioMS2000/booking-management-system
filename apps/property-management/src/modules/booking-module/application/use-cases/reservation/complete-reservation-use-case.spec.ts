@@ -12,8 +12,8 @@ import { requestContext } from '@/context/request-context'
 import {
 	ReservationNotFoundError,
 	ReservationNotConfirmedError,
-} from '../@errors'
-import { ReservationRepository } from '../repositories/reservation-repository'
+} from '../../@errors'
+import { ReservationRepository } from '../../repositories/reservation-repository'
 import { ReservationCompletedEvent } from '@repo/shared'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeReservation } from '@/modules/booking-module/test/factories/make-reservation'

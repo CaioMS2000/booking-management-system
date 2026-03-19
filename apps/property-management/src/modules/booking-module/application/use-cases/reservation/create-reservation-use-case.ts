@@ -10,15 +10,15 @@ import {
 	UseCase,
 } from '@repo/core'
 import { PropertyModuleInterface, ReservationCreatedEvent } from '@repo/shared'
-import { Reservation } from '../../domain/models/reservation'
-import { ReservationMinDurationRule } from '../../domain/rules/reservation-min-duration-rule'
+import { Reservation } from '../../../domain/models/reservation'
+import { ReservationMinDurationRule } from '../../../domain/rules/reservation-min-duration-rule'
 import {
 	InvalidReservationPeriodError,
 	ListingNotFoundError,
 	OutsideSlidingWindowError,
 	PeriodUnavailableError,
-} from '../@errors'
-import { ReservationRepository } from '../repositories/reservation-repository'
+} from '../../@errors'
+import { ReservationRepository } from '../../repositories/reservation-repository'
 
 export type CreateReservationUseCaseRequest = {
 	listingId: string

@@ -11,8 +11,8 @@ import {
 	GuestNotFoundError,
 	InvalidEmailError,
 	InvalidPhoneError,
-} from '../@errors'
-import { GuestRepository } from '../repositories/guest-repository'
+} from '../../@errors'
+import { GuestRepository } from '../../repositories/guest-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeGuest } from '@/modules/booking-module/test/factories/make-guest'
 import { UpdateGuestUseCase } from './update-guest-use-case'
