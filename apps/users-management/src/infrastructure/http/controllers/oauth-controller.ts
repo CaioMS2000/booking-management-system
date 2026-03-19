@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyReply } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import type { OAuthStateRepository } from '@/application/repositories/oauth-state-repository'
-import type { SocialLoginUseCase } from '@/application/use-cases/social-login-use-case'
+import type { SocialLoginUseCase } from '@/application/use-cases/auth/social-login-use-case'
 import type {
 	OAuthProvider,
 	OAuthProviderService,

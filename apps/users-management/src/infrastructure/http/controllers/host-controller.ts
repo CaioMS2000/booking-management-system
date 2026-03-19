@@ -2,9 +2,10 @@ import { Class } from '@repo/core'
 import type { FastifyInstance } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import type { DeleteHostUseCase } from '@/application/use-cases/delete-host-use-case'
-import type { GetHostUseCase } from '@/application/use-cases/get-host-use-case'
-import type { UpdateHostUseCase } from '@/application/use-cases/update-host-use-case'
+import type { DeleteHostUseCase } from '@/application/use-cases/host/delete-host-use-case'
+import type { GetHostUseCase } from '@/application/use-cases/host/get-host-use-case'
+import type { UpdateHostUseCase } from '@/application/use-cases/host/update-host-use-case'
+import { getAuthenticatedUser } from '@/context/get-authenticated-user'
 import type { Host } from '@/domain/models/host'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
 import { mapDomainErrorToAppError } from '@/infrastructure/http/domain-error-mapper'
@@ -44,6 +45,7 @@ export class HostController extends Class<HostControllerProps> {
 				params: userIdParamsSchema,
 				response: {
 					200: hostResponseSchema,
+					403: errorEnvelopeSchema,
 					404: errorEnvelopeSchema,
 				},
 			} satisfies RouteConfig
@@ -56,7 +58,10 @@ export class HostController extends Class<HostControllerProps> {
 				},
 				onRequest: [roleGuard('ADMIN', 'HOST')],
 				handler: async (req, reply) => {
+					const requester = getAuthenticatedUser()
 					const result = await this.props.getHostUseCase.execute({
+						requesterId: requester.id,
+						requesterRole: requester.role,
 						hostId: req.params.id,
 					})
 
@@ -78,6 +83,7 @@ export class HostController extends Class<HostControllerProps> {
 				response: {
 					200: hostResponseSchema,
 					400: errorEnvelopeSchema,
+					403: errorEnvelopeSchema,
 					404: errorEnvelopeSchema,
 				},
 			} satisfies RouteConfig
@@ -90,7 +96,10 @@ export class HostController extends Class<HostControllerProps> {
 				},
 				onRequest: [roleGuard('ADMIN', 'HOST')],
 				handler: async (req, reply) => {
+					const requester = getAuthenticatedUser()
 					const result = await this.props.updateHostUseCase.execute({
+						requesterId: requester.id,
+						requesterRole: requester.role,
 						hostId: req.params.id,
 						...req.body,
 					})

@@ -2,9 +2,10 @@ import { Class } from '@repo/core'
 import type { FastifyInstance } from 'fastify'
 import { fastifyPlugin } from 'fastify-plugin'
 import type { ZodTypeProvider } from 'fastify-type-provider-zod'
-import type { DeleteGuestUseCase } from '@/application/use-cases/delete-guest-use-case'
-import type { GetGuestUseCase } from '@/application/use-cases/get-guest-use-case'
-import type { UpdateGuestUseCase } from '@/application/use-cases/update-guest-use-case'
+import type { DeleteGuestUseCase } from '@/application/use-cases/guest/delete-guest-use-case'
+import type { GetGuestUseCase } from '@/application/use-cases/guest/get-guest-use-case'
+import type { UpdateGuestUseCase } from '@/application/use-cases/guest/update-guest-use-case'
+import { getAuthenticatedUser } from '@/context/get-authenticated-user'
 import type { Guest } from '@/domain/models/guest'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
 import { mapDomainErrorToAppError } from '@/infrastructure/http/domain-error-mapper'
@@ -44,6 +45,7 @@ export class GuestController extends Class<GuestControllerProps> {
 				params: userIdParamsSchema,
 				response: {
 					200: guestResponseSchema,
+					403: errorEnvelopeSchema,
 					404: errorEnvelopeSchema,
 				},
 			} satisfies RouteConfig
@@ -56,7 +58,10 @@ export class GuestController extends Class<GuestControllerProps> {
 				},
 				onRequest: [roleGuard('ADMIN', 'GUEST')],
 				handler: async (req, reply) => {
+					const requester = getAuthenticatedUser()
 					const result = await this.props.getGuestUseCase.execute({
+						requesterId: requester.id,
+						requesterRole: requester.role,
 						guestId: req.params.id,
 					})
 
@@ -78,6 +83,7 @@ export class GuestController extends Class<GuestControllerProps> {
 				response: {
 					200: guestResponseSchema,
 					400: errorEnvelopeSchema,
+					403: errorEnvelopeSchema,
 					404: errorEnvelopeSchema,
 				},
 			} satisfies RouteConfig
@@ -90,7 +96,10 @@ export class GuestController extends Class<GuestControllerProps> {
 				},
 				onRequest: [roleGuard('ADMIN', 'GUEST')],
 				handler: async (req, reply) => {
+					const requester = getAuthenticatedUser()
 					const result = await this.props.updateGuestUseCase.execute({
+						requesterId: requester.id,
+						requesterRole: requester.role,
 						guestId: req.params.id,
 						...req.body,
 					})

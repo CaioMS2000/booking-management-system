@@ -11,6 +11,7 @@ import {
 	OAuthProviderError,
 	PasswordAlreadySetError,
 	TokenReplayDetectedError,
+	UnauthorizedError,
 	UsersModuleApplicationError,
 } from '@/application/@errors'
 import { AppError } from './errors'
@@ -34,6 +35,11 @@ export function mapDomainErrorToAppError(
 		return AppError.unauthenticated(
 			'Possível reutilização de token detectada. Todos os tokens foram revogados.',
 			'Faça login novamente.'
+		)
+
+	if (error instanceof UnauthorizedError)
+		return AppError.forbidden(
+			'Você não tem permissão para acessar este recurso.'
 		)
 
 	if (error instanceof HostNotFoundError)
