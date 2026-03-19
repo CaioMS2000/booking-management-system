@@ -7,16 +7,16 @@ import {
 	Money,
 	DateInterval,
 } from '@repo/core'
-import { Listing } from '../../domain/models/listing'
+import { Listing } from '../../../domain/models/listing'
 import {
 	HostNotFoundError,
 	ListingNotFoundError,
 	PropertyNotFoundError,
 	ListingNotOwnedByHostError,
-} from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
-import { ListingRepository } from '../repositories/listing-repository'
+} from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
+import { ListingRepository } from '../../repositories/listing-repository'
 
 export type UpdateListingUseCaseRequest = {
 	listingId: string

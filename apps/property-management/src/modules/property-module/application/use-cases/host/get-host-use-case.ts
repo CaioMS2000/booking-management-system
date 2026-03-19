@@ -1,7 +1,7 @@
 import { Result, failure, UseCase, UniqueId, success } from '@repo/core'
-import { Host } from '../../domain/models/host'
-import { HostNotFoundError } from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
+import { Host } from '../../../domain/models/host'
+import { HostNotFoundError } from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
 
 export type GetHostUseCaseRequest = {
 	hostId: string

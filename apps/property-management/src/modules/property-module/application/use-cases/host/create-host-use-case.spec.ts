@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import { InvalidEmailError, InvalidPhoneError } from '../@errors'
+import { InvalidEmailError, InvalidPhoneError } from '../../@errors'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { FakeIdGenerator } from '@/modules/property-module/test/fake-id-generator'
 import { CreateHostUseCase } from './create-host-use-case'

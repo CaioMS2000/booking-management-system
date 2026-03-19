@@ -7,34 +7,30 @@ import {
 } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import { HostNotFoundError, PropertyNotFoundError } from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
-import { ListingRepository } from '../repositories/listing-repository'
+import {
+	HostNotFoundError,
+	PropertyNotFoundError,
+	PropertyNotOwnedByHostError,
+} from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
-import { FakeIdGenerator } from '@/modules/property-module/test/fake-id-generator'
-import { FakeIncrementalIdGenerator } from '@/modules/property-module/test/fake-incremental-id-generator'
-import { CreateListingUseCase } from './create-listing-use-case'
+import { UpdatePropertyUseCase } from './update-property-use-case'
 import { UniqueId } from '@repo/core'
 
-describe('CreateListingUseCase', () => {
+describe('UpdatePropertyUseCase', () => {
 	let hostRepo: HostRepository
 	let propertyRepo: PropertyRepository
-	let listingRepo: ListingRepository
-	let sut: CreateListingUseCase
+	let sut: UpdatePropertyUseCase
 
 	beforeEach(() => {
 		hostRepo = mock(HostRepository)
 		propertyRepo = mock(PropertyRepository)
-		listingRepo = mock(ListingRepository)
-		sut = new CreateListingUseCase({
+		sut = new UpdatePropertyUseCase({
 			hostRepository: instance(hostRepo),
 			propertyRepository: instance(propertyRepo),
-			listingRepository: instance(listingRepo),
-			idGeneratorV7: new FakeIdGenerator(),
-			incrementalIdGenerator: new FakeIncrementalIdGenerator(),
 		})
 	})
 
@@ -43,9 +39,9 @@ describe('CreateListingUseCase', () => {
 			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
-				hostId: UniqueId('non-existent-id'),
-				propertyId: UniqueId('some-property-id'),
-				pricePerNight: { valueInCents: 10000, currency: 'USD' },
+				hostId: 'non-existent-id',
+				propertyId: 'some-property-id',
+				name: 'New Name',
 			})
 
 			expect(result.isFailure()).toBe(true)
@@ -56,14 +52,13 @@ describe('CreateListingUseCase', () => {
 	it('should return failure when property is not found', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
 				hostId: host.id,
-				propertyId: UniqueId('non-existent-property'),
-				pricePerNight: { valueInCents: 10000, currency: 'USD' },
+				propertyId: 'non-existent-property',
+				name: 'New Name',
 			})
 
 			expect(result.isFailure()).toBe(true)
@@ -71,63 +66,49 @@ describe('CreateListingUseCase', () => {
 		})
 	})
 
-	it('should return success with created listing', () => {
+	it('should return failure when property does not belong to host', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const property = await makeProperty({ hostId: host.id })
+			const otherHost = await makeHost()
+			const property = await makeProperty({ hostId: otherHost.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(property)
-			when(listingRepo.save(anything())).thenResolve()
 
 			const result = await sut.execute({
 				hostId: host.id,
 				propertyId: property.id,
-				pricePerNight: { valueInCents: 15000, currency: 'BRL' },
-				intervals: [
-					{
-						from: new Date('2026-03-01'),
-						to: new Date('2026-03-15'),
-						status: 'AVAILABLE',
-					},
-				],
+				name: 'New Name',
 			})
 
-			expect(result.isSuccess()).toBe(true)
-			if (result.isSuccess()) {
-				const { listing } = result.value
-				expect(listing.pricePerNight).toEqual({
-					valueInCents: 15000,
-					currency: 'BRL',
-				})
-				expect(listing.propertyId).toBe(property.id)
-				expect(listing.intervals).toEqual([
-					{
-						from: new Date('2026-03-01'),
-						to: new Date('2026-03-15'),
-						status: 'AVAILABLE',
-					},
-				])
-			}
+			expect(result.isFailure()).toBe(true)
+			expect(result.value).toBeInstanceOf(PropertyNotOwnedByHostError)
 		})
 	})
 
-	it('should save listing to repository', () => {
+	it('should update property successfully', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			const property = await makeProperty({ hostId: host.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(property)
-			when(listingRepo.save(anything())).thenResolve()
+			when(propertyRepo.update(anything())).thenResolve()
 
-			await sut.execute({
+			const result = await sut.execute({
 				hostId: host.id,
 				propertyId: property.id,
-				pricePerNight: { valueInCents: 10000, currency: 'USD' },
+				name: 'Updated Property Name',
+				capacity: 10,
 			})
 
-			verify(listingRepo.save(anything())).once()
+			expect(result.isSuccess()).toBe(true)
+			if (result.isSuccess()) {
+				expect(result.value.property.name).toBe('Updated Property Name')
+				expect(result.value.property.capacity).toBe(10)
+				expect(result.value.property.description).toBe(property.description)
+			}
+			verify(propertyRepo.update(anything())).once()
 		})
 	})
 })

@@ -1,7 +1,7 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import { ListingRepository } from '../repositories/listing-repository'
+import { ListingRepository } from '../../repositories/listing-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'

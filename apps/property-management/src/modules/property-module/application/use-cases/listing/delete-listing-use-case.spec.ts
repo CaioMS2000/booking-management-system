@@ -12,27 +12,27 @@ import {
 	ListingNotFoundError,
 	PropertyNotFoundError,
 	ListingNotOwnedByHostError,
-} from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
-import { ListingRepository } from '../repositories/listing-repository'
+} from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
+import { ListingRepository } from '../../repositories/listing-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
 import { makeListing } from '@/modules/property-module/test/factories/make-listing'
-import { UpdateListingUseCase } from './update-listing-use-case'
+import { DeleteListingUseCase } from './delete-listing-use-case'
 
-describe('UpdateListingUseCase', () => {
+describe('DeleteListingUseCase', () => {
 	let hostRepo: HostRepository
 	let propertyRepo: PropertyRepository
 	let listingRepo: ListingRepository
-	let sut: UpdateListingUseCase
+	let sut: DeleteListingUseCase
 
 	beforeEach(() => {
 		hostRepo = mock(HostRepository)
 		propertyRepo = mock(PropertyRepository)
 		listingRepo = mock(ListingRepository)
-		sut = new UpdateListingUseCase({
+		sut = new DeleteListingUseCase({
 			hostRepository: instance(hostRepo),
 			propertyRepository: instance(propertyRepo),
 			listingRepository: instance(listingRepo),
@@ -111,7 +111,7 @@ describe('UpdateListingUseCase', () => {
 		})
 	})
 
-	it('should update listing price successfully', () => {
+	it('should delete listing successfully', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			const property = await makeProperty({ hostId: host.id })
@@ -120,22 +120,15 @@ describe('UpdateListingUseCase', () => {
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(listingRepo.findById(anything())).thenResolve(listing)
 			when(propertyRepo.findById(anything())).thenResolve(property)
-			when(listingRepo.update(anything())).thenResolve()
-
-			const newPrice = { valueInCents: 25000, currency: 'BRL' as const }
+			when(listingRepo.delete(anything())).thenResolve()
 
 			const result = await sut.execute({
 				listingId: listing.id,
 				hostId: host.id,
-				pricePerNight: newPrice,
 			})
 
 			expect(result.isSuccess()).toBe(true)
-			if (result.isSuccess()) {
-				expect(result.value.listing.pricePerNight).toEqual(newPrice)
-				expect(result.value.listing.propertyId).toBe(listing.propertyId)
-			}
-			verify(listingRepo.update(anything())).once()
+			verify(listingRepo.delete(anything())).once()
 		})
 	})
 })

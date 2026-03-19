@@ -7,14 +7,14 @@ import {
 	Address,
 	PropertyType,
 } from '@repo/core'
-import { Property } from '../../domain'
+import { Property } from '../../../domain'
 import {
 	HostNotFoundError,
 	PropertyNotFoundError,
 	PropertyNotOwnedByHostError,
-} from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
+} from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
 
 export type UpdatePropertyUseCaseRequest = {
 	propertyId: string

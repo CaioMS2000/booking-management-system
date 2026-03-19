@@ -152,6 +152,23 @@ export class PropertyModule extends PropertyModuleInterface {
 		return { success: true, listing: this.toListingDTO(result.value) }
 	}
 
+	async isListingOwnedByHost(
+		listingId: string,
+		hostId: string
+	): Promise<boolean> {
+		const listing = await this.props.listingRepository.findById(
+			UniqueId(listingId)
+		)
+		if (!listing) return false
+
+		const property = await this.props.propertyRepository.findById(
+			listing.propertyId
+		)
+		if (!property) return false
+
+		return String(property.hostId) === hostId
+	}
+
 	private toListingDTO(listing: Listing): ListingDTO {
 		return {
 			id: listing.id,

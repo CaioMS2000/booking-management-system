@@ -5,11 +5,11 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 
 import { getAuthenticatedUser } from '@/context/get-authenticated-user'
 import type { RouteConfig } from '@/infrastructure/http/@types/routes'
-import type { CreatePropertyUseCase } from '@/modules/property-module/application/use-cases/create-property-use-case'
-import type { DeletePropertyUseCase } from '@/modules/property-module/application/use-cases/delete-property-use-case'
-import type { GetAllPropertiesUseCase } from '@/modules/property-module/application/use-cases/get-all-properties-use-case'
-import type { GetPropertyUseCase } from '@/modules/property-module/application/use-cases/get-property-use-case'
-import type { UpdatePropertyUseCase } from '@/modules/property-module/application/use-cases/update-property-use-case'
+import type { CreatePropertyUseCase } from '@/modules/property-module/application/use-cases/property/create-property-use-case'
+import type { DeletePropertyUseCase } from '@/modules/property-module/application/use-cases/property/delete-property-use-case'
+import type { GetMyPropertiesUseCase } from '@/modules/property-module/application/use-cases/property/get-all-properties-use-case'
+import type { GetMyPropertyUseCase } from '@/modules/property-module/application/use-cases/property/get-property-use-case'
+import type { UpdatePropertyUseCase } from '@/modules/property-module/application/use-cases/property/update-property-use-case'
 import { Property } from '@/modules/property-module/domain/models/property'
 
 import { mapDomainErrorToAppError } from '../domain-error-mapper'
@@ -25,8 +25,8 @@ import { roleGuard } from '@/infrastructure/http/middlewares/role-guard'
 type PropertyControllerProps = {
 	app: FastifyInstance
 	createPropertyUseCase: CreatePropertyUseCase
-	getPropertyUseCase: GetPropertyUseCase
-	getAllPropertiesUseCase: GetAllPropertiesUseCase
+	getPropertyUseCase: GetMyPropertyUseCase
+	getAllPropertiesUseCase: GetMyPropertiesUseCase
 	updatePropertyUseCase: UpdatePropertyUseCase
 	deletePropertyUseCase: DeletePropertyUseCase
 }

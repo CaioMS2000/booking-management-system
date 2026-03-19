@@ -1,7 +1,7 @@
 import { Result, failure, UseCase, UniqueId, success } from '@repo/core'
-import { Listing } from '../../domain/models/listing'
-import { ListingNotFoundError } from '../@errors'
-import { ListingRepository } from '../repositories/listing-repository'
+import { Listing } from '../../../domain/models/listing'
+import { ListingNotFoundError } from '../../@errors'
+import { ListingRepository } from '../../repositories/listing-repository'
 
 export type GetListingUseCaseRequest = {
 	listingId: string

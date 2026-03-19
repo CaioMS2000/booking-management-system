@@ -1,10 +1,10 @@
 import { Result, UseCase, success } from '@repo/core'
-import { Listing } from '../../domain/models/listing'
+import { Listing } from '../../../domain/models/listing'
 import {
 	ListingRepository,
 	ListingFilters,
-} from '../repositories/listing-repository'
-import { Pagination } from '../repositories/params'
+} from '../../repositories/listing-repository'
+import { Pagination } from '../../repositories/params'
 
 export type GetAllListingsUseCaseRequest = {
 	filters?: ListingFilters

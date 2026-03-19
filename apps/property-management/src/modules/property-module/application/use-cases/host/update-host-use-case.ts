@@ -7,13 +7,13 @@ import {
 	Email,
 	Phone,
 } from '@repo/core'
-import { Host } from '../../domain/models/host'
+import { Host } from '../../../domain/models/host'
 import {
 	HostNotFoundError,
 	InvalidEmailError,
 	InvalidPhoneError,
-} from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
+} from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
 
 export type UpdateHostUseCaseRequest = {
 	hostId: string

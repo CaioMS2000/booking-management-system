@@ -1,34 +1,23 @@
-import {
-	anything,
-	instance,
-	mock,
-	verify,
-	when,
-} from '@johanblumenberg/ts-mockito'
+import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import {
-	HostNotFoundError,
-	PropertyNotFoundError,
-	PropertyNotOwnedByHostError,
-} from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
+import { HostNotFoundError, PropertyNotFoundError } from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
-import { UpdatePropertyUseCase } from './update-property-use-case'
-import { UniqueId } from '@repo/core'
+import { GetMyPropertyUseCase } from './get-property-use-case'
 
-describe('UpdatePropertyUseCase', () => {
+describe('GetMyPropertyUseCase', () => {
 	let hostRepo: HostRepository
 	let propertyRepo: PropertyRepository
-	let sut: UpdatePropertyUseCase
+	let sut: GetMyPropertyUseCase
 
 	beforeEach(() => {
 		hostRepo = mock(HostRepository)
 		propertyRepo = mock(PropertyRepository)
-		sut = new UpdatePropertyUseCase({
+		sut = new GetMyPropertyUseCase({
 			hostRepository: instance(hostRepo),
 			propertyRepository: instance(propertyRepo),
 		})
@@ -41,7 +30,6 @@ describe('UpdatePropertyUseCase', () => {
 			const result = await sut.execute({
 				hostId: 'non-existent-id',
 				propertyId: 'some-property-id',
-				name: 'New Name',
 			})
 
 			expect(result.isFailure()).toBe(true)
@@ -52,13 +40,13 @@ describe('UpdatePropertyUseCase', () => {
 	it('should return failure when property is not found', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
+
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
-				hostId: host.id,
+				hostId: host.id.toString(),
 				propertyId: 'non-existent-property',
-				name: 'New Name',
 			})
 
 			expect(result.isFailure()).toBe(true)
@@ -66,49 +54,23 @@ describe('UpdatePropertyUseCase', () => {
 		})
 	})
 
-	it('should return failure when property does not belong to host', () => {
-		return requestContext.run(makeAppContext(), async () => {
-			const host = await makeHost()
-			const otherHost = await makeHost()
-			const property = await makeProperty({ hostId: otherHost.id })
-
-			when(hostRepo.findById(anything())).thenResolve(host)
-			when(propertyRepo.findById(anything())).thenResolve(property)
-
-			const result = await sut.execute({
-				hostId: host.id,
-				propertyId: property.id,
-				name: 'New Name',
-			})
-
-			expect(result.isFailure()).toBe(true)
-			expect(result.value).toBeInstanceOf(PropertyNotOwnedByHostError)
-		})
-	})
-
-	it('should update property successfully', () => {
+	it('should return success with property', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			const property = await makeProperty({ hostId: host.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
 			when(propertyRepo.findById(anything())).thenResolve(property)
-			when(propertyRepo.update(anything())).thenResolve()
 
 			const result = await sut.execute({
 				hostId: host.id,
 				propertyId: property.id,
-				name: 'Updated Property Name',
-				capacity: 10,
 			})
 
 			expect(result.isSuccess()).toBe(true)
 			if (result.isSuccess()) {
-				expect(result.value.property.name).toBe('Updated Property Name')
-				expect(result.value.property.capacity).toBe(10)
-				expect(result.value.property.description).toBe(property.description)
+				expect(result.value.property).toEqual(property)
 			}
-			verify(propertyRepo.update(anything())).once()
 		})
 	})
 })

@@ -11,8 +11,8 @@ import {
 	HostNotFoundError,
 	InvalidEmailError,
 	InvalidPhoneError,
-} from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
+} from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { UpdateHostUseCase } from './update-host-use-case'

@@ -1,23 +1,23 @@
 import { anything, instance, mock, when } from '@johanblumenberg/ts-mockito'
 import { describe, expect, it, beforeEach } from 'vitest'
 import { requestContext } from '@/context/request-context'
-import { HostNotFoundError, PropertyNotFoundError } from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
+import { HostNotFoundError } from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
-import { GetPropertyUseCase } from './get-property-use-case'
+import { GetMyPropertiesUseCase } from './get-all-properties-use-case'
 
-describe('GetPropertyUseCase', () => {
+describe('GetMyPropertiesUseCase', () => {
 	let hostRepo: HostRepository
 	let propertyRepo: PropertyRepository
-	let sut: GetPropertyUseCase
+	let sut: GetMyPropertiesUseCase
 
 	beforeEach(() => {
 		hostRepo = mock(HostRepository)
 		propertyRepo = mock(PropertyRepository)
-		sut = new GetPropertyUseCase({
+		sut = new GetMyPropertiesUseCase({
 			hostRepository: instance(hostRepo),
 			propertyRepository: instance(propertyRepo),
 		})
@@ -29,7 +29,6 @@ describe('GetPropertyUseCase', () => {
 
 			const result = await sut.execute({
 				hostId: 'non-existent-id',
-				propertyId: 'some-property-id',
 			})
 
 			expect(result.isFailure()).toBe(true)
@@ -37,39 +36,44 @@ describe('GetPropertyUseCase', () => {
 		})
 	})
 
-	it('should return failure when property is not found', () => {
+	it('should return success with properties list', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
+			const property1 = await makeProperty({ hostId: host.id })
+			const property2 = await makeProperty({ hostId: host.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
-			when(propertyRepo.findById(anything())).thenResolve(null)
+			when(propertyRepo.findManyByHostId(anything())).thenResolve([
+				property1,
+				property2,
+			])
 
 			const result = await sut.execute({
 				hostId: host.id.toString(),
-				propertyId: 'non-existent-property',
-			})
-
-			expect(result.isFailure()).toBe(true)
-			expect(result.value).toBeInstanceOf(PropertyNotFoundError)
-		})
-	})
-
-	it('should return success with property', () => {
-		return requestContext.run(makeAppContext(), async () => {
-			const host = await makeHost()
-			const property = await makeProperty({ hostId: host.id })
-
-			when(hostRepo.findById(anything())).thenResolve(host)
-			when(propertyRepo.findById(anything())).thenResolve(property)
-
-			const result = await sut.execute({
-				hostId: host.id,
-				propertyId: property.id,
 			})
 
 			expect(result.isSuccess()).toBe(true)
 			if (result.isSuccess()) {
-				expect(result.value.property).toEqual(property)
+				expect(result.value.properties).toHaveLength(2)
+				expect(result.value.properties).toEqual([property1, property2])
+			}
+		})
+	})
+
+	it('should return success with empty list when host has no properties', () => {
+		return requestContext.run(makeAppContext(), async () => {
+			const host = await makeHost()
+
+			when(hostRepo.findById(anything())).thenResolve(host)
+			when(propertyRepo.findManyByHostId(anything())).thenResolve([])
+
+			const result = await sut.execute({
+				hostId: host.id.toString(),
+			})
+
+			expect(result.isSuccess()).toBe(true)
+			if (result.isSuccess()) {
+				expect(result.value.properties).toEqual([])
 			}
 		})
 	})

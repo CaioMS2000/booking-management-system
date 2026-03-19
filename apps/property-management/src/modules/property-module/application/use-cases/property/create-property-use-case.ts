@@ -10,10 +10,10 @@ import {
 	Address,
 	PropertyType,
 } from '@repo/core'
-import { Property } from '../../domain'
-import { HostNotFoundError } from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
+import { Property } from '../../../domain'
+import { HostNotFoundError } from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
 
 export type CreatePropertyUseCaseRequest = {
 	hostId: string

@@ -9,30 +9,30 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { requestContext } from '@/context/request-context'
 import {
 	HostNotFoundError,
-	ListingNotFoundError,
 	PropertyNotFoundError,
-	ListingNotOwnedByHostError,
-} from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
-import { ListingRepository } from '../repositories/listing-repository'
+	PropertyNotOwnedByHostError,
+	PropertyHasActiveListingsError,
+} from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
+import { ListingRepository } from '../../repositories/listing-repository'
 import { makeAppContext } from '@/modules/property-module/test/factories/make-app-context'
 import { makeHost } from '@/modules/property-module/test/factories/make-host'
 import { makeProperty } from '@/modules/property-module/test/factories/make-property'
 import { makeListing } from '@/modules/property-module/test/factories/make-listing'
-import { DeleteListingUseCase } from './delete-listing-use-case'
+import { DeletePropertyUseCase } from './delete-property-use-case'
 
-describe('DeleteListingUseCase', () => {
+describe('DeletePropertyUseCase', () => {
 	let hostRepo: HostRepository
 	let propertyRepo: PropertyRepository
 	let listingRepo: ListingRepository
-	let sut: DeleteListingUseCase
+	let sut: DeletePropertyUseCase
 
 	beforeEach(() => {
 		hostRepo = mock(HostRepository)
 		propertyRepo = mock(PropertyRepository)
 		listingRepo = mock(ListingRepository)
-		sut = new DeleteListingUseCase({
+		sut = new DeletePropertyUseCase({
 			hostRepository: instance(hostRepo),
 			propertyRepository: instance(propertyRepo),
 			listingRepository: instance(listingRepo),
@@ -44,8 +44,8 @@ describe('DeleteListingUseCase', () => {
 			when(hostRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
-				listingId: 'some-listing-id',
 				hostId: 'non-existent-id',
+				propertyId: 'some-property-id',
 			})
 
 			expect(result.isFailure()).toBe(true)
@@ -53,36 +53,15 @@ describe('DeleteListingUseCase', () => {
 		})
 	})
 
-	it('should return failure when listing is not found', () => {
-		return requestContext.run(makeAppContext(), async () => {
-			const host = await makeHost()
-			when(hostRepo.findById(anything())).thenResolve(host)
-			when(listingRepo.findById(anything())).thenResolve(null)
-
-			const result = await sut.execute({
-				listingId: 'non-existent-listing',
-				hostId: host.id,
-			})
-
-			expect(result.isFailure()).toBe(true)
-			expect(result.value).toBeInstanceOf(ListingNotFoundError)
-		})
-	})
-
 	it('should return failure when property is not found', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
-			const otherHost = await makeHost()
-			const property = await makeProperty({ hostId: otherHost.id })
-			const listing = await makeListing({ propertyId: property.id })
-
 			when(hostRepo.findById(anything())).thenResolve(host)
-			when(listingRepo.findById(anything())).thenResolve(listing)
 			when(propertyRepo.findById(anything())).thenResolve(null)
 
 			const result = await sut.execute({
-				listingId: listing.id,
 				hostId: host.id,
+				propertyId: 'non-existent-property',
 			})
 
 			expect(result.isFailure()).toBe(true)
@@ -90,45 +69,86 @@ describe('DeleteListingUseCase', () => {
 		})
 	})
 
-	it('should return failure when listing does not belong to host', () => {
+	it('should return failure when property does not belong to host', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			const otherHost = await makeHost()
 			const property = await makeProperty({ hostId: otherHost.id })
-			const listing = await makeListing({ propertyId: property.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
-			when(listingRepo.findById(anything())).thenResolve(listing)
 			when(propertyRepo.findById(anything())).thenResolve(property)
 
 			const result = await sut.execute({
-				listingId: listing.id,
 				hostId: host.id,
+				propertyId: property.id,
 			})
 
 			expect(result.isFailure()).toBe(true)
-			expect(result.value).toBeInstanceOf(ListingNotOwnedByHostError)
+			expect(result.value).toBeInstanceOf(PropertyNotOwnedByHostError)
 		})
 	})
 
-	it('should delete listing successfully', () => {
+	it('should return failure when property has active listings', () => {
 		return requestContext.run(makeAppContext(), async () => {
 			const host = await makeHost()
 			const property = await makeProperty({ hostId: host.id })
 			const listing = await makeListing({ propertyId: property.id })
 
 			when(hostRepo.findById(anything())).thenResolve(host)
-			when(listingRepo.findById(anything())).thenResolve(listing)
 			when(propertyRepo.findById(anything())).thenResolve(property)
-			when(listingRepo.delete(anything())).thenResolve()
+			when(listingRepo.findManyByPropertyId(anything())).thenResolve([listing])
 
 			const result = await sut.execute({
-				listingId: listing.id,
 				hostId: host.id,
+				propertyId: property.id,
+			})
+
+			expect(result.isFailure()).toBe(true)
+			expect(result.value).toBeInstanceOf(PropertyHasActiveListingsError)
+		})
+	})
+
+	it('should delete property when no active listings', () => {
+		return requestContext.run(makeAppContext(), async () => {
+			const host = await makeHost()
+			const property = await makeProperty({ hostId: host.id })
+
+			when(hostRepo.findById(anything())).thenResolve(host)
+			when(propertyRepo.findById(anything())).thenResolve(property)
+			when(listingRepo.findManyByPropertyId(anything())).thenResolve([])
+			when(propertyRepo.delete(anything())).thenResolve()
+
+			const result = await sut.execute({
+				hostId: host.id,
+				propertyId: property.id,
 			})
 
 			expect(result.isSuccess()).toBe(true)
-			verify(listingRepo.delete(anything())).once()
+			verify(propertyRepo.delete(anything())).once()
+		})
+	})
+
+	it('should allow delete when all listings are already deleted', () => {
+		return requestContext.run(makeAppContext(), async () => {
+			const host = await makeHost()
+			const property = await makeProperty({ hostId: host.id })
+			const listing = await makeListing({ propertyId: property.id })
+			const deletedListing = listing.delete()
+
+			when(hostRepo.findById(anything())).thenResolve(host)
+			when(propertyRepo.findById(anything())).thenResolve(property)
+			when(listingRepo.findManyByPropertyId(anything())).thenResolve([
+				deletedListing,
+			])
+			when(propertyRepo.delete(anything())).thenResolve()
+
+			const result = await sut.execute({
+				hostId: host.id,
+				propertyId: property.id,
+			})
+
+			expect(result.isSuccess()).toBe(true)
+			verify(propertyRepo.delete(anything())).once()
 		})
 	})
 })

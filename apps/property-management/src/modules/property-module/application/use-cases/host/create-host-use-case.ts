@@ -8,8 +8,8 @@ import {
 	Phone,
 	success,
 } from '@repo/core'
-import { Host } from '../../domain'
-import { InvalidEmailError, InvalidPhoneError } from '../@errors'
+import { Host } from '../../../domain'
+import { InvalidEmailError, InvalidPhoneError } from '../../@errors'
 
 export type CreateHostUseCaseRequest = {
 	name: string

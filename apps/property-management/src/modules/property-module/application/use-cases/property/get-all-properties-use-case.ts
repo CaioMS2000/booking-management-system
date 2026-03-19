@@ -1,14 +1,14 @@
 import { Result, failure, UseCase, UniqueId, success } from '@repo/core'
-import { Property } from '../../domain'
-import { HostNotFoundError, PropertyNotFoundError } from '../@errors'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
+import { Property } from '../../../domain'
+import { HostNotFoundError, PropertyNotFoundError } from '../../@errors'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
 
-export type GetPropertyUseCaseRequest = {
+export type GetMyPropertiesUseCaseRequest = {
 	hostId: string
 }
 
-export type GetPropertyUseCaseResponse = Result<
+export type GetMyPropertiesUseCaseResponse = Result<
 	HostNotFoundError | PropertyNotFoundError,
 	{
 		properties: Property[]
@@ -20,9 +20,9 @@ type UseCaseProps = {
 	propertyRepository: PropertyRepository
 }
 
-export class GetAllPropertiesUseCase extends UseCase<
-	GetPropertyUseCaseRequest,
-	GetPropertyUseCaseResponse,
+export class GetMyPropertiesUseCase extends UseCase<
+	GetMyPropertiesUseCaseRequest,
+	GetMyPropertiesUseCaseResponse,
 	UseCaseProps
 > {
 	constructor(protected props: UseCaseProps) {
@@ -30,8 +30,8 @@ export class GetAllPropertiesUseCase extends UseCase<
 	}
 
 	async execute(
-		input: GetPropertyUseCaseRequest
-	): Promise<GetPropertyUseCaseResponse> {
+		input: GetMyPropertiesUseCaseRequest
+	): Promise<GetMyPropertiesUseCaseResponse> {
 		const { hostId } = input
 		const host = await this.props.hostRepository.findById(UniqueId(hostId))
 

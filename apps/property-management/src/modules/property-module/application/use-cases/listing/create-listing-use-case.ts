@@ -9,11 +9,11 @@ import {
 	UniqueId,
 	UseCase,
 } from '@repo/core'
-import { Listing } from '../../domain/models/listing'
-import { PropertyRepository } from '../repositories/property-repository'
-import { HostRepository } from '../repositories/host-repository'
-import { ListingRepository } from '../repositories/listing-repository'
-import { HostNotFoundError, PropertyNotFoundError } from '../@errors'
+import { Listing } from '../../../domain/models/listing'
+import { PropertyRepository } from '../../repositories/property-repository'
+import { HostRepository } from '../../repositories/host-repository'
+import { ListingRepository } from '../../repositories/listing-repository'
+import { HostNotFoundError, PropertyNotFoundError } from '../../@errors'
 
 type CreateListingUseCaseRequest = {
 	propertyId: UniqueId

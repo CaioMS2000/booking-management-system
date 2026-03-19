@@ -4,11 +4,11 @@ import {
 	PropertyNotFoundError,
 	PropertyNotOwnedByHostError,
 	PropertyHasActiveListingsError,
-} from '../@errors'
-import type { Property } from '../../domain/models/property'
-import { HostRepository } from '../repositories/host-repository'
-import { PropertyRepository } from '../repositories/property-repository'
-import { ListingRepository } from '../repositories/listing-repository'
+} from '../../@errors'
+import type { Property } from '../../../domain/models/property'
+import { HostRepository } from '../../repositories/host-repository'
+import { PropertyRepository } from '../../repositories/property-repository'
+import { ListingRepository } from '../../repositories/listing-repository'
 
 export type DeletePropertyUseCaseRequest = {
 	propertyId: string
