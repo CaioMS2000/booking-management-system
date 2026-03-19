@@ -39,4 +39,9 @@ export abstract class PropertyModuleInterface {
 		listingId: string,
 		period: ReservationPeriod
 	): Promise<ReleaseIntervalResult>
+
+	abstract isListingOwnedByHost(
+		listingId: string,
+		hostId: string
+	): Promise<boolean>
 }
